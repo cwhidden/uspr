@@ -13,6 +13,8 @@
 #include <map>
 #include <list>
 #include <memory>
+#include <ctime>
+#include <cstdlib>
 #include "utree.h"
 #include "unode.h"
 #include "tbr.h"

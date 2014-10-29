@@ -1,12 +1,12 @@
 CC=g++
 CC64=CC
-CFLAGS=-O2 -std=c++0x -march=native
+CFLAGS=-O2
 OMPFLAGS=-fopenmp
 C64FLAGS=$(CFLAGS)
 BOOST_GRAPH=-lboost_graph-mt
 BOOST_ANY=-L/lib/libboost*
 LFLAGS=#$(BOOST_GRAPH) $(BOOST_ANY)
-DEBUGFLAGS=-g -O0 -std=c++0x
+DEBUGFLAGS=-g -O0
 PROFILEFLAGS=-pg
 OBJS=uspr
 all: $(OBJS)
