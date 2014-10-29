@@ -18,10 +18,10 @@ class unode {
 	unode() {
 	}
 	unode(int l) {
-		label - l;
+		label = l;
 	}
 
-	void add_neighbor(unode &n) {
+	void add_neighbor(unode n) {
 		neighbors.push_back(n);
 		num_neighbors++;
 	}

@@ -53,8 +53,8 @@ int main(int argc, char *argv[]) {
 	string T2_line = "";
 	while (getline(cin, T1_line) && getline(cin, T2_line)) {
 		// load into data structures
-		utree T1 = utree(T1_line);
-		utree T2 = utree(T2_line);
+		utree T1 = utree(T1_line, label_map, reverse_label_map);
+		utree T2 = utree(T2_line, label_map, reverse_label_map);
 		// compute TBR distance
 		int distance = tbr_distance(T1, T2);
 		cout << T1 << endl;
