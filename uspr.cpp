@@ -17,6 +17,7 @@
 #include <cstdlib>
 #include "utree.h"
 #include "unode.h"
+#include "uforest.h"
 #include "tbr.h"
 
 using namespace std;
@@ -62,5 +63,10 @@ int main(int argc, char *argv[]) {
 		cout << T1 << endl;
 		cout << T2 << endl;
 		cout << distance << endl;
+
+		uforest F1 = uforest(T1_line, label_map, reverse_label_map);
+		uforest F2 = uforest(T2_line, label_map, reverse_label_map);
+		cout << F1 << endl;
+		cout << F2 << endl;
 	}
 }

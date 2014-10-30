@@ -13,17 +13,20 @@ class unode {
 	int label;
 	list<unode *> neighbors;
 	int num_neighbors;
+	int component;
 
 	public:
 	unode() {
 		label = -1;
 		neighbors = list<unode *>();
 		num_neighbors = 0;
+		component = -1;
 	}
 	unode(int l) {
 		label = l;
 		neighbors = list<unode *>();
 		num_neighbors = 0;
+		component = -1;
 	}
 
 	void add_neighbor(unode *n) {
@@ -65,6 +68,22 @@ class unode {
 
 	const list<unode *> &const_neighbors() const {
 		return neighbors;
+	}
+
+	list<unode *> &get_neighbors() {
+		return neighbors;
+	}
+
+	int get_num_neighbors() {
+		return num_neighbors;
+	}
+
+	bool is_leaf() {
+		return (num_neighbors == 1);
+	}
+
+	void set_component(int c) {
+		component = c;
 	}
 
 };
