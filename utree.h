@@ -91,6 +91,16 @@ class utree {
 		str_subtree(s, root, root);
 		return s.str();
 	 }
+
+	list<int> find_leaves() {
+		list<int> leaf_list = list<int>();
+		for (unode *i : leaves) {
+			if (i != NULL) {
+				leaf_list.push_back(i->get_label());
+			}
+		}
+		return leaf_list;
+	}
 };
 
 ostream& operator<<(ostream &os, const utree& t) {

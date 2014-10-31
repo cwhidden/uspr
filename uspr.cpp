@@ -56,17 +56,12 @@ int main(int argc, char *argv[]) {
 	string T2_line = "";
 	while (getline(cin, T1_line) && getline(cin, T2_line)) {
 		// load into data structures
-		utree T1 = utree(T1_line, label_map, reverse_label_map);
-		utree T2 = utree(T2_line, label_map, reverse_label_map);
-		// compute TBR distance
-		int distance = tbr_distance(T1, T2);
-		cout << T1 << endl;
-		cout << T2 << endl;
-		cout << distance << endl;
-
 		uforest F1 = uforest(T1_line, label_map, reverse_label_map);
 		uforest F2 = uforest(T2_line, label_map, reverse_label_map);
 		cout << F1 << endl;
 		cout << F2 << endl;
+		// compute TBR distance
+		int distance = tbr_distance(F1, F2);
+		cout << distance << endl;
 	}
 }
