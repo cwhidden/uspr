@@ -86,6 +86,22 @@ class unode {
 		component = c;
 	}
 
+	void root(int l) {
+		unode *p = NULL;
+		for (unode *n : get_neighbors()) {
+			if (n->get_label() == l) {
+				n = p;
+			}
+			else {
+				n->root(get_label());
+			}
+		}
+		if (p != NULL) {
+			neighbors.remove(p);
+			neighbors.push_front(p);
+		}
+	}
+
 };
 
 #endif

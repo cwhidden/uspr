@@ -13,11 +13,13 @@ class utree;
 bool build_utree(utree &t, string &s, map<string, int> &label_map, map<int, string> &reverse_label_map);
 int build_utree_helper(utree &t, string &s, map<string, int> &label_map, map<int, string> & reverse_label_map, int start, unode *parent, bool &valid);
 void str_subtree(stringstream &s, unode *n, unode *prev);
+void find_sibling_pairs_hlpr(utree &t, map<int, int> &sibling_pairs);
 
 class utree {
 	protected:
 		vector <unode*> internal_nodes;
 		vector <unode*> leaves;
+		int smallest_leaf = -1;
 	public:
 		// create the tree
 		utree(string &newick, map<string, int> &label_map, map<int, string> &reverse_label_map) {
@@ -70,20 +72,22 @@ class utree {
 		 return leaves[label];
 	 }
 
+	 unode *get_node(int label) {
+		 if (label < 0) {
+			 return get_internal_node(label);
+		 }
+		 else {
+			 return get_leaf (label);
+		 }
+	 }
+
 	int num_leaves() const {
 		return leaves.size();
 	}
 
 	string str() const {
 		stringstream s;
-		int start = -1;
-		int end = num_leaves();
-		for(int i = 0; i < end; i++) {
-			if (leaves[i] != NULL) {
-				start = i;
-				break;
-			}
-		}
+		int start = smallest_leaf;
 		if (start == -1) {
 			return "empty tree";
 		}
@@ -101,6 +105,27 @@ class utree {
 		}
 		return leaf_list;
 	}
+
+	map<int, int> find_sibling_pairs() {
+		map<int, int> sibling_pairs = map<int, int>();
+		find_sibling_pairs_hlpr(*this, sibling_pairs);
+		return sibling_pairs;
+	}
+
+	void set_smallest_leaf(int l) {
+		smallest_leaf = l;
+	}
+
+	void root() {
+		root(smallest_leaf);
+	}
+
+	void root(int l) {
+		unode *n = get_leaf(l);
+		if (n != NULL) {
+			n->root(n->get_label());
+		}
+	}
 };
 
 ostream& operator<<(ostream &os, const utree& t) {
@@ -112,6 +137,15 @@ bool build_utree(utree &t, string &s, map<string, int> &label_map, map<int, stri
 	bool valid = true;
 	unode dummy = unode(-1);
 	build_utree_helper(t, s, label_map, reverse_label_map, 0, &dummy, valid);
+	int end = t.num_leaves();
+	int start = -1;
+	for(int i = 0; i < end; i++) {
+		if (t.get_leaf(i) != NULL) {
+			start = i;
+			break;
+		}
+	}
+	t.set_smallest_leaf(start);
 	return valid;
 }
 
@@ -187,6 +221,22 @@ void str_subtree(stringstream &s, unode *n, unode *prev) {
 	if (count > 0) {
 		s << ")";
 	}
+}
+
+void find_sibling_pairs_hlpr(utree &t, map<int, int> &sibling_pairs) {
+	int i = 3;
+	for(int l : t.find_leaves()) {
+		unode *n = t.get_leaf(l);
+		unode *p = n->get_neighbors().front();
+		for (unode *u : p->get_neighbors()) {
+			int ul = u->get_label();
+			if (u->is_leaf() && ul > l) {
+				sibling_pairs.insert(make_pair(l,ul));
+				sibling_pairs.insert(make_pair(ul,l));
+			}
+		}
+	}
+	return;
 }
 
 #endif
