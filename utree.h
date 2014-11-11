@@ -14,6 +14,8 @@ bool build_utree(utree &t, string &s, map<string, int> &label_map, map<int, stri
 int build_utree_helper(utree &t, string &s, map<string, int> &label_map, map<int, string> & reverse_label_map, int start, unode *parent, bool &valid);
 void str_subtree(stringstream &s, unode *n, unode *prev);
 void find_sibling_pairs_hlpr(utree &t, map<int, int> &sibling_pairs);
+map<int, int> distances_from_leaf(utree &T1, int leaf);
+void distances_from_leaf_hlpr(utree &T1, map<int, int> &distances, unode *prev, unode *current, int distance);
 
 class utree {
 	protected:
@@ -116,12 +118,22 @@ class utree {
 		smallest_leaf = l;
 	}
 
+	int get_smallest_leaf() {
+		return smallest_leaf;
+	}
+
 	void root() {
 		root(smallest_leaf);
 	}
 
 	void root(int l) {
 		unode *n = get_leaf(l);
+		if (n != NULL) {
+			n->root(n->get_label());
+		}
+	}
+
+	void root(unode *n) {
 		if (n != NULL) {
 			n->root(n->get_label());
 		}
@@ -237,6 +249,22 @@ void find_sibling_pairs_hlpr(utree &t, map<int, int> &sibling_pairs) {
 		}
 	}
 	return;
+}
+
+map<int, int> distances_from_leaf(utree &T1, int leaf) {
+	map<int, int> distances = map<int, int>();
+	unode *node = T1.get_leaf(leaf);
+	distances_from_leaf_hlpr(T1, distances, node, node, 0);
+	return distances;
+}
+
+void distances_from_leaf_hlpr(utree &T1, map<int, int> &distances, unode *prev, unode *current, int distance) {
+	distances.insert(make_pair(current->get_label(), distance));
+	for(unode *n : current->get_neighbors()) {
+		if (n != prev) {
+			distances_from_leaf_hlpr(T1, distances, current, n, distance+1);
+		}
+	}
 }
 
 #endif

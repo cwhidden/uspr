@@ -90,7 +90,7 @@ class unode {
 		unode *p = NULL;
 		for (unode *n : get_neighbors()) {
 			if (n->get_label() == l) {
-				n = p;
+				p = n;
 			}
 			else {
 				n->root(get_label());

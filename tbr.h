@@ -61,11 +61,22 @@ int tbr_distance(uforest &F1, uforest &F2) {
 
 		// "root" the trees
 		// TODO: make this normalize "leaves" as well
-		F1.root();
-		F2.root();
+		F1.root(F1.get_smallest_leaf());
+		F2.root(F2.get_smallest_leaf());
 
 		// TODO: use distance from root to speed up the approximation
-//		map<int,int> distances = 
+		map<int,int> F1_distances = distances_from_leaf(F1, F1.get_smallest_leaf());
+		map<int,int> F2_distances = distances_from_leaf(F2, F2.get_smallest_leaf());
+		cout << endl;
+		cout << F1 << endl;
+		for(int i : F1.find_leaves()) {
+			cout << i << ": " << F1_distances[i] << endl;
+		}
+
+		cout << F2 << endl;
+		for(int i : F2.find_leaves()) {
+			cout << i << ": " << F2_distances[i] << endl;
+		}
 
 
 		// test k
