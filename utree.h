@@ -12,10 +12,11 @@ class utree;
 // prototypes
 bool build_utree(utree &t, string &s, map<string, int> &label_map, map<int, string> &reverse_label_map);
 int build_utree_helper(utree &t, string &s, map<string, int> &label_map, map<int, string> & reverse_label_map, int start, unode *parent, bool &valid);
-void str_subtree(stringstream &s, unode *n, unode *prev);
 void find_sibling_pairs_hlpr(utree &t, map<int, int> &sibling_pairs);
 map<int, int> distances_from_leaf(utree &T1, int leaf);
 void distances_from_leaf_hlpr(utree &T1, map<int, int> &distances, unode *prev, unode *current, int distance);
+void distances_from_leaf_decorator(utree &T1, int leaf);
+void distances_from_leaf_decorator_hlpr(utree &T1, unode *prev, unode *current, int distance);
 
 class utree {
 	protected:
@@ -28,6 +29,42 @@ class utree {
 			internal_nodes = vector<unode *>();
 			leaves = vector<unode *>();
 			build_utree(*this, newick, label_map, reverse_label_map);
+		}
+		utree(const utree &T) {
+			// copy vectors of pointers
+			internal_nodes = vector<unode *>(T.internal_nodes);
+			leaves = vector<unode *>(T.leaves);
+			smallest_leaf = T.smallest_leaf;
+			// create new nodes
+			for(int i = 0; i < internal_nodes.size(); i++) {
+				if (internal_nodes[i] != NULL) {
+					internal_nodes[i] = new unode(*(internal_nodes[i]));
+				}
+			}
+			for(int i = 0; i < leaves.size(); i++) {
+				if (leaves[i] != NULL) {
+					leaves[i] = new unode(*(leaves[i]));
+				}
+			}
+			// update neighbor pointers
+			for(int i = 0; i < internal_nodes.size(); i++) {
+				if (internal_nodes[i] != NULL) {
+					list<unode *> old_neighbors = internal_nodes[i]->get_neighbors();
+					internal_nodes[i]->clear_neighbors();
+					for (unode *u : old_neighbors) {
+						internal_nodes[i]->add_neighbor(get_node(u->get_label()));
+					}
+				}
+			}
+			for(int i = 0; i < leaves.size(); i++) {
+				if (leaves[i] != NULL) {
+					list<unode *> old_neighbors = leaves[i]->get_neighbors();
+					leaves[i]->clear_neighbors();
+					for (unode *u : old_neighbors) {
+						leaves[i]->add_neighbor(get_node(u->get_label()));
+					}
+				}
+			}
 		}
 		~utree() {
 			int end = internal_nodes.size();
@@ -69,6 +106,11 @@ class utree {
 	 vector<unode *> &get_internal_nodes() {
 		 return internal_nodes;
 	 }
+
+	 vector<unode *> &get_leaves() {
+		 return leaves;
+	 }
+
 
 	 unode *get_leaf(int label) {
 		 return leaves[label];
@@ -138,6 +180,38 @@ class utree {
 			n->root(n->get_label());
 		}
 	}
+
+	string str_subtree(unode *n) {
+		stringstream ss;
+		str_subtree(ss, n, n->get_parent());
+		return ss.str();
+	}
+
+	void str_subtree(stringstream &s, unode *n, unode *prev) const {
+		// only leaf labels
+		if (n->get_label() >= 0) {
+			s << n->str();
+		}
+		list<unode *>::const_iterator i;
+		const list<unode *> &cn = n->const_neighbors();
+		int count = 0;
+		for(unode *i : n->const_neighbors()) {
+			if ((*i).get_label() != prev->get_label()) {
+				if (count == 0) {
+					s << "(";
+				}
+				else {
+					s << ",";
+				}
+				count++;
+				str_subtree(s, i, n);
+			}
+		}
+		if (count > 0) {
+			s << ")";
+		}
+	}
+	
 };
 
 ostream& operator<<(ostream &os, const utree& t) {
@@ -210,30 +284,6 @@ int build_utree_helper(utree &t, string &s, map<string, int> &label_map, map<int
 	return loc;
 }
 
-void str_subtree(stringstream &s, unode *n, unode *prev) {
-	// only leaf labels
-	if (n->get_label() >= 0) {
-		s << n->str();
-	}
-	list<unode *>::const_iterator i;
-	const list<unode *> &cn = n->const_neighbors();
-	int count = 0;
-	for(unode *i : n->const_neighbors()) {
-		if ((*i).get_label() != prev->get_label()) {
-			if (count == 0) {
-				s << "(";
-			}
-			else {
-				s << ",";
-			}
-			count++;
-			str_subtree(s, i, n);
-		}
-	}
-	if (count > 0) {
-		s << ")";
-	}
-}
 
 void find_sibling_pairs_hlpr(utree &t, map<int, int> &sibling_pairs) {
 	int i = 3;
@@ -263,6 +313,20 @@ void distances_from_leaf_hlpr(utree &T1, map<int, int> &distances, unode *prev, 
 	for(unode *n : current->get_neighbors()) {
 		if (n != prev) {
 			distances_from_leaf_hlpr(T1, distances, current, n, distance+1);
+		}
+	}
+}
+
+void distances_from_leaf_decorator(utree &T1, int leaf) {
+	unode *node = T1.get_leaf(leaf);
+	distances_from_leaf_decorator_hlpr(T1, node, node, 0);
+}
+
+void distances_from_leaf_decorator_hlpr(utree &T1, unode *prev, unode *current, int distance) {
+	current->set_distance(distance);
+	for(unode *n : current->get_neighbors()) {
+		if (n != prev) {
+			distances_from_leaf_decorator_hlpr(T1, current, n, distance+1);
 		}
 	}
 }

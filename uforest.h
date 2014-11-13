@@ -17,22 +17,71 @@ class uforest: public utree {
 				leaves[0]->set_component(0);
 			}
 		}
+		uforest(const uforest &F) : utree(F) {
+			// copy vector of pointers
+			components = vector<unode *>(F.components);
+			// update with the new nodes
+			for(int i = 0; i < components.size(); i++) {
+				components[i] = get_node(components[i]->get_label());
+			}
+		}
 		string str() const {
 			stringstream ss;
 			for(int i = 0; i < components.size(); i++) {
 				if (i > 0) {
 					ss << " ";
 				}
-				unode *root = components[i]->get_neighbors().front();
+				unode *root = components[i];
+				if (root->is_leaf()) {
+					root = root->get_neighbors().front();
+				}
 				str_subtree(ss, root, root);
+				ss << ";";
 			}
 			return ss.str();
 		}
 		friend ostream& operator<<(ostream &os, const uforest& f);
+
+		void cut_edge(int x, int y) {
+			unode *X, *Y;
+			X = get_node(x);
+			Y = get_node(y);
+			if (Y->get_parent() == X) {
+				X = get_node(y);
+				Y = get_node(x);
+			}
+			X->remove_neighbor(Y);
+			Y->remove_neighbor(X);
+
+			unode *Xprime = X->contract();
+			unode *Yprime = Y->contract();
+
+
+			if (Xprime->get_component() > -1) {
+				add_component(Yprime);
+				update_component(Xprime->get_component(), Xprime);
+			}
+			else {
+				add_component(Xprime);
+			}
+		}
+
+		void update_component(int c, int l) {
+			components[c] = get_node(l);
+		}
+
+		void update_component(int c, unode *n) {
+			components[c] = n;
+		}
+
+		void add_component(unode *C) {
+			C->set_component(components.size());
+			components.push_back(C);
+		}
 };
 
 ostream& operator<<(ostream &os, const uforest& f) {
-	os << f.str() << ";";
+	os << f.str();
 	return os;
 }
 

@@ -62,6 +62,6 @@ int main(int argc, char *argv[]) {
 		cout << F2 << endl;
 		// compute TBR distance
 		int distance = tbr_distance(F1, F2);
-		cout << distance << endl;
+		cout << "d_TBR = " << distance << endl;
 	}
 }
