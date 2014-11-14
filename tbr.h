@@ -47,7 +47,7 @@ class nodemapping {
 //
 int tbr_distance(uforest F1, uforest F2) {
 
-	for(int k = 0; k < 2; k++) {
+	for(int k = 0; k < 5; k++) {
 		if (k > 0) {
 			cout << " ";
 		}
@@ -273,7 +273,23 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 			// add to nodemapping
 			twins.add(F1_new_terminal->get_label(), F2_new_terminal->get_label());
 
-			// TODO: singletons induced by Case 2
+			// TODO: this is broken!
+			//
+			// check for singleton
+			if (F2_new_terminal->get_parent()->get_distance() > F2_new_terminal->get_distance()) {
+				bool is_singleton = true;
+				for (unode *c : F2_new_terminal->get_neighbors()) {
+					if (c->get_terminal() == false) {
+						is_singleton = false;
+					}
+				}
+				if (is_singleton) {
+					singletons.push_back(F2_new_terminal->get_label());
+				}
+			}
+
+
+
 		}
 
 		else if (F2_a->get_parent() == F2_c) {
@@ -306,6 +322,8 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 			// Cut F2_a
 			pair <int, int> e_a = make_pair(F2_a->get_label(), F2_a->get_parent()->get_label());
 
+			cout  << "cut e_a" << endl;
+
 			// copy the trees
 			uforest F1_copy = uforest(F1);
 			uforest F2_copy = uforest(F2);
@@ -329,8 +347,35 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 				result = branch_a;
 			}
 
+			/*
 			// Cut F2_c
 			pair <int, int> e_c = make_pair(F2_c->get_label(), F2_c->get_parent()->get_label());
+
+			cout  << "cut e_c" << endl;
+
+			// copy the trees
+			F1_copy = uforest(F1);
+			F2_copy = uforest(F2);
+			twins_copy = nodemapping(twins);
+			sibling_pairs_copy = map<int, int>(sibling_pairs);
+			singletons_copy = list<int>(singletons);
+
+			cout << F2_copy << endl;
+			components = F2_copy.cut_edge(e_c.first, e_c.second);
+//			cout << F2_copy.str_subtree(F2_copy.get_node(component)) << endl;
+			cout << F2_copy << endl;
+			if (F2_copy.get_node(components.first)->get_terminal()) {
+				singletons_copy.push_back(components.first);
+			}
+			if (F2_copy.get_node(components.second)->get_terminal()) {
+				singletons_copy.push_back(components.second);
+			}
+			int branch_c = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy);
+
+			if (branch_c > result) {
+				result = branch_c;
+			}
+			*/
 
 			// Cut F2_b
 

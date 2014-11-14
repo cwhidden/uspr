@@ -23,4 +23,4 @@ debug:
 profile:
 	$(CC) $(LFLAGS) $(DEBUGFLAGS) $(PROFILEFLAGS) -o uspr uspr.cpp
 test:
-	./uspr < test_trees/trees2.tre
+	./uspr < test_trees/trees3.tre
