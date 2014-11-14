@@ -42,11 +42,11 @@ class uforest: public utree {
 		}
 		friend ostream& operator<<(ostream &os, const uforest& f);
 
-		void cut_edge(int x, int y) {
+		pair<int,int> cut_edge(int x, int y) {
 			unode *X, *Y;
 			X = get_node(x);
 			Y = get_node(y);
-			if (Y->get_parent() == X) {
+			if (Y->get_parent() == X && X->get_parent() != Y) {
 				X = get_node(y);
 				Y = get_node(x);
 			}
@@ -64,6 +64,7 @@ class uforest: public utree {
 			else {
 				add_component(Xprime);
 			}
+			return make_pair(Xprime->get_label(),Yprime->get_label());
 		}
 
 		void update_component(int c, int l) {

@@ -4,8 +4,8 @@
 class nodemapping;
 
 // function prototypes
-int tbr_distance(uforest &F1, uforest &F2);
-int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int, int> &sibling_pairs);
+int tbr_distance(uforest F1, uforest F2);
+int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons);
 list<pair<int,int> > find_pendants(unode *a, unode *c);
 
 class nodemapping {
@@ -45,7 +45,7 @@ class nodemapping {
 
 // compute the tbr distance
 //
-int tbr_distance(uforest &F1, uforest &F2) {
+int tbr_distance(uforest F1, uforest F2) {
 
 	for(int k = 0; k < 2; k++) {
 		if (k > 0) {
@@ -59,6 +59,9 @@ int tbr_distance(uforest &F1, uforest &F2) {
 
 		// sibling pairs
 		map<int,int> sibling_pairs = F1.find_sibling_pairs();
+
+		// singletons
+		list<int> singletons = list<int>();
 
 		// "root" the trees
 		// TODO: make this normalize "leaves" as well
@@ -88,9 +91,9 @@ int tbr_distance(uforest &F1, uforest &F2) {
 
 
 		// test k
-		int result = tbr_distance_hlpr(F1, F2, k, twins, sibling_pairs);
+		int result = tbr_distance_hlpr(F1, F2, k, twins, sibling_pairs, singletons);
 		if (result >= 0) {
-			return result;
+			return k - result;
 		}
 
 	}
@@ -98,14 +101,69 @@ int tbr_distance(uforest &F1, uforest &F2) {
 	return -1;
 }
 
-int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int, int> &sibling_pairs) {
+int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons) {
 
 	if (k < 0) {
 		return -1;
 	}
 
+	cout << "tbr_distance_hlpr(" << k << ")" << endl;
+
 	// if (sib pair list is not empty, k>=0) {
 	while (!sibling_pairs.empty()) {
+
+		// Case 1 : Isolated Subtree
+		while (!singletons.empty()) {
+
+			cout << "Case 1" << endl;
+
+			unode *F2_a = F2.get_node(singletons.front());
+			singletons.pop_front();
+			unode *F1_a = F1.get_node(twins.get_backward(F2_a->get_label()));
+			cout << "F1: " << F1.str() << endl;
+			cout << "F1_a: " << F1.str_subtree(F1_a) << endl;
+
+			cout << "F2: " << F2.str() << endl;
+			cout << "F2_a: " << F2.str_subtree(F2_a) << endl;
+
+			// remove from sibling pairs if necessary
+			map<int,int>::iterator i = sibling_pairs.find(F1_a->get_label());
+			if (i != sibling_pairs.end()) {
+				sibling_pairs.erase(i->second);
+				sibling_pairs.erase(i->first);
+			}
+
+			cout << F1 << endl;
+			pair<int,int> components = F1.cut_edge(F1_a->get_label(), F1_a->get_parent()->get_label());
+			cout << F1 << endl;
+
+			// check for new sibling pair
+			unode *new_sibling;
+//			cout << F1_new_terminal->get_parent()->get_distance() << endl;
+//			cout << F1_new_terminal->get_distance() << endl;
+			// root is terminal
+			unode *F1_new_terminal = F1.get_node(components.second);
+			if (F1_new_terminal->get_parent()->get_terminal()) {
+				new_sibling = F1_new_terminal->get_parent();
+			}
+			else {
+				if (F1_new_terminal->get_parent()->get_distance() > F1_new_terminal->get_distance()) {
+					// root
+					new_sibling = F1_new_terminal->get_parent();
+				}
+				else {
+					new_sibling = F1_new_terminal->get_sibling();
+				}
+			}
+				
+			cout << F1.str_subtree(new_sibling) << endl;
+			cout << new_sibling->get_terminal() << endl;
+			if (new_sibling->get_terminal() == true) {
+				sibling_pairs.insert(make_pair(F1_new_terminal->get_label(),new_sibling->get_label()));
+				sibling_pairs.insert(make_pair(new_sibling->get_label(),F1_new_terminal->get_label()));
+			}
+
+		}
 
 		cout << "sibling pairs: " << endl; 
 		for (pair<int, int> p: sibling_pairs) {
@@ -147,7 +205,6 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 
 
 
-		// Case 1 : Isolated Subtree
 		
 		// Case 2 : Compatible Sibling Pair
 
@@ -185,18 +242,15 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 			else {
 				if (F1_new_terminal->get_parent()->get_distance() > F1_new_terminal->get_distance()) {
 					// root
-					cout << "foo" << endl;
 					new_sibling = F1_new_terminal->get_neighbor_not(F1_a, F1_c);
 				}
 				else {
-					cout << "bar" << endl;
 					new_sibling = F1_new_terminal->get_sibling();
 				}
 			}
 				
 			cout << F1.str_subtree(new_sibling) << endl;
 			cout << new_sibling->get_terminal() << endl;
-			cout << "baa" << endl;
 			if (new_sibling->get_terminal() == true) {
 				sibling_pairs.insert(make_pair(F1_new_terminal->get_label(),new_sibling->get_label()));
 				sibling_pairs.insert(make_pair(new_sibling->get_label(),F1_new_terminal->get_label()));
@@ -218,6 +272,8 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 
 			// add to nodemapping
 			twins.add(F1_new_terminal->get_label(), F2_new_terminal->get_label());
+
+			// TODO: singletons induced by Case 2
 		}
 
 		else if (F2_a->get_parent() == F2_c) {
@@ -233,6 +289,8 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 			}
 
 			cout << "Case 3" << endl;
+
+			int result = -1;
 
 			// find pendant edges between a and c in F2
 			// TODO: need distances from "root" to do this efficiently
@@ -251,20 +309,32 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 			// copy the trees
 			uforest F1_copy = uforest(F1);
 			uforest F2_copy = uforest(F2);
+			nodemapping twins_copy = nodemapping(twins);
+			map<int,int> sibling_pairs_copy = map<int, int>(sibling_pairs);
+			list<int> singletons_copy = list<int>(singletons);
 
 			cout << F2_copy << endl;
-			F2_copy.cut_edge(e_a.first, e_a.second);
+			pair<int,int> components = F2_copy.cut_edge(e_a.first, e_a.second);
+//			cout << F2_copy.str_subtree(F2_copy.get_node(component)) << endl;
 			cout << F2_copy << endl;
+			if (F2_copy.get_node(components.first)->get_terminal()) {
+				singletons_copy.push_back(components.first);
+			}
+			if (F2_copy.get_node(components.second)->get_terminal()) {
+				singletons_copy.push_back(components.second);
+			}
+			int branch_a = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy);
 
-			// check if x' is term
-			// Update distances from contracted nodes
+			if (branch_a > result) {
+				result = branch_a;
+			}
 
 			// Cut F2_c
 			pair <int, int> e_c = make_pair(F2_c->get_label(), F2_c->get_parent()->get_label());
 
 			// Cut F2_b
 
-
+			return result;
 		}
 	}
 
