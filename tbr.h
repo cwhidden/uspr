@@ -138,12 +138,24 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 			cout << F1 << endl;
 
 			// check for new sibling pair
-			unode *new_sibling;
+			cout << F1.str_subtree(F1.get_node(components.first)) << endl;
+			cout << F1.str_subtree(F1.get_node(components.second)) << endl;
 //			cout << F1_new_terminal->get_parent()->get_distance() << endl;
 //			cout << F1_new_terminal->get_distance() << endl;
 			// root is terminal
-			unode *F1_new_terminal = F1.get_node(components.second);
-			if (F1_new_terminal->get_parent()->get_terminal()) {
+			unode *F1_new_node = F1.get_node(components.second)->get_parent();
+			vector<int> new_sibling_pair = vector<int>();
+			for (unode *u : F1_new_node->get_neighbors()) {
+				if (u->get_terminal()) {
+					new_sibling_pair.push_back(u->get_label());
+				}
+			}
+			for(int i = 0; i + 1 < new_sibling_pair.size(); i++) {
+				sibling_pairs.insert(make_pair(new_sibling_pair[i], new_sibling_pair[i+1]));
+				sibling_pairs.insert(make_pair(new_sibling_pair[i+1], new_sibling_pair[i]));
+			}
+
+/*			if (F1_new_terminal->get_parent()->get_terminal()) {
 				new_sibling = F1_new_terminal->get_parent();
 			}
 			else {
@@ -159,9 +171,8 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 			cout << F1.str_subtree(new_sibling) << endl;
 			cout << new_sibling->get_terminal() << endl;
 			if (new_sibling->get_terminal() == true) {
-				sibling_pairs.insert(make_pair(F1_new_terminal->get_label(),new_sibling->get_label()));
-				sibling_pairs.insert(make_pair(new_sibling->get_label(),F1_new_terminal->get_label()));
 			}
+			*/
 
 		}
 
@@ -320,65 +331,127 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 			cout << endl;
 
 			// Cut F2_a
-			pair <int, int> e_a = make_pair(F2_a->get_label(), F2_a->get_parent()->get_label());
-
-			cout  << "cut e_a" << endl;
-
-			// copy the trees
-			uforest F1_copy = uforest(F1);
-			uforest F2_copy = uforest(F2);
-			nodemapping twins_copy = nodemapping(twins);
-			map<int,int> sibling_pairs_copy = map<int, int>(sibling_pairs);
-			list<int> singletons_copy = list<int>(singletons);
-
-			cout << F2_copy << endl;
-			pair<int,int> components = F2_copy.cut_edge(e_a.first, e_a.second);
-//			cout << F2_copy.str_subtree(F2_copy.get_node(component)) << endl;
-			cout << F2_copy << endl;
-			if (F2_copy.get_node(components.first)->get_terminal()) {
-				singletons_copy.push_back(components.first);
+			{
+				pair <int, int> e_a = make_pair(F2_a->get_label(), F2_a->get_parent()->get_label());
+	
+				cout  << "cut e_a" << endl;
+	
+				// copy the trees
+				uforest F1_copy = uforest(F1);
+				uforest F2_copy = uforest(F2);
+				nodemapping twins_copy = nodemapping(twins);
+				map<int,int> sibling_pairs_copy = map<int, int>(sibling_pairs);
+				list<int> singletons_copy = list<int>(singletons);
+	
+				cout << F2_copy << endl;
+				pair<int,int> components = F2_copy.cut_edge(e_a.first, e_a.second);
+				cout << F2_copy << endl;
+				if (F2_copy.get_node(components.first)->get_terminal()) {
+					singletons_copy.push_back(components.first);
+				}
+				if (F2_copy.get_node(components.second)->get_terminal()) {
+					singletons_copy.push_back(components.second);
+				}
+				int branch_a = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy);
+	
+				if (branch_a > result) {
+					result = branch_a;
+				}
 			}
-			if (F2_copy.get_node(components.second)->get_terminal()) {
-				singletons_copy.push_back(components.second);
-			}
-			int branch_a = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy);
 
-			if (branch_a > result) {
-				result = branch_a;
+			// Cut F2_c
+			{
+				pair <int, int> e_c = make_pair(F2_c->get_label(), F2_c->get_parent()->get_label());
+	
+				cout  << "cut e_c" << endl;
+	
+				// copy the trees
+				uforest F1_copy = uforest(F1);
+				uforest F2_copy = uforest(F2);
+				nodemapping twins_copy = nodemapping(twins);
+				map<int, int> sibling_pairs_copy = map<int, int>(sibling_pairs);
+				list<int> singletons_copy = list<int>(singletons);
+	
+				cout << F2_copy << endl;
+				pair<int, int> components = F2_copy.cut_edge(e_c.first, e_c.second);
+				cout << F2_copy << endl;
+				if (F2_copy.get_node(components.first)->get_terminal()) {
+					singletons_copy.push_back(components.first);
+				}
+				if (F2_copy.get_node(components.second)->get_terminal()) {
+					singletons_copy.push_back(components.second);
+				}
+				int branch_c = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy);
+	
+				if (branch_c > result) {
+					result = branch_c;
+				}
 			}
 
 			/*
-			// Cut F2_c
-			pair <int, int> e_c = make_pair(F2_c->get_label(), F2_c->get_parent()->get_label());
-
-			cout  << "cut e_c" << endl;
-
-			// copy the trees
-			F1_copy = uforest(F1);
-			F2_copy = uforest(F2);
-			twins_copy = nodemapping(twins);
-			sibling_pairs_copy = map<int, int>(sibling_pairs);
-			singletons_copy = list<int>(singletons);
-
-			cout << F2_copy << endl;
-			components = F2_copy.cut_edge(e_c.first, e_c.second);
-//			cout << F2_copy.str_subtree(F2_copy.get_node(component)) << endl;
-			cout << F2_copy << endl;
-			if (F2_copy.get_node(components.first)->get_terminal()) {
-				singletons_copy.push_back(components.first);
-			}
-			if (F2_copy.get_node(components.second)->get_terminal()) {
-				singletons_copy.push_back(components.second);
-			}
-			int branch_c = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy);
-
-			if (branch_c > result) {
-				result = branch_c;
+			// Cut F2_b
+			{
+				pair <int, int> e_b = pendants.front();
+	
+				cout  << "cut e_b" << endl;
+	
+				// copy the trees
+				uforest F1_copy = uforest(F1);
+				uforest F2_copy = uforest(F2);
+				nodemapping twins_copy = nodemapping(twins);
+				map<int, int> sibling_pairs_copy = map<int, int>(sibling_pairs);
+				sibling_pairs_copy.insert(make_pair(F1_a->get_label(), F1_c->get_label()));
+				sibling_pairs_copy.insert(make_pair(F1_c->get_label(), F1_a->get_label()));
+				list<int> singletons_copy = list<int>(singletons);
+	
+				cout << F2_copy << endl;
+				pair<int, int> components = F2_copy.cut_edge(e_b.first, e_b.second);
+				cout << F2_copy << endl;
+				if (F2_copy.get_node(components.first)->get_terminal()) {
+					singletons_copy.push_back(components.first);
+				}
+				if (F2_copy.get_node(components.second)->get_terminal()) {
+					singletons_copy.push_back(components.second);
+				}
+				int branch_b = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy);
+	
+				if (branch_b > result) {
+					result = branch_b;
+				}
 			}
 			*/
-
-			// Cut F2_b
-
+/*
+			// Cut F2_d
+			{
+				pair <int, int> e_d = pendants.back();
+	
+				cout  << "cut e_d" << endl;
+	
+				// copy the trees
+				uforest F1_copy = uforest(F1);
+				uforest F2_copy = uforest(F2);
+				nodemapping twins_copy = nodemapping(twins);
+				map<int, int> sibling_pairs_copy = map<int, int>(sibling_pairs);
+				sibling_pairs_copy.insert(make_pair(F1_a->get_label(), F1_c->get_label()));
+				sibling_pairs_copy.insert(make_pair(F1_c->get_label(), F1_a->get_label()));
+				list<int> singletons_copy = list<int>(singletons);
+	
+				cout << F2_copy << endl;
+				pair<int, int> components = F2_copy.cut_edge(e_d.first, e_d.second);
+				cout << F2_copy << endl;
+				if (F2_copy.get_node(components.first)->get_terminal()) {
+					singletons_copy.push_back(components.first);
+				}
+				if (F2_copy.get_node(components.second)->get_terminal()) {
+					singletons_copy.push_back(components.second);
+				}
+				int branch_d = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy);
+	
+				if (branch_d > result) {
+					result = branch_d;
+				}
+			}
+			*/
 			return result;
 		}
 	}

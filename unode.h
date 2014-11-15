@@ -34,6 +34,14 @@ class unode {
 		terminal = false;
 		distance = -1;
 	}
+	unode(const unode &n) {
+		label = n.label;
+		neighbors = list<unode *>(n.neighbors);
+		num_neighbors = n.num_neighbors;
+		component = n.component;
+		terminal = n.terminal;
+		distance = n.distance;
+	}
 
 	void add_neighbor(unode *n) {
 		neighbors.push_back(n);
@@ -182,6 +190,9 @@ class unode {
 				c->add_parent(p);
 				p->add_neighbor(c);
 				c->set_distance(distance);
+				if (component > -1) {
+					p->set_component(component);
+				}
 				return p;
 			}
 		}

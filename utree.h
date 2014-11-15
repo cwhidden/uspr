@@ -32,44 +32,68 @@ class utree {
 		}
 		utree(const utree &T) {
 			// copy vectors of pointers
-			internal_nodes = vector<unode *>(T.internal_nodes);
-			leaves = vector<unode *>(T.leaves);
+			internal_nodes = vector<unode *>(T.internal_nodes.size());
+			leaves = vector<unode *>(T.leaves.size());
 			smallest_leaf = T.smallest_leaf;
 			// create new nodes
-			for(int i = 0; i < internal_nodes.size(); i++) {
-				if (internal_nodes[i] != NULL) {
-					internal_nodes[i] = new unode(*(internal_nodes[i]));
+			for(int i = 0; i < T.internal_nodes.size(); i++) {
+				if (T.internal_nodes[i] != NULL) {
+				//	cout << "internal_nodes[" << i << "]" << endl;
+					internal_nodes[i] = new unode(*(T.internal_nodes[i]));
+				//	cout << "\t" << T.internal_nodes[i] << ", " << internal_nodes[i] << endl;
 				}
 			}
-			for(int i = 0; i < leaves.size(); i++) {
-				if (leaves[i] != NULL) {
-					leaves[i] = new unode(*(leaves[i]));
+			for(int i = 0; i < T.leaves.size(); i++) {
+				if (T.leaves[i] != NULL) {
+				//	cout << "leaves[" << i << "]" << endl;
+					leaves[i] = new unode(*(T.leaves[i]));
+				//	cout << "\t" << T.leaves[i] << ", " << leaves[i] << endl;
 				}
 			}
 			// update neighbor pointers
 			for(int i = 0; i < internal_nodes.size(); i++) {
+				//	cout << "neighborhood of internal_nodes[" << i << "]" << endl;
 				if (internal_nodes[i] != NULL) {
-					list<unode *> old_neighbors = internal_nodes[i]->get_neighbors();
+					list<unode *> old_neighbors = T.internal_nodes[i]->get_neighbors();
 					internal_nodes[i]->clear_neighbors();
+				//	cout << "\t";
 					for (unode *u : old_neighbors) {
+				//		cout << u << ", ";
 						internal_nodes[i]->add_neighbor(get_node(u->get_label()));
 					}
+				//	cout << endl;
+				//	cout << "\t";
+				//	for (unode *u : internal_nodes[i]->get_neighbors()) {
+				//		cout << u << ", ";
+				//	}
+				//	cout << endl;
 				}
 			}
 			for(int i = 0; i < leaves.size(); i++) {
+				//	cout << "neighborhood of leaves[" << i << "]" << endl;
 				if (leaves[i] != NULL) {
-					list<unode *> old_neighbors = leaves[i]->get_neighbors();
+					list<unode *> old_neighbors = T.leaves[i]->get_neighbors();
 					leaves[i]->clear_neighbors();
+				//	cout << "\t";
 					for (unode *u : old_neighbors) {
+				//		cout << u << ", ";
 						leaves[i]->add_neighbor(get_node(u->get_label()));
 					}
+				//	cout << endl;
+				//	cout << "\t";
+				//	for (unode *u : leaves[i]->get_neighbors()) {
+				//		cout << u << ", ";
+				//	}
+				//	cout << endl;
 				}
 			}
 		}
 		~utree() {
 			int end = internal_nodes.size();
 			for(int i = 0; i < end; i++) {
+				if (internal_nodes[i] != NULL) {
 				delete internal_nodes[i];
+				}
 			}
 			end = leaves.size();
 			for(int i = 0; i < end; i++) {

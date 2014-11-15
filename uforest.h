@@ -19,10 +19,12 @@ class uforest: public utree {
 		}
 		uforest(const uforest &F) : utree(F) {
 			// copy vector of pointers
-			components = vector<unode *>(F.components);
+			components = vector<unode *>(F.components.size());
 			// update with the new nodes
-			for(int i = 0; i < components.size(); i++) {
-				components[i] = get_node(components[i]->get_label());
+			for(int i = 0; i < F.components.size(); i++) {
+//				cout << "components[" << i << "]" << endl;
+				components[i] = get_node(F.components[i]->get_label());
+//				cout << "\t" << F.components[i] << ", " << components[i] << endl;
 			}
 		}
 		string str() const {
@@ -46,7 +48,10 @@ class uforest: public utree {
 			unode *X, *Y;
 			X = get_node(x);
 			Y = get_node(y);
-			if (Y->get_parent() == X && X->get_parent() != Y) {
+			cout << "d_X: " << X->get_distance() << endl;
+			cout << "d_Y: " << Y->get_distance() << endl;
+			if (Y->get_distance() > X->get_distance()) {
+				cout << "AHH!" << endl;
 				X = get_node(y);
 				Y = get_node(x);
 			}
@@ -58,10 +63,12 @@ class uforest: public utree {
 
 
 			if (Xprime->get_component() > -1) {
+				cout << "boo" << endl;
 				add_component(Yprime);
 				update_component(Xprime->get_component(), Xprime);
 			}
 			else {
+				cout << "urns" << endl;
 				add_component(Xprime);
 			}
 			return make_pair(Xprime->get_label(),Yprime->get_label());
