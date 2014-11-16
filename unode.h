@@ -206,6 +206,21 @@ class unode {
 	int get_distance() {
 		return distance;
 	}
+	bool is_singleton() {
+		if (num_neighbors == 0) {
+			return true;
+		}
+		if (get_parent()->get_distance() <= get_distance()) {
+			return false;
+		}
+		bool ret = this->get_terminal();
+		for (unode *c : this->get_neighbors()) {
+			if (c->get_terminal() == false) {
+				ret = false;
+			}
+		}
+		return ret;
+	}
 
 };
 

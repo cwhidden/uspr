@@ -36,6 +36,10 @@ int main(int argc, char *argv[]) {
 	int max_args = argc-1;
 	while (argc > 1) {
 		char *arg = argv[--argc];
+		if (strcmp(arg, "--keep-labels") == 0) {
+			KEEP_LABELS = true;
+				cout << "KEEP_LABELS=true" << endl;
+		}
 		if (strcmp(arg, "--help") == 0 ||
 				strcmp(arg, "-h") == 0 ||
 				strcmp(arg, "-help") == 0) {

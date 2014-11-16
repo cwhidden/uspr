@@ -285,19 +285,16 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 			twins.add(F1_new_terminal->get_label(), F2_new_terminal->get_label());
 
 			// TODO: this is broken!
+			// TODO: fix for e_x singleton identification !
+			// need to check that all neighbors are singletons?
 			//
 			// check for singleton
 			if (F2_new_terminal->get_parent()->get_distance() > F2_new_terminal->get_distance()) {
-				bool is_singleton = true;
-				for (unode *c : F2_new_terminal->get_neighbors()) {
-					if (c->get_terminal() == false) {
-						is_singleton = false;
-					}
-				}
-				if (is_singleton) {
+				if (F2_new_terminal->is_singleton()) {
 					singletons.push_back(F2_new_terminal->get_label());
 				}
 			}
+
 
 
 
@@ -346,12 +343,23 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 				cout << F2_copy << endl;
 				pair<int,int> components = F2_copy.cut_edge(e_a.first, e_a.second);
 				cout << F2_copy << endl;
-				if (F2_copy.get_node(components.first)->get_terminal()) {
+				// check for singleton
+				cout << "checking if " << F2_copy.str_subtree(F2_copy.get_node(components.first)) << " is a singleton" << endl;
+				if (F2_copy.get_node(components.first)->is_singleton()) {
+					cout << "it is" << endl;
 					singletons_copy.push_back(components.first);
 				}
-				if (F2_copy.get_node(components.second)->get_terminal()) {
+				cout << "checking if " << F2_copy.str_subtree(F2_copy.get_node(components.second)) << " is a singleton" << endl;
+				if (F2_copy.get_node(components.second)->is_singleton()) {
+					cout << "it is" << endl;
 					singletons_copy.push_back(components.second);
 				}
+//				if (F2_copy.get_node(components.first)->get_terminal()) {
+//					singletons_copy.push_back(components.first);
+//				}
+//				if (F2_copy.get_node(components.second)->get_terminal()) {
+//					singletons_copy.push_back(components.second);
+//				}
 				int branch_a = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy);
 	
 				if (branch_a > result) {
@@ -375,10 +383,10 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 				cout << F2_copy << endl;
 				pair<int, int> components = F2_copy.cut_edge(e_c.first, e_c.second);
 				cout << F2_copy << endl;
-				if (F2_copy.get_node(components.first)->get_terminal()) {
+				if (F2_copy.get_node(components.first)->is_singleton()) {
 					singletons_copy.push_back(components.first);
 				}
-				if (F2_copy.get_node(components.second)->get_terminal()) {
+				if (F2_copy.get_node(components.second)->is_singleton()) {
 					singletons_copy.push_back(components.second);
 				}
 				int branch_c = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy);
@@ -481,6 +489,7 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 		//
 		// note: need to maintain component representatives when cutting and merging (initially smallest leaf)
 
+	cout << "ANSWER FOUND" << endl;
 	return k;
 }
 
