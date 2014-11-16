@@ -25,7 +25,7 @@ class utree {
 	protected:
 		vector <unode*> internal_nodes;
 		vector <unode*> leaves;
-		int smallest_leaf = -1;
+		int smallest_leaf;
 	public:
 		// create the tree
 		utree(string &newick, map<string, int> &label_map, map<int, string> &reverse_label_map) {
@@ -64,6 +64,12 @@ class utree {
 				//		cout << u << ", ";
 						internal_nodes[i]->add_neighbor(get_node(u->get_label()));
 					}
+					list<unode *> old_contracted_neighbors = T.internal_nodes[i]->get_contracted_neighbors();
+				//	cout << "\t";
+					for (unode *u : old_contracted_neighbors) {
+				//		cout << u << ", ";
+						internal_nodes[i]->add_contracted_neighbor(get_node(u->get_label()));
+					}
 				//	cout << endl;
 				//	cout << "\t";
 				//	for (unode *u : internal_nodes[i]->get_neighbors()) {
@@ -81,6 +87,12 @@ class utree {
 					for (unode *u : old_neighbors) {
 				//		cout << u << ", ";
 						leaves[i]->add_neighbor(get_node(u->get_label()));
+					}
+					list<unode *> old_contracted_neighbors = T.leaves[i]->get_contracted_neighbors();
+				//	cout << "\t";
+					for (unode *u : old_contracted_neighbors) {
+				//		cout << u << ", ";
+						leaves[i]->add_contracted_neighbor(get_node(u->get_label()));
 					}
 				//	cout << endl;
 				//	cout << "\t";

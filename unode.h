@@ -54,6 +54,10 @@ class unode {
 		num_neighbors++;
 	}
 
+	void add_contracted_neighbor(unode *n) {
+		contracted_neighbors.push_back(n);
+	}
+
 	void add_parent(unode *n) {
 		neighbors.push_front(n);
 		num_neighbors++;
@@ -111,6 +115,10 @@ class unode {
 
 	list<unode *> &get_neighbors() {
 		return neighbors;
+	}
+
+	list<unode *> &get_contracted_neighbors() {
+		return contracted_neighbors;
 	}
 
 	int get_num_neighbors() {
