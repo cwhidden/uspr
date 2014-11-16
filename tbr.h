@@ -219,6 +219,8 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 		
 		// Case 2 : Compatible Sibling Pair
 
+		// TODO: need to reroot after (or check reroot, because it isn't working on trees5.tre)
+
 		
 		if (F2_a->get_parent() == F2_c->get_parent()) {
 
