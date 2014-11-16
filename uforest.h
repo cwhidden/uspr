@@ -50,10 +50,12 @@ class uforest: public utree {
 			Y = get_node(y);
 			cout << "d_X: " << X->get_distance() << endl;
 			cout << "d_Y: " << Y->get_distance() << endl;
+			bool swapped = false;
 			if (Y->get_distance() > X->get_distance()) {
 				cout << "AHH!" << endl;
 				X = get_node(y);
 				Y = get_node(x);
+				swapped = true;
 			}
 			X->remove_neighbor(Y);
 			Y->remove_neighbor(X);
@@ -71,7 +73,12 @@ class uforest: public utree {
 				cout << "urns" << endl;
 				add_component(Xprime);
 			}
-			return make_pair(Xprime->get_label(),Yprime->get_label());
+			if (swapped) {
+				return make_pair(Yprime->get_label(),Xprime->get_label());
+			}
+			else {
+				return make_pair(Xprime->get_label(),Yprime->get_label());
+			}
 		}
 
 		void update_component(int c, int l) {

@@ -12,6 +12,7 @@ class unode {
 	private:
 	int label;
 	list<unode *> neighbors;
+	list<unode *> contracted_neighbors;
 	int num_neighbors;
 	int component;
 	bool terminal;
@@ -21,6 +22,7 @@ class unode {
 	unode() {
 		label = -1;
 		neighbors = list<unode *>();
+		contracted_neighbors = list<unode *>();
 		num_neighbors = 0;
 		component = -1;
 		terminal = false;
@@ -29,6 +31,8 @@ class unode {
 	unode(int l) {
 		label = l;
 		neighbors = list<unode *>();
+		contracted_neighbors = list<unode *>();
+		num_neighbors = 0;
 		num_neighbors = 0;
 		component = -1;
 		terminal = false;
@@ -37,6 +41,8 @@ class unode {
 	unode(const unode &n) {
 		label = n.label;
 		neighbors = list<unode *>(n.neighbors);
+		contracted_neighbors = list<unode *>(n.contracted_neighbors);
+		num_neighbors = 0;
 		num_neighbors = n.num_neighbors;
 		component = n.component;
 		terminal = n.terminal;
@@ -69,6 +75,14 @@ class unode {
 		return result;
 	}
 
+	bool contract_neighbor(unode *n) {
+		bool ret = remove_neighbor(n);
+		if (ret) {
+			contracted_neighbors.push_back(n);
+		}
+		return ret;
+	}
+
 	string str() const {
 		stringstream ss;
 		ss << label;
@@ -89,6 +103,10 @@ class unode {
 
 	const list<unode *> &const_neighbors() const {
 		return neighbors;
+	}
+
+	const list<unode *> &const_contracted_neighbors() const {
+		return contracted_neighbors;
 	}
 
 	list<unode *> &get_neighbors() {
@@ -177,7 +195,14 @@ class unode {
 	}
 
 	unode *contract() {
-		if (num_neighbors == 2) {
+		if (num_neighbors == 1) {
+			unode *p = neighbors.front();
+			if (p->is_leaf() && this->get_label() < -1) {
+				p->remove_neighbor(this);
+				return p;
+			}
+		}
+		else if (num_neighbors == 2) {
 			unode *p = neighbors.front();
 			unode *c = *(next(neighbors.begin(), 1));
 			cout << "contracting:" << endl;
@@ -190,6 +215,9 @@ class unode {
 				c->add_parent(p);
 				p->add_neighbor(c);
 				c->set_distance(distance);
+				if (!get_terminal()) {
+					p->set_terminal(false);
+				}
 				if (component > -1) {
 					p->set_component(component);
 				}
@@ -210,6 +238,8 @@ class unode {
 		if (num_neighbors == 0) {
 			return true;
 		}
+		return false;
+		/*
 		if (get_parent()->get_distance() <= get_distance()) {
 			return false;
 		}
@@ -220,6 +250,7 @@ class unode {
 			}
 		}
 		return ret;
+		*/
 	}
 
 };

@@ -222,6 +222,7 @@ class utree {
 		list<unode *>::const_iterator i;
 		const list<unode *> &cn = n->const_neighbors();
 		int count = 0;
+		bool has_contracted = false;
 		for(unode *i : n->const_neighbors()) {
 			if ((*i).get_label() != prev->get_label()) {
 				if (count == 0) {
@@ -234,7 +235,23 @@ class utree {
 				str_subtree(s, i, n);
 			}
 		}
-		if (count > 0) {
+		for(unode *i : n->const_contracted_neighbors()) {
+			if ((*i).get_label() != prev->get_label()) {
+				if (count == 0) {
+					s << "<";
+				}
+				else {
+					s << ",";
+				}
+				count++;
+				has_contracted = true;
+				str_subtree(s, i, n);
+			}
+		}
+		if (has_contracted) {
+			s << ">";
+		}
+		else if (count > 0) {
 			s << ")";
 		}
 	}
