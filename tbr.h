@@ -128,8 +128,12 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 
 			// remove from sibling pairs if necessary
 			map<int,int>::iterator i = sibling_pairs.find(F1_a->get_label());
+			map<int,int>::iterator j;
 			if (i != sibling_pairs.end()) {
-				sibling_pairs.erase(i->second);
+				j = sibling_pairs.find(i->second);
+				if (j != sibling_pairs.end() && j->second == i->first) {
+					sibling_pairs.erase(i->second);
+				}
 				sibling_pairs.erase(i->first);
 			}
 
@@ -152,8 +156,8 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 					}
 				}
 			}
-			for(int i = 0; i + 1 < new_sibling_pair.size(); i++) {
-				for(int j = i + 1; j < new_sibling_pair.size(); i++) {
+			for(int i = 0; i < new_sibling_pair.size(); i++) {
+				for(int j = (i + 1); j < new_sibling_pair.size(); j++) {
 				sibling_pairs.insert(make_pair(new_sibling_pair[i], new_sibling_pair[j]));
 				sibling_pairs.insert(make_pair(new_sibling_pair[j], new_sibling_pair[i]));
 				}
@@ -292,8 +296,8 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 					}
 				}
 			}
-			for(int i = 0; i + 1 < new_sibling_pair.size(); i++) {
-				for(int j = i + 1; j < new_sibling_pair.size(); i++) {
+			for(int i = 0; i < new_sibling_pair.size(); i++) {
+				for(int j = (i + 1); j < new_sibling_pair.size(); j++) {
 				sibling_pairs.insert(make_pair(new_sibling_pair[i], new_sibling_pair[j]));
 				sibling_pairs.insert(make_pair(new_sibling_pair[j], new_sibling_pair[i]));
 				}
@@ -346,6 +350,28 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 			}
 
 
+			// remove from sibling pairs if necessary
+			map<int,int>::iterator i = sibling_pairs.find(F1_a->get_label());
+			map<int,int>::iterator j;
+			if (i != sibling_pairs.end()) {
+				j = sibling_pairs.find(i->second);
+				if (j != sibling_pairs.end() && j->second == i->first) {
+					sibling_pairs.erase(i->second);
+				}
+				sibling_pairs.erase(i->first);
+			}
+
+			i = sibling_pairs.find(F1_c->get_label());
+			if (i != sibling_pairs.end()) {
+				j = sibling_pairs.find(i->second);
+				if (j != sibling_pairs.end() && j->second == i->first) {
+					sibling_pairs.erase(i->second);
+				}
+				sibling_pairs.erase(i->first);
+			}
+
+
+			// TODO: sibling pairs involving leaves?
 
 
 
