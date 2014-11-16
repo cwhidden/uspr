@@ -167,15 +167,21 @@ class unode {
 	}
 
 	unode *get_parent() {
+		if (neighbors.empty()) {
+			return NULL;
+		}
 		return neighbors.front();
 	}
 
 	unode *get_neighbor_not(unode *a, unode *b) {
+		cout << "neighbors: " << get_neighbors().size() << endl;
+		cout << "c_neighbors: " << get_contracted_neighbors().size() << endl;
 		for (unode *x : get_neighbors()) {
 			if (*x != *a && *x != *b) {
 				return x;
 			}
 		}
+		return NULL;
 	}
 
 	void set_terminal(bool t) {
@@ -202,15 +208,19 @@ class unode {
 		num_neighbors = 0;
 	}
 
+	void clear_contracted_neighbors() {
+		contracted_neighbors.clear();
+	}
+
 	unode *contract() {
-		if (num_neighbors == 1) {
+		if (num_neighbors == 1 && contracted_neighbors.empty()) {
 			unode *p = neighbors.front();
 			if (p->is_leaf() && this->get_label() < -1) {
 				p->remove_neighbor(this);
 				return p;
 			}
 		}
-		else if (num_neighbors == 2) {
+		else if (num_neighbors == 2 && contracted_neighbors.empty()) {
 			unode *p = neighbors.front();
 			unode *c = *(next(neighbors.begin(), 1));
 			cout << "contracting:" << endl;

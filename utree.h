@@ -64,6 +64,7 @@ class utree {
 				//		cout << u << ", ";
 						internal_nodes[i]->add_neighbor(get_node(u->get_label()));
 					}
+					internal_nodes[i]->clear_contracted_neighbors();
 					list<unode *> old_contracted_neighbors = T.internal_nodes[i]->get_contracted_neighbors();
 				//	cout << "\t";
 					for (unode *u : old_contracted_neighbors) {
@@ -90,6 +91,7 @@ class utree {
 					}
 					list<unode *> old_contracted_neighbors = T.leaves[i]->get_contracted_neighbors();
 				//	cout << "\t";
+					leaves[i]->clear_contracted_neighbors();
 					for (unode *u : old_contracted_neighbors) {
 				//		cout << u << ", ";
 						leaves[i]->add_contracted_neighbor(get_node(u->get_label()));
@@ -236,7 +238,7 @@ class utree {
 		int count = 0;
 		bool has_contracted = false;
 		for(unode *i : n->const_neighbors()) {
-			if ((*i).get_label() != prev->get_label()) {
+			if (prev == NULL || (*i).get_label() != prev->get_label()) {
 				if (count == 0) {
 					s << "(";
 				}
@@ -248,7 +250,7 @@ class utree {
 			}
 		}
 		for(unode *i : n->const_contracted_neighbors()) {
-			if ((*i).get_label() != prev->get_label()) {
+			if (prev == NULL || (*i).get_label() != prev->get_label()) {
 				if (count == 0) {
 					s << "<";
 				}
@@ -328,10 +330,6 @@ int build_utree_helper(utree &t, string &s, map<string, int> &label_map, map<int
 		// internal node
 	int l = t.add_internal_node(parent);
 		unode *new_node = t.get_internal_node(l);
-		if (parent->get_label() != -1) {
-			new_node->add_neighbor(parent);
-			parent->add_neighbor(new_node);
-		}
 		loc = build_utree_helper(t, s, label_map, reverse_label_map, loc + 1, new_node, valid);
 		while(s[loc] == ',') {
 			loc = build_utree_helper(t, s, label_map, reverse_label_map, loc + 1, new_node, valid);
@@ -339,6 +337,10 @@ int build_utree_helper(utree &t, string &s, map<string, int> &label_map, map<int
 		if (s[loc] != ')') {
 			valid = false;
 			return s.size()-1;
+		}
+		if (parent->get_label() != -1) {
+			new_node->add_neighbor(parent);
+			parent->add_neighbor(new_node);
 		}
 		loc++;
 	}

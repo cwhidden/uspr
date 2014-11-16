@@ -34,8 +34,13 @@ class uforest: public utree {
 					ss << " ";
 				}
 				unode *root = components[i];
-				if (root->is_leaf()) {
-					root = root->get_neighbors().front();
+				if (root->get_label() > -1) {
+					if (root->is_leaf()) {
+						root = root->get_neighbors().front();
+					}
+					else if (!(root->get_contracted_neighbors().empty())){
+						root = root->get_contracted_neighbors().front();
+					}
 				}
 				str_subtree(ss, root, root);
 				ss << ";";
@@ -72,6 +77,9 @@ class uforest: public utree {
 			else {
 				cout << "urns" << endl;
 				add_component(Xprime);
+				if (Yprime->get_component() > -1) {
+					update_component(Yprime->get_component(), Yprime);
+				}
 			}
 			if (swapped) {
 				return make_pair(Yprime->get_label(),Xprime->get_label());
