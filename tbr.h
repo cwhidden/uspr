@@ -538,8 +538,47 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 				}
 			}
 
-			// Cut F2_b
+			// Cut each F2_b but one, for each possible choice
 			if (cut_b) {
+				for (int i = 0; i < num_pendants; i++) {
+					cout << "cut e_b except for _{b_" << i << "}" << endl;
+
+					// copy the trees
+					uforest F1_copy = uforest(F1);
+					uforest F2_copy = uforest(F2);
+					nodemapping twins_copy = nodemapping(twins);
+					map<int, int> sibling_pairs_copy = map<int, int>(sibling_pairs);
+					sibling_pairs_copy.insert(make_pair(F1_a->get_label(), F1_c->get_label()));
+					sibling_pairs_copy.insert(make_pair(F1_c->get_label(), F1_a->get_label()));
+					list<int> singletons_copy = list<int>(singletons);
+
+					cout << F2_copy << endl;
+
+					int j = 0;
+					for(pair<int, int> e_b : pendants) {
+						if ( j != i) {
+							cout << "cut e_{b_" << j << "}" << endl;
+							pair<int, int> components = F2_copy.cut_edge(e_b.first, e_b.second);
+							cout << F2_copy << endl;
+							if (F2_copy.get_node(components.first)->is_singleton()) {
+								singletons_copy.push_back(components.first);
+							}
+							if (F2_copy.get_node(components.second)->is_singleton()) {
+								singletons_copy.push_back(components.second);
+							}
+						}
+						j++;
+					}
+					int branch_b = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy);
+					if (branch_b > result) {
+						result = branch_b;
+					}
+				}
+
+			}
+
+			// Cut F2_b
+			if (false && cut_b) {
 				pair <int, int> e_b = pendants.front();
 	
 				cout  << "cut e_b" << endl;
@@ -562,14 +601,14 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 				if (F2_copy.get_node(components.second)->is_singleton()) {
 					singletons_copy.push_back(components.second);
 				}
-				int branch_b = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy);
+				int branch_b = tbr_distance_hlpr(F1_copy, F2_copy, k-(num_pendants-1), twins_copy, sibling_pairs_copy, singletons_copy);
 	
 				if (branch_b > result) {
 					result = branch_b;
 				}
 			}
 			// Cut F2_d
-			if (cut_b) {
+			if (false && cut_b) {
 				pair <int, int> e_d = pendants.back();
 	
 				cout  << "cut e_d" << endl;
