@@ -213,6 +213,8 @@ class unode {
 	}
 
 	unode *contract() {
+		cout << "n: " << num_neighbors << endl;
+		cout << "c_n: " << contracted_neighbors.size() << endl;
 		if (num_neighbors == 1 && contracted_neighbors.empty()) {
 			unode *p = neighbors.front();
 			if (p->is_leaf() && this->get_label() < -1) {
@@ -229,7 +231,9 @@ class unode {
 			cout << "contracting:" << endl;
 			cout << p << endl;
 			cout << c << endl;
-			if (!p->is_leaf() || !c->is_leaf()) {
+			if (!p->is_leaf() ||
+						!(p->get_contracted_neighbors().empty()) ||
+						!c->is_leaf()) {
 				clear_neighbors();
 				p->remove_neighbor(this);
 				c->remove_neighbor(this);
