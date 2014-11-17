@@ -3,6 +3,8 @@
 
 class nodemapping;
 
+bool OPTIMIZE_2B = true;
+
 // function prototypes
 int tbr_distance(uforest &F1, uforest &F2);
 int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons);
@@ -47,7 +49,7 @@ class nodemapping {
 //
 int tbr_distance(uforest &T1, uforest &T2) {
 
-	for(int k = 0; k < 5; k++) {
+	for(int k = 0; k < 100; k++) {
 		if (k > 0) {
 			cout << " ";
 		}
@@ -451,8 +453,20 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 
 			cout << endl;
 
+			bool cut_a = true;
+			bool cut_c = true;
+			bool cut_b = true;
+
+			if (num_pendants < 2) {
+				cut_b = false;
+			}
+			else if (OPTIMIZE_2B && num_pendants == 2) {
+				cut_a = false;
+				cut_c = false;
+			}
+
 			// Cut F2_a
-			{
+			if (cut_a) {
 				pair <int, int> e_a = make_pair(F2_a->get_label(), F2_a->get_parent()->get_label());
 	
 				cout  << "cut e_a" << endl;
@@ -496,7 +510,7 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 			}
 
 			// Cut F2_c
-			{
+			if (cut_c) {
 				pair <int, int> e_c = make_pair(F2_c->get_label(), F2_c->get_parent()->get_label());
 	
 				cout  << "cut e_c" << endl;
@@ -525,7 +539,7 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 			}
 
 			// Cut F2_b
-			if (num_pendants >= 2) {
+			if (cut_b) {
 				pair <int, int> e_b = pendants.front();
 	
 				cout  << "cut e_b" << endl;
@@ -555,7 +569,7 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 				}
 			}
 			// Cut F2_d
-			if (num_pendants >= 2) {
+			if (cut_b) {
 				pair <int, int> e_d = pendants.back();
 	
 				cout  << "cut e_d" << endl;
@@ -639,7 +653,7 @@ list<pair<int,int> > find_pendants(unode *a, unode *c) {
 			cout << prev_a->get_distance() << endl;
 			cout << a->get_distance() << endl;
 			cout << a->get_parent()->get_distance() << endl;
-			cout << a->get_neighbor_not(prev_a, a->get_parent())->get_distance() << endl;
+			//cout << a->get_neighbor_not(prev_a, a->get_parent())->get_distance() << endl;
 			cout << endl;
 			if (a->get_parent() != NULL && a->get_neighbor_not(prev_a, a->get_parent()) != NULL) {
 				pendants.push_back(make_pair(a->get_label(), a->get_neighbor_not(prev_a, a->get_parent())->get_label()));
