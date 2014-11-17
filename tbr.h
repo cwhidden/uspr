@@ -513,7 +513,7 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 			if (cut_c) {
 				pair <int, int> e_c = make_pair(F2_c->get_label(), F2_c->get_parent()->get_label());
 	
-				cout  << "cut e_c" << endl;
+				cout  << "cut e_c: " << F2.str_subtree(F2_c) << endl;
 	
 				// copy the trees
 				uforest F1_copy = uforest(F1);

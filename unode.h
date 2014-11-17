@@ -217,6 +217,9 @@ class unode {
 			unode *p = neighbors.front();
 			if (p->is_leaf() && this->get_label() < -1) {
 				p->remove_neighbor(this);
+				if (component > -1) {
+					p->set_component(component);
+				}
 				return p;
 			}
 		}
