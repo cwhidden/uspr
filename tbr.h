@@ -22,7 +22,9 @@ class nodemapping {
 			}
 		}
 		void add(int l1, int l2) {
+			forward.erase(l1);
 			forward.insert(make_pair(l1, l2));
+			backward.erase(l2);
 			backward.insert(make_pair(l2, l1));
 		}
 		int get_forward(int l) {
@@ -276,7 +278,8 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 
 			// make terminal in F1
 			// contract F1_a and F1_c
-			unode *F1_new_terminal = F1_c->get_parent();
+			unode *F1_new_terminal = F1_a->get_parent();
+			cout << "F1_new_terminal: " << F1.str_subtree(F1_new_terminal) << endl;
 			F1_new_terminal->set_terminal(true);
 			F1_new_terminal->contract_neighbor(F1_a);
 			F1_new_terminal->contract_neighbor(F1_c);
@@ -309,16 +312,19 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 			
 			// make terminal in F2
 			// contract F2_a and F2_c
+			cout << "d(F2_a): " << F2_a->get_distance() << endl;
+			cout << "d(F2_c): " << F2_c->get_distance() << endl;
 			unode *F2_new_terminal = F2_a->get_parent();
-			if (F2_c->get_parent() == F2_a) {
-				F2_new_terminal = F2_c->get_parent();
+			if (F2_c->get_parent() == F2_a &&
+					F2_a->get_label() < -1) {
+				F2_new_terminal = F2_a;
 			}
 			F2_new_terminal->set_terminal(true);
 
-			if (F2_c->get_parent() != F2_a) {
+			if (F2_new_terminal != F2_a) {
 				F2_new_terminal->contract_neighbor(F2_a);
 			}
-			if (F2_a->get_parent() != F2_c) {
+			if (F2_new_terminal != F2_c) {
 				F2_new_terminal->contract_neighbor(F2_c);
 			}
 
@@ -331,6 +337,10 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 
 			// add to nodemapping
 			twins.add(F1_new_terminal->get_label(), F2_new_terminal->get_label());
+
+			cout << "here?" << endl;
+			cout << F2.str_subtree(F2_new_terminal) << endl;
+			cout << F2_new_terminal->is_singleton() << endl;
 
 			// check for singleton
 			if (F2_new_terminal->is_singleton()) { //get_parent()->get_distance() > F2_new_terminal->get_distance()) 
