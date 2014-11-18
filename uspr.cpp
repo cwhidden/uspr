@@ -62,8 +62,8 @@ int main(int argc, char *argv[]) {
 		// load into data structures
 		uforest F1 = uforest(T1_line, label_map, reverse_label_map);
 		uforest F2 = uforest(T2_line, label_map, reverse_label_map);
-		cout << F1 << endl;
-		cout << F2 << endl;
+		cout << "T1: " << F1 << endl;
+		cout << "T2: " << F2 << endl;
 		// compute TBR distance
 		int distance = tbr_distance(F1, F2);
 		cout << "d_TBR = " << distance << endl;

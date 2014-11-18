@@ -10,7 +10,7 @@ using namespace std;
 class utree;
 
 // options
-bool KEEP_LABELS = false;
+bool KEEP_LABELS = true;
 
 // prototypes
 bool build_utree(utree &t, string &s, map<string, int> &label_map, map<int, string> &reverse_label_map);
@@ -314,10 +314,10 @@ int build_utree_helper(utree &t, string &s, map<string, int> &label_map, map<int
 		}
 		else {
 			label = label_map.size();
-			cout << "label=" << label << endl;
+			//cout << "label=" << label << endl;
 			if (KEEP_LABELS) {
 				label = atoi(name.c_str());
-				cout << "label=" << label << endl;
+				//cout << "label=" << label << endl;
 			}
 			label_map.insert(make_pair(name, label));
 			reverse_label_map.insert(make_pair(label, name));

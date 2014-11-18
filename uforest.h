@@ -13,8 +13,8 @@ class uforest: public utree {
 		uforest(string &newick, map<string, int> &label_map, map<int, string> &reverse_label_map) : utree(newick, label_map, reverse_label_map) {
 			components = vector<unode *>();
 			if (leaves.size() > 0) {
-				components.push_back(leaves[0]);
-				leaves[0]->set_component(0);
+				components.push_back(leaves[smallest_leaf]);
+				leaves[smallest_leaf]->set_component(0);
 			}
 		}
 		uforest(const uforest &F) : utree(F) {
@@ -53,11 +53,11 @@ class uforest: public utree {
 			unode *X, *Y;
 			X = get_node(x);
 			Y = get_node(y);
-			cout << "d_X: " << X->get_distance() << endl;
-			cout << "d_Y: " << Y->get_distance() << endl;
+			//cout << "d_X: " << X->get_distance() << endl;
+			//cout << "d_Y: " << Y->get_distance() << endl;
 			bool swapped = false;
 			if (Y->get_distance() > X->get_distance()) {
-				cout << "AHH!" << endl;
+				//cout << "AHH!" << endl;
 				X = get_node(y);
 				Y = get_node(x);
 				swapped = true;
@@ -70,12 +70,12 @@ class uforest: public utree {
 
 
 			if (Xprime->get_component() > -1) {
-				cout << "boo" << endl;
+				//cout << "boo" << endl;
 				add_component(Yprime);
 				update_component(Xprime->get_component(), Xprime);
 			}
 			else {
-				cout << "urns" << endl;
+				//cout << "urns" << endl;
 				add_component(Xprime);
 				if (Yprime->get_component() > -1) {
 					update_component(Yprime->get_component(), Yprime);

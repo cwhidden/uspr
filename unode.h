@@ -1,6 +1,13 @@
 #ifndef INCLUDE_UNODE
 #define INCLUDE_UNODE
 
+//#define DEBUG 1
+#ifdef DEBUG
+	#define debug(x) x
+#else
+	#define debug(x) 
+#endif
+
 #include <list>
 #include <sstream>
 
@@ -17,6 +24,7 @@ class unode {
 	int component;
 	bool terminal;
 	int distance;
+	bool b_protected;
 
 	public:
 	unode() {
@@ -27,6 +35,7 @@ class unode {
 		component = -1;
 		terminal = false;
 		distance = -1;
+		b_protected = false;
 	}
 	unode(int l) {
 		label = l;
@@ -37,6 +46,7 @@ class unode {
 		component = -1;
 		terminal = false;
 		distance = -1;
+		b_protected = false;
 	}
 	unode(const unode &n) {
 		label = n.label;
@@ -47,6 +57,7 @@ class unode {
 		component = n.component;
 		terminal = n.terminal;
 		distance = n.distance;
+		b_protected = n.b_protected;
 	}
 
 	void add_neighbor(unode *n) {
@@ -174,8 +185,6 @@ class unode {
 	}
 
 	unode *get_neighbor_not(unode *a, unode *b) {
-		cout << "neighbors: " << get_neighbors().size() << endl;
-		cout << "c_neighbors: " << get_contracted_neighbors().size() << endl;
 		for (unode *x : get_neighbors()) {
 			if (*x != *a && *x != *b) {
 				return x;
@@ -213,8 +222,10 @@ class unode {
 	}
 
 	unode *contract() {
-		cout << "n: " << num_neighbors << endl;
-		cout << "c_n: " << contracted_neighbors.size() << endl;
+		debug(
+			cout << "n: " << num_neighbors << endl;
+			cout << "c_n: " << contracted_neighbors.size() << endl;
+		)
 		if (num_neighbors == 1 && contracted_neighbors.empty()) {
 			unode *p = neighbors.front();
 			if (p->is_leaf() && this->get_label() < -1) {
@@ -228,9 +239,11 @@ class unode {
 		else if (num_neighbors == 2 && contracted_neighbors.empty()) {
 			unode *p = neighbors.front();
 			unode *c = *(next(neighbors.begin(), 1));
-			cout << "contracting:" << endl;
-			cout << p << endl;
-			cout << c << endl;
+			debug(
+				cout << "contracting:" << endl;
+				cout << p << endl;
+				cout << c << endl;
+			)
 			if (!p->is_leaf() ||
 						!(p->get_contracted_neighbors().empty()) ||
 						!c->is_leaf()) {
@@ -264,18 +277,14 @@ class unode {
 			return true;
 		}
 		return false;
-		/*
-		if (get_parent()->get_distance() <= get_distance()) {
-			return false;
-		}
-		bool ret = this->get_terminal();
-		for (unode *c : this->get_neighbors()) {
-			if (c->get_terminal() == false) {
-				ret = false;
-			}
-		}
-		return ret;
-		*/
+	}
+
+	bool is_protected() {
+		return b_protected;
+	}
+
+	void set_protected(bool b) {
+		b_protected = b;
 	}
 
 };
