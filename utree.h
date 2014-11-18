@@ -281,6 +281,12 @@ bool build_utree(utree &t, string &s, map<string, int> &label_map, map<int, stri
 	bool valid = true;
 	unode dummy = unode(-1);
 	build_utree_helper(t, s, label_map, reverse_label_map, 0, &dummy, valid);
+	unode *root = dummy.get_parent();
+	root->remove_neighbor(&dummy);
+	root->contract();
+
+
+
 	int end = t.num_leaves();
 	int start = -1;
 	for(int i = 0; i < end; i++) {
@@ -338,10 +344,10 @@ int build_utree_helper(utree &t, string &s, map<string, int> &label_map, map<int
 			valid = false;
 			return s.size()-1;
 		}
-		if (parent->get_label() != -1) {
+	//	if (parent->get_label() != -1) {
 			new_node->add_neighbor(parent);
 			parent->add_neighbor(new_node);
-		}
+	//	}
 		loc++;
 	}
 	return loc;
