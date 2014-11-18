@@ -62,8 +62,12 @@ class uforest: public utree {
 				Y = get_node(x);
 				swapped = true;
 			}
-			X->remove_neighbor(Y);
-			Y->remove_neighbor(X);
+			bool cut_x = X->remove_neighbor(Y);
+			bool cut_y = Y->remove_neighbor(X);
+
+			if (!cut_x || !cut_y) {
+				return make_pair(-1,-1);
+			}
 
 			unode *Xprime = X->contract();
 			unode *Yprime = Y->contract();
@@ -100,6 +104,10 @@ class uforest: public utree {
 		void add_component(unode *C) {
 			C->set_component(components.size());
 			components.push_back(C);
+		}
+
+		int num_components() {
+			return components.size();
 		}
 };
 
