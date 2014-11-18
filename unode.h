@@ -184,10 +184,15 @@ class unode {
 		return neighbors.front();
 	}
 
+	unode *get_neighbor_not(unode *a) {
+		return get_neighbor_not(a, a);
+	}
+
 	unode *get_neighbor_not(unode *a, unode *b) {
-		for (unode *x : get_neighbors()) {
-			if (*x != *a && *x != *b) {
-				return x;
+		list<unode *>::reverse_iterator x;
+		for (x = neighbors.rbegin(); x != neighbors.rend(); x++) {
+			if (*x != a && *x != b) {
+				return *x;
 			}
 		}
 		return NULL;
