@@ -17,7 +17,9 @@ bool OPTIMIZE_BRANCH_AND_BOUND = true;
 
 // function prototypes
 int tbr_distance(uforest &F1, uforest &F2);
-int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons);
+int tbr_distance(uforest &T1, uforest &T2, int (*func_pointer)(uforest &F1, uforest &F2, int k));
+int tbr_distance_hlpr(uforest &T1, uforest &T2, int k, int (*func_pointer)(uforest &F1, uforest &F2, int k));
+int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons, int (*func_pointer)(uforest &F1, uforest &F2, int k));
 list<pair<int,int> > find_pendants(unode *a, unode *c);
 int tbr_approx(uforest &T1, uforest &T2);
 int tbr_approx(uforest &T1, uforest &T2, bool low);
@@ -27,6 +29,7 @@ int tbr_low_lower_bound(uforest &T1, uforest &T2);
 int tbr_high_upper_bound(uforest &T1, uforest &T2);
 int tbr_low_upper_bound(uforest &T1, uforest &T2);
 int tbr_branch_bound(uforest &F1, uforest &F2, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons);
+int print_mAFs(uforest &F1, uforest &F2, int k);
 
 class nodemapping {
 	private:
@@ -66,73 +69,77 @@ class nodemapping {
 };
 
 // compute the tbr distance
-//
 int tbr_distance(uforest &T1, uforest &T2) {
+	return tbr_distance(T1, T2, NULL);
+}
+
+int tbr_distance(uforest &T1, uforest &T2, int (*func_pointer)(uforest &F1, uforest &F2, int k)) {
 
 	int start = tbr_high_lower_bound(T1, T2);
 
 	for(int k = start; k < 100; k++) {
 			cout << "{" << k << "} ";
 			cout.flush();
-
-		uforest F1 = uforest(T1);
-		uforest F2 = uforest(T2);
-
-		// remaining leaves and their mappings
-		list<int> leaves = F1.find_leaves();
-		nodemapping twins = nodemapping(leaves);
-
-		// sibling pairs
-		map<int,int> sibling_pairs = F1.find_sibling_pairs();
-
-		// singletons
-		list<int> singletons = list<int>();
-
-		// "root" the trees
-		// TODO: make this normalize "leaves" as well
-		F1.root(F1.get_smallest_leaf());
-		F2.root(F2.get_smallest_leaf());
-
-		// set leaves as terminal
-		for(unode *u : F1.get_leaves()) {
-			if (u != NULL) {
-				u->set_terminal(true);
+			// test k
+			int result = tbr_distance_hlpr(T1, T2, k, func_pointer);
+			if (result >= 0) {
+				cout << endl;
+				return result;
 			}
-		}
-		for(unode *u : F2.get_leaves()) {
-			if (u != NULL) {
-				u->set_terminal(true);
-			}
-		}
-
-		distances_from_leaf_decorator(F1, F1.get_smallest_leaf());
-		distances_from_leaf_decorator(F2, F2.get_smallest_leaf());
-		debug(
-			cout << endl << F1 << endl;
-			for(int i : F1.find_leaves()) {
-				cout << i << ": " << F1.get_node(i)->get_distance() << endl;
-			}
-
-			cout << F2 << endl;
-			for(int i : F2.find_leaves()) {
-				cout << i << ": " << F2.get_node(i)->get_distance() << endl;
-			}
-		)
-
-
-		// test k
-		int result = tbr_distance_hlpr(F1, F2, k, twins, sibling_pairs, singletons);
-		if (result >= 0) {
-			cout << endl;
-			return k - result;
-		}
-
 	}
-
 	return -1;
 }
 
-int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons) {
+int tbr_distance_hlpr(uforest &T1, uforest &T2, int k, int (*func_pointer)(uforest &F1, uforest &F2, int k)) {
+	uforest F1 = uforest(T1);
+	uforest F2 = uforest(T2);
+
+	// remaining leaves and their mappings
+	list<int> leaves = F1.find_leaves();
+	nodemapping twins = nodemapping(leaves);
+
+	// sibling pairs
+	map<int,int> sibling_pairs = F1.find_sibling_pairs();
+
+	// singletons
+	list<int> singletons = list<int>();
+
+	// "root" the trees
+	// TODO: make this normalize "leaves" as well
+	F1.root(F1.get_smallest_leaf());
+	F2.root(F2.get_smallest_leaf());
+
+	// set leaves as terminal
+	for(unode *u : F1.get_leaves()) {
+		if (u != NULL) {
+			u->set_terminal(true);
+		}
+	}
+	for(unode *u : F2.get_leaves()) {
+		if (u != NULL) {
+			u->set_terminal(true);
+		}
+	}
+
+	distances_from_leaf_decorator(F1, F1.get_smallest_leaf());
+	distances_from_leaf_decorator(F2, F2.get_smallest_leaf());
+	debug(
+		cout << endl << F1 << endl;
+		for(int i : F1.find_leaves()) {
+			cout << i << ": " << F1.get_node(i)->get_distance() << endl;
+		}
+
+		cout << F2 << endl;
+		for(int i : F2.find_leaves()) {
+			cout << i << ": " << F2.get_node(i)->get_distance() << endl;
+		}
+	)
+
+
+	return tbr_distance_hlpr(F1, F2, k, twins, sibling_pairs, singletons, func_pointer);
+}
+
+int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons, int (*func_pointer)(uforest &F1, uforest &F2, int k)) {
 
 	if (k < 0) {
 		return -1;
@@ -430,7 +437,7 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 					debug(cout << "it is" << endl);
 					singletons_copy.push_back(components.second);
 				}
-				int branch_a = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy);
+				int branch_a = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy, func_pointer);
 	
 				if (branch_a > result) {
 					result = branch_a;
@@ -462,7 +469,7 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 				if (F2_copy.get_node(components.second)->is_singleton()) {
 					singletons_copy.push_back(components.second);
 				}
-				int branch_c = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy);
+				int branch_c = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy, func_pointer);
 	
 				if (branch_c > result) {
 					result = branch_c;
@@ -500,7 +507,7 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 						}
 						j++;
 					}
-					int branch_b = tbr_distance_hlpr(F1_copy, F2_copy, k-(num_pendants-1), twins_copy, sibling_pairs_copy, singletons_copy);
+					int branch_b = tbr_distance_hlpr(F1_copy, F2_copy, k-(num_pendants-1), twins_copy, sibling_pairs_copy, singletons_copy, func_pointer);
 					if (branch_b > result) {
 						result = branch_b;
 					}
@@ -532,7 +539,7 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 				if (F2_copy.get_node(components.second)->is_singleton()) {
 					singletons_copy.push_back(components.second);
 				}
-				int branch_b = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy);
+				int branch_b = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy, func_pointer);
 	
 				if (branch_b > result) {
 					result = branch_b;
@@ -562,7 +569,7 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 				if (F2_copy.get_node(components.second)->is_singleton()) {
 					singletons_copy.push_back(components.second);
 				}
-				int branch_d = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy);
+				int branch_d = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy, func_pointer);
 	
 				if (branch_d > result) {
 					result = branch_d;
@@ -602,7 +609,12 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 		cout << "\t" << F1.str() << endl;
 		cout << "\t" << F2.str() << endl;
 	)
-	return k;
+	if (func_pointer == NULL) {
+		return k;
+	}
+	else {
+		return (*func_pointer)(F1, F2, k);
+	}
 }
 
 // compute the tbr distance approximation
@@ -948,7 +960,7 @@ int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int
 			}
 			*/
 
-//				int branch_a = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy);
+//				int branch_a = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy, func_pointer);
 
 			// Cut F2_a
 			if (cut_a) {
@@ -1138,6 +1150,13 @@ list<pair<int,int> > find_pendants(unode *a, unode *c) {
 		}
 	}
 	return pendants;
+}
+
+int print_mAFs(uforest &F1, uforest &F2, int k) {
+		cout << "ANSWER FOUND" << endl;
+		cout << "\t" << F1.str() << endl;
+		cout << "\t" << F2.str() << endl;
+		return k;
 }
 
 #endif

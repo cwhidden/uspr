@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
 //		cout << "a_TBR low upper bound = " << tbr_low_upper_bound(F1, F2) << endl;
 //		cout << "a_TBR low lower bound = " << tbr_low_lower_bound(F1, F2) << endl;
 		cout << "a_TBR: " << tbr_high_lower_bound(F1, F2) << " <= d_TBR <= " << tbr_low_upper_bound(F1, F2) << endl;
-		int distance = tbr_distance(F1, F2);
+		int distance = tbr_distance(F1, F2, &print_mAFs);
 		cout << "d_TBR = " << distance << endl;
 	}
 }
