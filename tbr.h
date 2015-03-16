@@ -246,7 +246,10 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 		unode *F2_c = F2.get_node(twins.get_forward(F1_c->get_label()));
 
 		// a is the deeper of the pair
-		if (F2_a->get_distance() < F2_c->get_distance()) {
+		if (F2_a->get_distance() < F2_c->get_distance() ||
+				(F2_a->get_distance() == F2_c->get_distance() &&
+				 F2_a->get_parent()->get_distance() < F2_c->get_parent()->get_distance())
+				) {
 
 			unode *temp = F1_a;
 			F1_a = F1_c;
@@ -809,7 +812,10 @@ int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int
 		unode *F2_c = F2.get_node(twins.get_forward(F1_c->get_label()));
 
 		// a is the deeper of the pair
-		if (F2_a->get_distance() < F2_c->get_distance()) {
+		if (F2_a->get_distance() < F2_c->get_distance() ||
+				(F2_a->get_distance() == F2_c->get_distance() &&
+				 F2_a->get_parent()->get_distance() < F2_c->get_parent()->get_distance())
+				) {
 
 			unode *temp = F1_a;
 			F1_a = F1_c;
