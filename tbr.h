@@ -1171,8 +1171,18 @@ list<pair<int,int> > find_pendants(unode *a, unode *c) {
 			cout << "FOO: " << a->get_parent()->get_neighbor_not(a,c) << endl;
 	//		cout << "FOO: " << a->get_parent()->get_neighbor_not(a,c)->get_label() << endl;
 		)
-		if (a->get_parent()->get_neighbor_not(a,c) != NULL) {
-			pendants.push_back(make_pair(a->get_parent()->get_label(), a->get_parent()->get_neighbor_not(a,c)->get_label()));
+		if (a->get_parent()->get_distance() > a->get_distance()) {
+			// a = c = root
+			if (a->get_neighbor_not(a,c) != NULL) {
+				pendants.push_back(make_pair(a->get_label(), a->get_neighbor_not(a,c)->get_label()));
+		 }
+		}
+		else {
+			// a = c = not root
+			if (a->get_parent()->get_neighbor_not(a,c) != NULL) {
+				pendants.push_back(make_pair(a->get_parent()->get_label(), a->get_parent()->get_neighbor_not(a,c)->get_label()));
+
+			}
 		}
 	}
 	return pendants;

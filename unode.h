@@ -260,8 +260,11 @@ class unode {
 				if (p->get_distance() > distance &&
 						c->get_distance() > distance) {
 					p->set_distance(distance-1);
+					c->set_distance(distance);
 				}
-				c->set_distance(distance);
+				else {
+					c->set_distance(p->get_distance()+1);
+				}
 				if (!get_terminal()) {
 					p->set_terminal(false);
 				}
