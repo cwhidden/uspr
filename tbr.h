@@ -1118,7 +1118,9 @@ list<pair<int,int> > find_pendants(unode *a, unode *c) {
 	while(a->get_parent() != c->get_parent()) {
 		debug(cout << "a:" << a->get_distance() << endl;
 		cout << "c:" << c->get_distance() << endl;)
-		if (a->get_distance() >= c->get_distance()) {
+		if (a->get_distance() > c->get_distance() ||
+				(a->get_distance() == c->get_distance() &&
+				 a->get_parent()->get_distance() >= c->get_parent()->get_distance())) {
 			unode *prev_a = a;
 			a = a->get_parent();
 			if (a->get_distance() > prev_a->get_distance()) {

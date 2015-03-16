@@ -259,11 +259,9 @@ class unode {
 				p->add_neighbor(c);
 				if (p->get_distance() > distance &&
 						c->get_distance() > distance) {
-					p->set_distance(distance);
+					p->set_distance(distance-1);
 				}
-				else {
-					c->set_distance(distance);
-				}
+				c->set_distance(distance);
 				if (!get_terminal()) {
 					p->set_terminal(false);
 				}
