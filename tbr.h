@@ -10,6 +10,13 @@ class nodemapping;
 	#define debug(x) 
 #endif
 
+//#define DEBUG_APPROX 1
+#ifdef DEBUG_APPROX
+	#define debug_approx(x) x
+#else
+	#define debug_approx(x) 
+#endif
+
 
 bool OPTIMIZE_2B = true;
 bool OPTIMIZE_PROTECT_A = true;
@@ -84,7 +91,7 @@ int tbr_distance(uforest &T1, uforest &T2, int (*func_pointer)(uforest &F1, ufor
 			int result = tbr_distance_hlpr(T1, T2, k, func_pointer);
 			if (result >= 0) {
 				cout << endl;
-				return result;
+				return k - result;
 			}
 	}
 	return -1;
@@ -374,6 +381,8 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 
 			// find pendant edges between a and c in F2
 			// TODO: need distances from "root" to do this efficiently
+
+			debug(cout << F2.str_with_depths() << endl);
 			
 			list<pair<int,int> > pendants = find_pendants(F2_a, F2_c);
 			int num_pendants = pendants.size();
@@ -684,7 +693,7 @@ int tbr_approx(uforest &T1, uforest &T2, bool low) {
 
 	distances_from_leaf_decorator(F1, F1.get_smallest_leaf());
 	distances_from_leaf_decorator(F2, F2.get_smallest_leaf());
-	debug(
+	debug_approx(
 		cout << endl << F1 << endl;
 		for(int i : F1.find_leaves()) {
 			cout << i << ": " << F1.get_node(i)->get_distance() << endl;
@@ -707,19 +716,19 @@ int tbr_approx(uforest &T1, uforest &T2, bool low) {
 
 int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons) {
 
-	debug(cout << "tbr_approx_hlpr(" << k << ")" << endl);
+	debug_approx(cout << "tbr_approx_hlpr(" << k << ")" << endl);
 
 	while (!sibling_pairs.empty() || !singletons.empty()) {
 
 		// Case 1 : Isolated Subtree
 		while (!singletons.empty()) {
 
-			debug(cout << "Case 1" << endl);
+			debug_approx(cout << "Case 1" << endl);
 
 			unode *F2_a = F2.get_node(singletons.front());
 			singletons.pop_front();
 			unode *F1_a = F1.get_node(twins.get_backward(F2_a->get_label()));
-			debug(
+			debug_approx(
 				cout << "F1: " << F1.str() << endl;
 				cout << "F1_a: " << F1.str_subtree(F1_a) << endl;
 	
@@ -738,16 +747,16 @@ int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int
 				sibling_pairs.erase(spi->first);
 			}
 
-			debug(cout << F1 << endl);
+			debug_approx(cout << F1 << endl);
 
 			if (F1_a->get_parent() == NULL) {
 				continue;
 			}
 			pair<int,int> components = F1.cut_edge(F1_a->get_label(), F1_a->get_parent()->get_label());
-			debug(cout << F1 << endl);
+			debug_approx(cout << F1 << endl);
 
 			// check for new sibling pair
-			debug(
+			debug_approx(
 				cout << F1.str_subtree(F1.get_node(components.first)) << endl;
 				cout << F1.str_subtree(F1.get_node(components.second)) << endl;
 //			cout << F1_new_terminal->get_parent()->get_distance() << endl;
@@ -766,10 +775,10 @@ int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int
 				}
 			}
 			int i = new_sibling_pair.size();
-			debug(cout << new_sibling_pair.size() << endl);
+			debug_approx(cout << new_sibling_pair.size() << endl);
 			if (i >= 2) {
 				if (sibling_pairs.find(new_sibling_pair[i-1]) == sibling_pairs.end() && sibling_pairs.find(new_sibling_pair[i-2]) == sibling_pairs.end()) {
-					debug(cout << "sibling_pair found" << endl);
+					debug_approx(cout << "sibling_pair found" << endl);
 					sibling_pairs.insert(make_pair(new_sibling_pair[i-2], new_sibling_pair[i-1]));
 					sibling_pairs.insert(make_pair(new_sibling_pair[i-1], new_sibling_pair[i-2]));
 				}
@@ -781,7 +790,7 @@ int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int
 			break;
 		}
 
-		debug(
+		debug_approx(
 			cout << "sibling pairs: " << sibling_pairs.size() << endl; 
 			for (pair<int, int> p: sibling_pairs) {
 				cout << p.first << ", " << p.second << endl;
@@ -811,7 +820,7 @@ int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int
 			F2_c = temp;
 		}
 
-		debug(
+		debug_approx(
 			cout << "F1: " << F1.str() << endl;
 			cout << "F1_a: " << F1.str_subtree(F1_a) << endl;
 			cout << "F1_c: " << F1.str_subtree(F1_c) << endl;
@@ -832,12 +841,12 @@ int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int
 				F2_a->get_parent() == F2_c ||
 				F2_c->get_parent() == F2_a) {
 
-			debug(cout << "Case 2" << endl);
+			debug_approx(cout << "Case 2" << endl);
 
 			// make terminal in F1
 			// contract F1_a and F1_c
 			unode *F1_new_terminal = F1_a->get_parent();
-			debug(cout << "F1_new_terminal: " << F1.str_subtree(F1_new_terminal) << endl);
+			debug_approx(cout << "F1_new_terminal: " << F1.str_subtree(F1_new_terminal) << endl);
 			F1_new_terminal->set_terminal(true);
 			F1_new_terminal->contract_neighbor(F1_a);
 			F1_new_terminal->contract_neighbor(F1_c);
@@ -870,7 +879,7 @@ int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int
 			
 			// make terminal in F2
 			// contract F2_a and F2_c
-			debug(
+			debug_approx(
 				cout << "d(F2_a): " << F2_a->get_distance() << endl;
 				cout << "d(F2_c): " << F2_c->get_distance() << endl;
 			)
@@ -909,7 +918,7 @@ int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int
 		}
 
 		else if (F2_a->get_parent() == F2_c) {
-			debug(cout << "Case 2.5" << endl);
+			debug_approx(cout << "Case 2.5" << endl);
 		}
 
 		// TODO: 2.5 where (F2_c->get_parent() == F2_a) ?
@@ -918,7 +927,7 @@ int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int
 
 		else {
 
-			debug(cout << "Case 3" << endl);
+			debug_approx(cout << "Case 3" << endl);
 
 			// to avoid finding the pendant edges between a and c, note that cutting any two neighbors of p_a / p_c results in the same forest
 
@@ -966,11 +975,11 @@ int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int
 			if (cut_a) {
 				pair <int, int> e_a = make_pair(F2_a->get_label(), F2_a->get_parent()->get_label());
 	
-				debug(cout  << "cut e_a" << endl);
+				debug_approx(cout  << "cut e_a" << endl);
 	
-				debug(cout << F2 << endl;)
+				debug_approx(cout << F2 << endl;)
 				pair<int,int> components = F2.cut_edge(e_a.first, e_a.second);
-				debug(
+				debug_approx(
 					cout << F2 << endl;
 					cout << components.first << endl;
 					cout << F2.get_node(components.first) << endl;
@@ -978,14 +987,14 @@ int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int
 					cout << F2.get_node(components.second) << endl;
 				)
 				// check for singleton
-				debug(cout << "checking if " << F2.str_subtree(F2.get_node(components.first)) << " is a singleton" << endl);
+				debug_approx(cout << "checking if " << F2.str_subtree(F2.get_node(components.first)) << " is a singleton" << endl);
 				if (F2.get_node(components.first)->is_singleton()) {
-					debug(cout << "it is" << endl);
+					debug_approx(cout << "it is" << endl);
 					singletons.push_back(components.first);
 				}
-				debug(cout << "checking if " << F2.str_subtree(F2.get_node(components.second)) << " is a singleton" << endl);
+				debug_approx(cout << "checking if " << F2.str_subtree(F2.get_node(components.second)) << " is a singleton" << endl);
 				if (F2.get_node(components.second)->is_singleton()) {
-					debug(cout << "it is" << endl);
+					debug_approx(cout << "it is" << endl);
 					singletons.push_back(components.second);
 				}
 	
@@ -995,11 +1004,11 @@ int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int
 			if (cut_c) {
 				pair <int, int> e_c = make_pair(F2_c->get_label(), F2_c->get_parent()->get_label());
 	
-				debug(cout  << "cut e_c" << endl);
+				debug_approx(cout  << "cut e_c" << endl);
 	
-				debug(cout << F2 << endl;)
+				debug_approx(cout << F2 << endl;)
 				pair<int,int> components = F2.cut_edge(e_c.first, e_c.second);
-				debug(
+				debug_approx(
 					cout << F2 << endl;
 					cout << components.first << endl;
 					cout << F2.get_node(components.first) << endl;
@@ -1007,14 +1016,14 @@ int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int
 					cout << F2.get_node(components.second) << endl;
 				)
 				// check for singleton
-				debug(cout << "checking if " << F2.str_subtree(F2.get_node(components.first)) << " is a singleton" << endl);
+				debug_approx(cout << "checking if " << F2.str_subtree(F2.get_node(components.first)) << " is a singleton" << endl);
 				if (F2.get_node(components.first)->is_singleton()) {
-					debug(cout << "it is" << endl);
+					debug_approx(cout << "it is" << endl);
 					singletons.push_back(components.first);
 				}
-				debug(cout << "checking if " << F2.str_subtree(F2.get_node(components.second)) << " is a singleton" << endl);
+				debug_approx(cout << "checking if " << F2.str_subtree(F2.get_node(components.second)) << " is a singleton" << endl);
 				if (F2.get_node(components.second)->is_singleton()) {
-					debug(cout << "it is" << endl);
+					debug_approx(cout << "it is" << endl);
 					singletons.push_back(components.second);
 				}
 	
@@ -1024,28 +1033,28 @@ int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int
 			if (cut_b) {
 				pair <int, int> e_b = make_pair(F2_b1->get_label(), F2_b2->get_label());
 	
-				debug(cout  << "cut e_b" << endl);
+				debug_approx(cout  << "cut e_b" << endl);
 	
-				debug(cout << F2 << endl;)
+				debug_approx(cout << F2 << endl;)
 				pair<int,int> components = F2.cut_edge(e_b.first, e_b.second);
-				debug(cout << F2 << endl;)
+				debug_approx(cout << F2 << endl;)
 
 				if (components.first != -1 && components.second != -1) {
-					debug(
+					debug_approx(
 						cout << components.first << endl;
 						cout << F2.get_node(components.first) << endl;
 						cout << components.second<< endl;
 						cout << F2.get_node(components.second) << endl;
 					)
 					// check for singleton
-					debug(cout << "checking if " << F2.str_subtree(F2.get_node(components.first)) << " is a singleton" << endl);
+					debug_approx(cout << "checking if " << F2.str_subtree(F2.get_node(components.first)) << " is a singleton" << endl);
 					if (F2.get_node(components.first)->is_singleton()) {
-						debug(cout << "it is" << endl);
+						debug_approx(cout << "it is" << endl);
 						singletons.push_back(components.first);
 					}
-					debug(cout << "checking if " << F2.str_subtree(F2.get_node(components.second)) << " is a singleton" << endl);
+					debug_approx(cout << "checking if " << F2.str_subtree(F2.get_node(components.second)) << " is a singleton" << endl);
 					if (F2.get_node(components.second)->is_singleton()) {
-						debug(cout << "it is" << endl);
+						debug_approx(cout << "it is" << endl);
 						singletons.push_back(components.second);
 					}
 				}
@@ -1054,28 +1063,28 @@ int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int
 			if (cut_d) {
 				pair <int, int> e_d = make_pair(F2_d1->get_label(), F2_d2->get_label());
 	
-				debug(cout  << "cut e_d" << endl);
+				debug_approx(cout  << "cut e_d" << endl);
 	
-				debug(cout << F2 << endl;)
+				debug_approx(cout << F2 << endl;)
 				pair<int,int> components = F2.cut_edge(e_d.first, e_d.second);
-				debug(cout << F2 << endl;)
+				debug_approx(cout << F2 << endl;)
 
 				if (components.first != -1 && components.second != -1) {
-					debug(
+					debug_approx(
 						cout << components.first << endl;
 						cout << F2.get_node(components.first) << endl;
 						cout << components.second<< endl;
 						cout << F2.get_node(components.second) << endl;
 					)
 					// check for singleton
-					debug(cout << "checking if " << F2.str_subtree(F2.get_node(components.first)) << " is a singleton" << endl);
+					debug_approx(cout << "checking if " << F2.str_subtree(F2.get_node(components.first)) << " is a singleton" << endl);
 					if (F2.get_node(components.first)->is_singleton()) {
-						debug(cout << "it is" << endl);
+						debug_approx(cout << "it is" << endl);
 						singletons.push_back(components.first);
 					}
-					debug(cout << "checking if " << F2.str_subtree(F2.get_node(components.second)) << " is a singleton" << endl);
+					debug_approx(cout << "checking if " << F2.str_subtree(F2.get_node(components.second)) << " is a singleton" << endl);
 					if (F2.get_node(components.second)->is_singleton()) {
-						debug(cout << "it is" << endl);
+						debug_approx(cout << "it is" << endl);
 						singletons.push_back(components.second);
 					}
 				}
@@ -1084,7 +1093,7 @@ int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int
 		}
 	}
 
-	debug(
+	debug_approx(
 		cout << "ANSWER FOUND" << endl;
 		cout << "\t" << F1.str() << endl;
 		cout << "\t" << F2.str() << endl;
@@ -1094,15 +1103,16 @@ int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int
 
 // assume a is deeper than c
 list<pair<int,int> > find_pendants(unode *a, unode *c) {
+	debug(cout << "find_pendants()" << endl);
 	list<pair<int,int> > pendants = list<pair<int,int> >();
 	// don't forget c's grandparent
 	// move through "parents" until we reach the same node
 	// use a list of pairs of ints instead?
 	bool same_component = true;
 	while(a->get_parent() != c->get_parent()) {
-//		cout << "a:" << a->get_distance() << endl;
-//		cout << "c:" << c->get_distance() << endl;
-		if (a->get_distance() > c->get_distance()) {
+		debug(cout << "a:" << a->get_distance() << endl;
+		cout << "c:" << c->get_distance() << endl;)
+		if (a->get_distance() >= c->get_distance()) {
 			unode *prev_a = a;
 			a = a->get_parent();
 			if (a->get_distance() > prev_a->get_distance()) {
@@ -1124,9 +1134,17 @@ list<pair<int,int> > find_pendants(unode *a, unode *c) {
 			unode *prev_c = c;
 			c = c->get_parent();
 			if (c->get_distance() > prev_c->get_distance()) {
+				debug(cout << "c's new distance is " << c->get_distance() << endl;)
 				same_component = false;
 				break;
 			}
+			debug(
+				cout << prev_c->get_distance() << endl;
+				cout << c->get_distance() << endl;
+				cout << c->get_parent()->get_distance() << endl;
+				//cout << a->get_neighbor_not(prev_a, a->get_parent())->get_distance() << endl;
+				cout << endl;
+			)
 			if (c->get_parent() != NULL && c->get_neighbor_not(prev_c, c->get_parent()) != NULL) {
 				pendants.push_back(make_pair(c->get_label(), c->get_neighbor_not(prev_c, c->get_parent())->get_label()));
 			}
@@ -1158,5 +1176,7 @@ int print_mAFs(uforest &F1, uforest &F2, int k) {
 		cout << "\t" << F2.str() << endl;
 		return k;
 }
+
+// TODO: func pointers need to have original T1 and T2 for the replug distance - what a pain!
 
 #endif

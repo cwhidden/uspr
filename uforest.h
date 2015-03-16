@@ -47,6 +47,26 @@ class uforest: public utree {
 			}
 			return ss.str();
 		}
+		string str_with_depths() const {
+			stringstream ss;
+			for(int i = 0; i < components.size(); i++) {
+				if (i > 0) {
+					ss << " ";
+				}
+				unode *root = components[i];
+				if (root->get_label() > -1) {
+					if (root->is_leaf()) {
+						root = root->get_neighbors().front();
+					}
+					else if (!(root->get_contracted_neighbors().empty())){
+						root = root->get_contracted_neighbors().front();
+					}
+				}
+				str_subtree_with_depths(ss, root, root);
+				ss << ";";
+			}
+			return ss.str();
+		}
 		friend ostream& operator<<(ostream &os, const uforest& f);
 
 		pair<int,int> cut_edge(int x, int y) {

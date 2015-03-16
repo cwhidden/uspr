@@ -269,6 +269,49 @@ class utree {
 			s << ")";
 		}
 	}
+
+	void str_subtree_with_depths(stringstream &s, unode *n, unode *prev) const {
+		// only leaf labels
+		if (n->get_label() >= 0) {
+			s << n->str();
+		}
+		list<unode *>::const_iterator i;
+		const list<unode *> &cn = n->const_neighbors();
+		int count = 0;
+		bool has_contracted = false;
+		for(unode *i : n->const_neighbors()) {
+			if (prev == NULL || (*i).get_label() != prev->get_label()) {
+				if (count == 0) {
+					s << "(";
+				}
+				else {
+					s << ",";
+				}
+				count++;
+				str_subtree_with_depths(s, i, n);
+			}
+		}
+		for(unode *i : n->const_contracted_neighbors()) {
+			if (prev == NULL || (*i).get_label() != prev->get_label()) {
+				if (count == 0) {
+					s << "<";
+				}
+				else {
+					s << ",";
+				}
+				count++;
+				has_contracted = true;
+				str_subtree_with_depths(s, i, n);
+			}
+		}
+		if (has_contracted) {
+			s << ">";
+		}
+		else if (count > 0) {
+			s << ")";
+		}
+		s << ":" << n->get_distance();
+	}
 	
 };
 

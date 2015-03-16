@@ -27,6 +27,8 @@ using namespace std;
 string USAGE =
 "uspr, version 0.0.1\n";
 
+bool DEFAULT_OPTIMIZATIONS = true;
+
 
 
 // function prototypes
@@ -40,12 +42,23 @@ int main(int argc, char *argv[]) {
 			KEEP_LABELS = true;
 				cout << "KEEP_LABELS=true" << endl;
 		}
+		if (strcmp(arg, "--no-opt") == 0) {
+			DEFAULT_OPTIMIZATIONS = false;
+			cout << "NO OPTIMIZATIONS" << endl;
+		}
 		if (strcmp(arg, "--help") == 0 ||
 				strcmp(arg, "-h") == 0 ||
 				strcmp(arg, "-help") == 0) {
 			cout << USAGE;
 			return 0;
 		}
+	}
+
+	if (DEFAULT_OPTIMIZATIONS == false) {
+		OPTIMIZE_2B = false;
+		OPTIMIZE_PROTECT_A = false;
+		OPTIMIZE_BRANCH_AND_BOUND = false;
+		cout << "NO OPTIMIZATIONS" << endl;
 	}
 
 	// label maps to allow string labels
