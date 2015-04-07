@@ -24,9 +24,15 @@ bool OPTIMIZE_BRANCH_AND_BOUND = true;
 
 // function prototypes
 int tbr_distance(uforest &F1, uforest &F2);
-int tbr_distance(uforest &T1, uforest &T2, int (*func_pointer)(uforest &F1, uforest &F2, int k));
-int tbr_distance_hlpr(uforest &T1, uforest &T2, int k, int (*func_pointer)(uforest &F1, uforest &F2, int k));
-int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons, int (*func_pointer)(uforest &F1, uforest &F2, int k));
+template<typename T>
+int tbr_distance(uforest &T1, uforest &T2, int (*func_pointer)(uforest &F1, uforest &F2, int k, T s));
+int tbr_count_MAFs(uforest &F1, uforest &F2);
+template<typename T>
+int tbr_distance(uforest &T1, uforest &T2, T t, int (*func_pointer)(uforest &F1, uforest &F2, int k, T s));
+template<typename T>
+int tbr_distance_hlpr(uforest &T1, uforest &T2, int k, T t, int (*func_pointer)(uforest &F1, uforest &F2, int k, T s));
+template<typename T>
+int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons, T t, int (*func_pointer)(uforest &F1, uforest &F2, int k, T s));
 list<pair<int,int> > find_pendants(unode *a, unode *c);
 int tbr_approx(uforest &T1, uforest &T2);
 int tbr_approx(uforest &T1, uforest &T2, bool low);
@@ -36,7 +42,10 @@ int tbr_low_lower_bound(uforest &T1, uforest &T2);
 int tbr_high_upper_bound(uforest &T1, uforest &T2);
 int tbr_low_upper_bound(uforest &T1, uforest &T2);
 int tbr_branch_bound(uforest &F1, uforest &F2, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons);
-int print_mAFs(uforest &F1, uforest &F2, int k);
+
+// AF helpers
+int print_mAFs(uforest &F1, uforest &F2, int k, int dummy);
+int count_mAFs(uforest &F1, uforest &F2, int k, int *count);
 
 class nodemapping {
 	private:
@@ -77,10 +86,18 @@ class nodemapping {
 
 // compute the tbr distance
 int tbr_distance(uforest &T1, uforest &T2) {
-	return tbr_distance(T1, T2, NULL);
+//	return tbr_distance(T1, T2, NULL);
+	return tbr_distance(T1, T2, &print_mAFs);
 }
 
-int tbr_distance(uforest &T1, uforest &T2, int (*func_pointer)(uforest &F1, uforest &F2, int k)) {
+template <typename T>
+int tbr_distance(uforest &T1, uforest &T2, int (*func_pointer)(uforest &F1, uforest &F2, int k, T s)) {
+	T dummy = 0;
+	return tbr_distance(T1, T2, dummy, func_pointer);
+}
+
+template <typename T>
+int tbr_distance(uforest &T1, uforest &T2, T t, int (*func_pointer)(uforest &F1, uforest &F2, int k, T s)) {
 
 	int start = tbr_high_lower_bound(T1, T2);
 
@@ -88,7 +105,7 @@ int tbr_distance(uforest &T1, uforest &T2, int (*func_pointer)(uforest &F1, ufor
 			cout << "{" << k << "} ";
 			cout.flush();
 			// test k
-			int result = tbr_distance_hlpr(T1, T2, k, func_pointer);
+			int result = tbr_distance_hlpr(T1, T2, k, t, func_pointer);
 			if (result >= 0) {
 				cout << endl;
 				return k - result;
@@ -97,7 +114,25 @@ int tbr_distance(uforest &T1, uforest &T2, int (*func_pointer)(uforest &F1, ufor
 	return -1;
 }
 
-int tbr_distance_hlpr(uforest &T1, uforest &T2, int k, int (*func_pointer)(uforest &F1, uforest &F2, int k)) {
+int tbr_count_MAFs(uforest &T1, uforest &T2) {
+	int count = 0;
+	int start = tbr_high_lower_bound(T1, T2);
+
+	for(int k = start; k < 100; k++) {
+			cout << "{" << k << "} ";
+			cout.flush();
+			// test k
+			int result = tbr_distance_hlpr(T1, T2, k, &count, &count_mAFs);
+			if (result >= 0) {
+				cout << endl;
+				return count;
+			}
+	}
+	return count;
+}
+
+template <typename T>
+int tbr_distance_hlpr(uforest &T1, uforest &T2, int k, T t, int (*func_pointer)(uforest &F1, uforest &F2, int k, T s)) {
 	uforest F1 = uforest(T1);
 	uforest F2 = uforest(T2);
 
@@ -143,10 +178,11 @@ int tbr_distance_hlpr(uforest &T1, uforest &T2, int k, int (*func_pointer)(ufore
 	)
 
 
-	return tbr_distance_hlpr(F1, F2, k, twins, sibling_pairs, singletons, func_pointer);
+	return tbr_distance_hlpr(F1, F2, k, twins, sibling_pairs, singletons, t, func_pointer);
 }
 
-int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons, int (*func_pointer)(uforest &F1, uforest &F2, int k)) {
+template <typename T>
+int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons, T t, int (*func_pointer)(uforest &F1, uforest &F2, int k, T s)) {
 
 	if (k < 0) {
 		return -1;
@@ -449,7 +485,7 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 					debug(cout << "it is" << endl);
 					singletons_copy.push_back(components.second);
 				}
-				int branch_a = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy, func_pointer);
+				int branch_a = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy, t, func_pointer);
 	
 				if (branch_a > result) {
 					result = branch_a;
@@ -481,7 +517,7 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 				if (F2_copy.get_node(components.second)->is_singleton()) {
 					singletons_copy.push_back(components.second);
 				}
-				int branch_c = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy, func_pointer);
+				int branch_c = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy, t, func_pointer);
 	
 				if (branch_c > result) {
 					result = branch_c;
@@ -520,7 +556,7 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 						}
 						j++;
 					}
-					int branch_b = tbr_distance_hlpr(F1_copy, F2_copy, k-(num_pendants-1), twins_copy, sibling_pairs_copy, singletons_copy, func_pointer);
+					int branch_b = tbr_distance_hlpr(F1_copy, F2_copy, k-(num_pendants-1), twins_copy, sibling_pairs_copy, singletons_copy, t, func_pointer);
 					if (branch_b > result) {
 						result = branch_b;
 					}
@@ -552,7 +588,7 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 				if (F2_copy.get_node(components.second)->is_singleton()) {
 					singletons_copy.push_back(components.second);
 				}
-				int branch_b = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy, func_pointer);
+				int branch_b = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy, t, func_pointer);
 	
 				if (branch_b > result) {
 					result = branch_b;
@@ -582,7 +618,7 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 				if (F2_copy.get_node(components.second)->is_singleton()) {
 					singletons_copy.push_back(components.second);
 				}
-				int branch_d = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy, func_pointer);
+				int branch_d = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy, t, func_pointer);
 	
 				if (branch_d > result) {
 					result = branch_d;
@@ -626,7 +662,7 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 		return k;
 	}
 	else {
-		return (*func_pointer)(F1, F2, k);
+		return (*func_pointer)(F1, F2, k, t);
 	}
 }
 
@@ -1188,11 +1224,16 @@ list<pair<int,int> > find_pendants(unode *a, unode *c) {
 	return pendants;
 }
 
-int print_mAFs(uforest &F1, uforest &F2, int k) {
+int print_mAFs(uforest &F1, uforest &F2, int k, int dummy) {
 		cout << "ANSWER FOUND" << endl;
 		cout << "\t" << F1.str() << endl;
 		cout << "\t" << F2.str() << endl;
 		return k;
+}
+
+int count_mAFs(uforest &F1, uforest &F2, int k, int *count) {
+	(*count)++;
+	return k;
 }
 
 // TODO: func pointers need to have original T1 and T2 for the replug distance - what a pain!
