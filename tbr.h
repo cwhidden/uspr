@@ -490,6 +490,7 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 
 			// Cut each F2_b but one, for each possible choice
 			if (cut_b) {
+				debug(cout << "k=" << k << endl);
 				for (int i = 0; i < num_pendants; i++) {
 					debug(cout << "cut e_b except for e_{b_" << i << "}" << endl);
 
@@ -1119,8 +1120,7 @@ list<pair<int,int> > find_pendants(unode *a, unode *c) {
 		debug(cout << "a:" << a->get_distance() << endl;
 		cout << "c:" << c->get_distance() << endl;)
 		if (a->get_distance() > c->get_distance() ||
-				(a->get_distance() == c->get_distance() &&
-				 a->get_parent()->get_distance() >= c->get_parent()->get_distance())) {
+				 (a->get_parent()->get_distance() >= c->get_parent()->get_distance())) {
 			unode *prev_a = a;
 			a = a->get_parent();
 			if (a->get_distance() > prev_a->get_distance()) {
