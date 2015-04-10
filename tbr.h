@@ -27,6 +27,7 @@ int tbr_distance(uforest &F1, uforest &F2);
 template<typename T>
 int tbr_distance(uforest &T1, uforest &T2, int (*func_pointer)(uforest &F1, uforest &F2, int k, T s));
 int tbr_count_MAFs(uforest &F1, uforest &F2);
+int tbr_count_mAFs(uforest &F1, uforest &F2);
 template<typename T>
 int tbr_distance(uforest &T1, uforest &T2, T t, int (*func_pointer)(uforest &F1, uforest &F2, int k, T s));
 template<typename T>
@@ -130,6 +131,32 @@ int tbr_count_MAFs(uforest &T1, uforest &T2) {
 	}
 	return count;
 }
+
+int tbr_count_mAFs(uforest &T1, uforest &T2) {
+	int count = 0;
+	int start = tbr_high_lower_bound(T1, T2);
+
+	for(int k = start; k < 100; k++) {
+			cout << "{" << k << "} ";
+			cout.flush();
+			// test k
+			int new_count = 0;
+			int result = tbr_distance_hlpr(T1, T2, k, &new_count, &count_mAFs);
+			if (result >= 0) {
+				cout << endl;
+				cout << "found " << new_count << " mAFs" << endl;
+				if (count < new_count) {
+					count = new_count;
+				}
+				else {
+					cout << endl;
+					return count;
+				}
+			}
+	}
+	return count;
+}
+
 
 template <typename T>
 int tbr_distance_hlpr(uforest &T1, uforest &T2, int k, T t, int (*func_pointer)(uforest &F1, uforest &F2, int k, T s)) {
