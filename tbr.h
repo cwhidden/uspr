@@ -20,6 +20,7 @@ class nodemapping;
 
 bool OPTIMIZE_2B = true;
 bool OPTIMIZE_PROTECT_A = true;
+bool OPTIMIZE_PROTECT_B = true;
 bool OPTIMIZE_BRANCH_AND_BOUND = true;
 
 // function prototypes
@@ -28,6 +29,8 @@ template<typename T>
 int tbr_distance(uforest &T1, uforest &T2, int (*func_pointer)(uforest &F1, uforest &F2, int k, T s));
 int tbr_count_MAFs(uforest &F1, uforest &F2);
 int tbr_count_mAFs(uforest &F1, uforest &F2);
+int tbr_print_mAFs(uforest &F1, uforest &F2);
+int tbr_count_mAFs(uforest &T1, uforest &T2, bool print);
 template<typename T>
 int tbr_distance(uforest &T1, uforest &T2, T t, int (*func_pointer)(uforest &F1, uforest &F2, int k, T s));
 template<typename T>
@@ -45,8 +48,10 @@ int tbr_low_upper_bound(uforest &T1, uforest &T2);
 int tbr_branch_bound(uforest &F1, uforest &F2, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons);
 
 // AF helpers
+int dummy_mAFs(uforest &F1, uforest &F2, int k, int dummy);
 int print_mAFs(uforest &F1, uforest &F2, int k, int dummy);
 int count_mAFs(uforest &F1, uforest &F2, int k, int *count);
+int print_and_count_mAFs(uforest &F1, uforest &F2, int k, int *count);
 
 class nodemapping {
 	private:
@@ -87,8 +92,7 @@ class nodemapping {
 
 // compute the tbr distance
 int tbr_distance(uforest &T1, uforest &T2) {
-//	return tbr_distance(T1, T2, NULL);
-	return tbr_distance(T1, T2, &print_mAFs);
+	return tbr_distance(T1, T2, &dummy_mAFs);
 }
 
 template <typename T>
@@ -132,7 +136,15 @@ int tbr_count_MAFs(uforest &T1, uforest &T2) {
 	return count;
 }
 
+int tbr_print_mAFs(uforest &T1, uforest &T2) {
+	return tbr_count_mAFs(T1, T2, true);
+}
+
 int tbr_count_mAFs(uforest &T1, uforest &T2) {
+	return tbr_count_mAFs(T1, T2, false);
+}
+
+int tbr_count_mAFs(uforest &T1, uforest &T2, bool print) {
 	int count = 0;
 	int start = tbr_high_lower_bound(T1, T2);
 
@@ -141,7 +153,13 @@ int tbr_count_mAFs(uforest &T1, uforest &T2) {
 			cout.flush();
 			// test k
 			int new_count = 0;
-			int result = tbr_distance_hlpr(T1, T2, k, &new_count, &count_mAFs);
+			int result;
+			if (print) {
+				result = tbr_distance_hlpr(T1, T2, k, &new_count, &print_and_count_mAFs);
+			}
+			else {
+				result = tbr_distance_hlpr(T1, T2, k, &new_count, &count_mAFs);
+			}
 			if (result >= 0) {
 				cout << endl;
 				cout << "found " << new_count << " mAFs" << endl;
@@ -556,6 +574,7 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 				debug(cout << "k=" << k << endl);
 				for (int i = 0; i < num_pendants; i++) {
 					debug(cout << "cut e_b except for e_{b_" << i << "}" << endl);
+					bool valid = true;
 
 					// copy the trees
 					uforest F1_copy = uforest(F1);
@@ -572,6 +591,18 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 					for(pair<int, int> e_b : pendants) {
 						if ( j != i) {
 							debug(cout << "cut e_{b_" << j << "}" << endl);
+							if (OPTIMIZE_PROTECT_A) {
+								unode *x = F2_copy.get_node(e_b.first);
+								unode *y = F2_copy.get_node(e_b.second);
+								if (y->get_distance() > x->get_distance()) {
+									x = F2_copy.get_node(e_b.second);
+									y = F2_copy.get_node(e_b.first);
+								}
+								if (x->is_protected()) {
+									valid = false;
+								}
+							}
+
 							pair<int, int> components = F2_copy.cut_edge(e_b.first, e_b.second);
 							debug(cout << F2_copy << endl);
 							if (F2_copy.get_node(components.first)->is_singleton()) {
@@ -581,9 +612,23 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 								singletons_copy.push_back(components.second);
 							}
 						}
+						else {
+							if (OPTIMIZE_PROTECT_B && i < num_pendants) {
+								unode *x = F2_copy.get_node(e_b.first);
+								unode *y = F2_copy.get_node(e_b.second);
+								if (y->get_distance() > x->get_distance()) {
+									x = F2_copy.get_node(e_b.second);
+									y = F2_copy.get_node(e_b.first);
+								}
+								x->set_protected(true);
+							}
+						}
 						j++;
 					}
-					int branch_b = tbr_distance_hlpr(F1_copy, F2_copy, k-(num_pendants-1), twins_copy, sibling_pairs_copy, singletons_copy, t, func_pointer);
+					int branch_b = -1;
+					if (valid) {
+						branch_b = tbr_distance_hlpr(F1_copy, F2_copy, k-(num_pendants-1), twins_copy, sibling_pairs_copy, singletons_copy, t, func_pointer);
+					}
 					if (branch_b > result) {
 						result = branch_b;
 					}
@@ -1252,14 +1297,26 @@ list<pair<int,int> > find_pendants(unode *a, unode *c) {
 }
 
 int print_mAFs(uforest &F1, uforest &F2, int k, int dummy) {
-		cout << "ANSWER FOUND" << endl;
-		cout << "\t" << F1.str() << endl;
-		cout << "\t" << F2.str() << endl;
-		return k;
+	cout << "ANSWER FOUND" << endl;
+	cout << "\t" << F1.str() << endl;
+	cout << "\t" << F2.str() << endl;
+	return k;
 }
 
 int count_mAFs(uforest &F1, uforest &F2, int k, int *count) {
 	(*count)++;
+	return k;
+}
+
+int print_and_count_mAFs(uforest &F1, uforest &F2, int k, int *count) {
+	cout << "ANSWER FOUND" << endl;
+	cout << "\t" << F1.str() << endl;
+	cout << "\t" << F2.str() << endl;
+	(*count)++;
+	return k;
+}
+
+int dummy_mAFs(uforest &F1, uforest &F2, int k, int dummy) {
 	return k;
 }
 

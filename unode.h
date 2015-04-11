@@ -238,6 +238,9 @@ class unode {
 				if (component > -1) {
 					p->set_component(component);
 				}
+				if (is_protected()) {
+					p->set_protected(true);
+				}
 				return p;
 			}
 		}
@@ -270,6 +273,9 @@ class unode {
 				}
 				if (component > -1) {
 					p->set_component(component);
+				}
+				if (is_protected()) {
+					p->set_protected(true);
 				}
 				return p;
 			}

@@ -28,6 +28,7 @@ string USAGE =
 "uspr, version 0.0.1\n";
 
 bool DEFAULT_OPTIMIZATIONS = true;
+bool PRINT_mAFS = false;
 
 
 
@@ -38,15 +39,21 @@ int main(int argc, char *argv[]) {
 	int max_args = argc-1;
 	while (argc > 1) {
 		char *arg = argv[--argc];
-		if (strcmp(arg, "--keep-labels") == 0) {
+		if (strcmp(arg, "--print-mAFs") == 0) {
+			PRINT_mAFS = true;
+		}
+		else if (strcmp(arg, "--keep-labels") == 0) {
 			KEEP_LABELS = true;
 				cout << "KEEP_LABELS=true" << endl;
 		}
-		if (strcmp(arg, "--no-opt") == 0) {
+		else if (strcmp(arg, "--no-opt") == 0) {
 			DEFAULT_OPTIMIZATIONS = false;
 			cout << "NO OPTIMIZATIONS" << endl;
 		}
-		if (strcmp(arg, "--help") == 0 ||
+		else if (strcmp(arg, "--no-protect-b") == 0) {
+			OPTIMIZE_PROTECT_B = false;
+		}
+		else if (strcmp(arg, "--help") == 0 ||
 				strcmp(arg, "-h") == 0 ||
 				strcmp(arg, "-help") == 0) {
 			cout << USAGE;
@@ -57,6 +64,7 @@ int main(int argc, char *argv[]) {
 	if (DEFAULT_OPTIMIZATIONS == false) {
 		OPTIMIZE_2B = false;
 		OPTIMIZE_PROTECT_A = false;
+		OPTIMIZE_PROTECT_B = false;
 		OPTIMIZE_BRANCH_AND_BOUND = false;
 		cout << "NO OPTIMIZATIONS" << endl;
 	}
@@ -83,11 +91,16 @@ int main(int argc, char *argv[]) {
 //		cout << "a_TBR low upper bound = " << tbr_low_upper_bound(F1, F2) << endl;
 //		cout << "a_TBR low lower bound = " << tbr_low_lower_bound(F1, F2) << endl;
 		cout << "a_TBR: " << tbr_high_lower_bound(F1, F2) << " <= d_TBR <= " << tbr_low_upper_bound(F1, F2) << endl;
-		int distance = tbr_distance(F1, F2, &print_mAFs);
+		int distance = tbr_distance(F1, F2);
 		cout << "d_TBR = " << distance << endl;
-//		int count = tbr_count_MAFs(F1, F2);
+		int count;
+		if (PRINT_mAFS) {
+			count = tbr_print_mAFs(F1, F2);
+		}
+		else {
+			count = tbr_count_mAFs(F1, F2);
+		}
 //		cout << count << " MAFs" << endl;
-		int count = tbr_count_mAFs(F1, F2);
 		cout << count << " mAFs" << endl;
 	}
 }
