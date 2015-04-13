@@ -33,17 +33,17 @@ bool OPTIMIZE_BRANCH_AND_BOUND = true;
 // function prototypes
 int tbr_distance(uforest &F1, uforest &F2);
 template<typename T>
-int tbr_distance(uforest &T1, uforest &T2, int (*func_pointer)(uforest &F1, uforest &F2, int k, T s));
+int tbr_distance(uforest &T1, uforest &T2, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s));
 int tbr_count_MAFs(uforest &F1, uforest &F2);
 int tbr_count_mAFs(uforest &F1, uforest &F2);
 int tbr_print_mAFs(uforest &F1, uforest &F2);
 int tbr_count_mAFs(uforest &T1, uforest &T2, bool print);
 template<typename T>
-int tbr_distance(uforest &T1, uforest &T2, T t, int (*func_pointer)(uforest &F1, uforest &F2, int k, T s));
+int tbr_distance(uforest &T1, uforest &T2, T t, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s));
 template<typename T>
-int tbr_distance_hlpr(uforest &T1, uforest &T2, int k, T t, int (*func_pointer)(uforest &F1, uforest &F2, int k, T s));
+int tbr_distance_hlpr(uforest &T1, uforest &T2, int k, T t, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s));
 template<typename T>
-int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons, T t, int (*func_pointer)(uforest &F1, uforest &F2, int k, T s));
+int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons, T t, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s));
 list<pair<int,int> > find_pendants(unode *a, unode *c);
 int tbr_approx(uforest &T1, uforest &T2);
 int tbr_approx(uforest &T1, uforest &T2, bool low);
@@ -55,11 +55,11 @@ int tbr_low_upper_bound(uforest &T1, uforest &T2);
 int tbr_branch_bound(uforest &F1, uforest &F2, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons);
 
 // AF helpers
-int dummy_mAFs(uforest &F1, uforest &F2, int k, int dummy);
-int print_mAFs(uforest &F1, uforest &F2, int k, int dummy);
-int count_mAFs(uforest &F1, uforest &F2, int k, int *count);
-int print_and_count_mAFs(uforest &F1, uforest &F2, int k, int *count);
-int replug_hlpr(uforest &F1, uforest &F2, int k, pair<uforest, uforest> T);
+int dummy_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, int dummy);
+int print_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, int dummy);
+int count_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, int *count);
+int print_and_count_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, int *count);
+int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<uforest, uforest> T);
 
 class nodemapping {
 	private:
@@ -104,13 +104,13 @@ int tbr_distance(uforest &T1, uforest &T2) {
 }
 
 template <typename T>
-int tbr_distance(uforest &T1, uforest &T2, int (*func_pointer)(uforest &F1, uforest &F2, int k, T s)) {
+int tbr_distance(uforest &T1, uforest &T2, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s)) {
 	T dummy = 0;
 	return tbr_distance(T1, T2, dummy, func_pointer);
 }
 
 template <typename T>
-int tbr_distance(uforest &T1, uforest &T2, T t, int (*func_pointer)(uforest &F1, uforest &F2, int k, T s)) {
+int tbr_distance(uforest &T1, uforest &T2, T t, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s)) {
 
 	int start = tbr_high_lower_bound(T1, T2);
 
@@ -194,7 +194,7 @@ int replug_distance(uforest &T1, uforest &T2) {
 
 
 template <typename T>
-int tbr_distance_hlpr(uforest &T1, uforest &T2, int k, T t, int (*func_pointer)(uforest &F1, uforest &F2, int k, T s)) {
+int tbr_distance_hlpr(uforest &T1, uforest &T2, int k, T t, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s)) {
 	uforest F1 = uforest(T1);
 	uforest F2 = uforest(T2);
 
@@ -244,7 +244,7 @@ int tbr_distance_hlpr(uforest &T1, uforest &T2, int k, T t, int (*func_pointer)(
 }
 
 template <typename T>
-int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons, T t, int (*func_pointer)(uforest &F1, uforest &F2, int k, T s)) {
+int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons, T t, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s)) {
 
 	if (k < 0) {
 		return -1;
@@ -751,7 +751,7 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 		return k;
 	}
 	else {
-		return (*func_pointer)(F1, F2, k, t);
+		return (*func_pointer)(F1, F2, twins, k, t);
 	}
 }
 
@@ -1313,19 +1313,19 @@ list<pair<int,int> > find_pendants(unode *a, unode *c) {
 	return pendants;
 }
 
-int print_mAFs(uforest &F1, uforest &F2, int k, int dummy) {
+int print_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, int dummy) {
 	cout << "ANSWER FOUND" << endl;
 	cout << "\t" << F1.str() << endl;
 	cout << "\t" << F2.str() << endl;
 	return k;
 }
 
-int count_mAFs(uforest &F1, uforest &F2, int k, int *count) {
+int count_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, int *count) {
 	(*count)++;
 	return k;
 }
 
-int print_and_count_mAFs(uforest &F1, uforest &F2, int k, int *count) {
+int print_and_count_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, int *count) {
 	cout << "ANSWER FOUND" << endl;
 	cout << "\t" << F1.str() << endl;
 	cout << "\t" << F2.str() << endl;
@@ -1333,11 +1333,11 @@ int print_and_count_mAFs(uforest &F1, uforest &F2, int k, int *count) {
 	return k;
 }
 
-int dummy_mAFs(uforest &F1, uforest &F2, int k, int dummy) {
+int dummy_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, int dummy) {
 	return k;
 }
 
-int replug_hlpr(uforest &F1, uforest &F2, int k, pair<uforest, uforest> T) {
+int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<uforest, uforest> T) {
 	debug_replug(
 		cout << endl << "REPLUG_HLPR" << endl;
 		cout << "\t" << "k:  " << k << endl;
@@ -1356,6 +1356,8 @@ int replug_hlpr(uforest &F1, uforest &F2, int k, pair<uforest, uforest> T) {
 	// 	(i,j) - F edge
 	// 	T - corresponding tree, 1 or 2
 	// 	l - socket order from i to j
+	//
+	// 	note: need to normalize with F1 <-> F2 mapping
 
 	// 3. Map dead nodes (not alive or sockets)
 
