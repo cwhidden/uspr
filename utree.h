@@ -10,7 +10,7 @@ using namespace std;
 class utree;
 
 // options
-bool KEEP_LABELS = true;
+bool KEEP_LABELS = false;
 
 // prototypes
 bool build_utree(utree &t, string &s, map<string, int> &label_map, map<int, string> &reverse_label_map);

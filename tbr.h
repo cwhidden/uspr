@@ -17,6 +17,13 @@ class nodemapping;
 	#define debug_approx(x) 
 #endif
 
+#define DEBUG_REPLUG 1
+#ifdef DEBUG_REPLUG
+	#define debug_replug(x) x
+#else
+	#define debug_replug(x) 
+#endif
+
 
 bool OPTIMIZE_2B = true;
 bool OPTIMIZE_PROTECT_A = true;
@@ -52,6 +59,7 @@ int dummy_mAFs(uforest &F1, uforest &F2, int k, int dummy);
 int print_mAFs(uforest &F1, uforest &F2, int k, int dummy);
 int count_mAFs(uforest &F1, uforest &F2, int k, int *count);
 int print_and_count_mAFs(uforest &F1, uforest &F2, int k, int *count);
+int replug_hlpr(uforest &F1, uforest &F2, int k, pair<uforest, uforest> T);
 
 class nodemapping {
 	private:
@@ -173,6 +181,10 @@ int tbr_count_mAFs(uforest &T1, uforest &T2, bool print) {
 			}
 	}
 	return count;
+}
+
+int replug_distance(uforest &T1, uforest &T2) {
+	return tbr_distance(T1, T2, make_pair(T1, T2), &replug_hlpr);
 }
 
 
@@ -1320,6 +1332,17 @@ int dummy_mAFs(uforest &F1, uforest &F2, int k, int dummy) {
 	return k;
 }
 
-// TODO: func pointers need to have original T1 and T2 for the replug distance - what a pain!
+int replug_hlpr(uforest &F1, uforest &F2, int k, pair<uforest, uforest> T) {
+	debug_replug(
+		cout << endl << "REPLUG_HLPR" << endl;
+		cout << "\t" << "k:  " << k << endl;
+		cout << "\t" << "T1: " << T.first << endl;
+		cout << "\t" << "T2: " << T.second << endl;
+		cout << "\t" << "F1: " << F1.str() << endl;
+		cout << "\t" << "F2: " << F2.str() << endl;
+	)
+	return k;
+}
+
 
 #endif

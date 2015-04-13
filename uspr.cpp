@@ -102,5 +102,11 @@ int main(int argc, char *argv[]) {
 		}
 //		cout << count << " MAFs" << endl;
 		cout << count << " mAFs" << endl;
+
+		int d_replug = replug_distance(F1, F2);
+		cout << "d_R = " << d_replug << endl;
+
+
+
 	}
 }
