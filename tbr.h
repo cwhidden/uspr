@@ -184,6 +184,11 @@ int tbr_count_mAFs(uforest &T1, uforest &T2, bool print) {
 }
 
 int replug_distance(uforest &T1, uforest &T2) {
+	// may be needed
+	T1.root(T1.get_smallest_leaf());
+	T2.root(T2.get_smallest_leaf());
+	distances_from_leaf_decorator(T1, T1.get_smallest_leaf());
+	distances_from_leaf_decorator(T2, T2.get_smallest_leaf());
 	return tbr_distance(T1, T2, make_pair(T1, T2), &replug_hlpr);
 }
 
@@ -1341,6 +1346,40 @@ int replug_hlpr(uforest &F1, uforest &F2, int k, pair<uforest, uforest> T) {
 		cout << "\t" << "F1: " << F1.str() << endl;
 		cout << "\t" << "F2: " << F2.str() << endl;
 	)
+
+	// Need F1 <-> F2 node mapping?
+
+	// 1. Map alive nodes T1 <-> F1 and T2 <-> F2
+
+	// 2. Map sockets (T nodes on F paths)
+	// 	Socket format: s(i,j,T,l)
+	// 	(i,j) - F edge
+	// 	T - corresponding tree, 1 or 2
+	// 	l - socket order from i to j
+
+	// 3. Map dead nodes (not alive or sockets)
+
+	// 4. Identify dead components and corresponding socket sets
+	//
+	// 5. Preprocessing - find obvious phi-nodes (or not phi-nodes)
+	//
+	// 6. Convert to set of constraints - 2 CNF+ <=2
+	//
+	// 7. Solve with edge cover
+	//
+	// 8. Find set of replug moves to test
+	//
+	// 9. return distance
+	//
+	// OPTIONAL - check maximality before enumerating socket pairings
+	//
+	// ?. When to enumerate socket pairings?
+	//
+	// OPTIONAL - clustering
+
+
+
+
 	return k;
 }
 
