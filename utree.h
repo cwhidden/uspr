@@ -152,6 +152,20 @@ class utree {
 		 return leaves;
 	 }
 
+	 list<unode *> get_node_list() {
+		 list<unode *> L = list<unode *>();
+		 for (unode *i: leaves) {
+			 if (i != NULL) {
+				 L.push_back(i);
+			 }
+		 }
+		 for (unode *i: internal_nodes) {
+			 if (i != NULL) {
+				 L.push_back(i);
+			 }
+		 }
+			 return L;
+	 }
 
 	 unode *get_leaf(int label) {
 		 return leaves[label];
@@ -222,15 +236,15 @@ class utree {
 		}
 	}
 
-	string str_subtree(unode *n) {
+	string str_subtree(unode *n, bool print_internal_labels = false) {
 		stringstream ss;
-		str_subtree(ss, n, n->get_parent());
+		str_subtree(ss, n, n->get_parent(), print_internal_labels);
 		return ss.str();
 	}
 
-	void str_subtree(stringstream &s, unode *n, unode *prev) const {
+	void str_subtree(stringstream &s, unode *n, unode *prev, bool print_internal_labels = false) const {
 		// only leaf labels
-		if (n->get_label() >= 0) {
+		if (print_internal_labels || n->get_label() >= 0) {
 			s << n->str();
 		}
 		list<unode *>::const_iterator i;
@@ -246,7 +260,7 @@ class utree {
 					s << ",";
 				}
 				count++;
-				str_subtree(s, i, n);
+				str_subtree(s, i, n, print_internal_labels);
 			}
 		}
 		for(unode *i : n->const_contracted_neighbors()) {
@@ -259,7 +273,7 @@ class utree {
 				}
 				count++;
 				has_contracted = true;
-				str_subtree(s, i, n);
+				str_subtree(s, i, n, print_internal_labels);
 			}
 		}
 		if (has_contracted) {
@@ -270,9 +284,9 @@ class utree {
 		}
 	}
 
-	void str_subtree_with_depths(stringstream &s, unode *n, unode *prev) const {
+	void str_subtree_with_depths(stringstream &s, unode *n, unode *prev, bool print_internal_labels = false) const {
 		// only leaf labels
-		if (n->get_label() >= 0) {
+		if (print_internal_labels || n->get_label() >= 0) {
 			s << n->str();
 		}
 		list<unode *>::const_iterator i;
@@ -288,7 +302,7 @@ class utree {
 					s << ",";
 				}
 				count++;
-				str_subtree_with_depths(s, i, n);
+				str_subtree_with_depths(s, i, n, print_internal_labels);
 			}
 		}
 		for(unode *i : n->const_contracted_neighbors()) {
@@ -301,7 +315,7 @@ class utree {
 				}
 				count++;
 				has_contracted = true;
-				str_subtree_with_depths(s, i, n);
+				str_subtree_with_depths(s, i, n, print_internal_labels);
 			}
 		}
 		if (has_contracted) {

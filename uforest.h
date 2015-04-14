@@ -27,7 +27,7 @@ class uforest: public utree {
 //				cout << "\t" << F.components[i] << ", " << components[i] << endl;
 			}
 		}
-		string str() const {
+		string str(bool print_internal = false) const {
 			stringstream ss;
 			for(int i = 0; i < components.size(); i++) {
 				if (i > 0) {
@@ -42,12 +42,12 @@ class uforest: public utree {
 						root = root->get_contracted_neighbors().front();
 					}
 				}
-				str_subtree(ss, root, root);
+				str_subtree(ss, root, root, print_internal);
 				ss << ";";
 			}
 			return ss.str();
 		}
-		string str_with_depths() const {
+		string str_with_depths(bool print_internal = false) const {
 			stringstream ss;
 			for(int i = 0; i < components.size(); i++) {
 				if (i > 0) {
@@ -62,7 +62,7 @@ class uforest: public utree {
 						root = root->get_contracted_neighbors().front();
 					}
 				}
-				str_subtree_with_depths(ss, root, root);
+				str_subtree_with_depths(ss, root, root, print_internal);
 				ss << ";";
 			}
 			return ss.str();

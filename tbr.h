@@ -1344,7 +1344,18 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 		cout << "\t" << "T1: " << T.first << endl;
 		cout << "\t" << "T2: " << T.second << endl;
 		cout << "\t" << "F1: " << F1.str() << endl;
+		cout << "\t" << "F1: " << F1.str(true) << endl;
 		cout << "\t" << "F2: " << F2.str() << endl;
+		cout << "\t" << "F2: " << F2.str(true) << endl;
+
+		cout << "\t" << "nodemapping: " << endl;
+		for (unode *i: F1.get_node_list()) {
+			cout << "\t\t";
+			cout << i->get_label();
+			cout << ": ";
+			cout << twins.get_forward(i->get_label());
+			cout << endl;
+		}
 	)
 
 	// Need F1 <-> F2 node mapping?
