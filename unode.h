@@ -61,7 +61,12 @@ class unode {
 	}
 
 	void add_neighbor(unode *n) {
-		neighbors.push_back(n);
+		if (num_neighbors > 0 && neighbors.front()->get_distance() > n->get_distance()) {
+			neighbors.push_front(n);
+		}
+		else {
+			neighbors.push_back(n);
+		}
 		num_neighbors++;
 	}
 
@@ -222,8 +227,34 @@ class unode {
 		num_neighbors = 0;
 	}
 
+
 	void clear_contracted_neighbors() {
 		contracted_neighbors.clear();
+	}
+
+	void uncontract_neighbors() {
+		for (unode *x: contracted_neighbors) {
+			add_neighbor(x);
+		}
+		clear_contracted_neighbors();
+	}
+
+	void uncontract_subtree(unode *last = NULL) {
+		for (unode *n : neighbors) {
+			if (last == NULL || n != last) {
+				n->uncontract_subtree(this);
+			}
+		}
+		uncontract_neighbors();
+	}
+
+	void contract_degree_two_subtree(unode *last = NULL) {
+		for (unode *n : neighbors) {
+			if (last == NULL || n != last) {
+				n->contract_degree_two_subtree(this);
+			}
+		}
+		contract();
 	}
 
 	unode *contract() {
@@ -244,14 +275,58 @@ class unode {
 				return p;
 			}
 		}
-		else if (num_neighbors == 2 && contracted_neighbors.empty()) {
-			unode *p = neighbors.front();
-			unode *c = *(next(neighbors.begin(), 1));
+		/*
+		else if (num_neighbors == 0 && contracted_neighbors.size() == 2) {
+//			uncontract_neighbors();
+			unode *p = contracted_neighbors.front();
+			unode *c = *(next(contracted_neighbors.begin(), 1));
 			debug(
 				cout << "contracting:" << endl;
 				cout << p << endl;
 				cout << c << endl;
 			)
+			if (!p->is_leaf() ||
+						!(p->get_contracted_neighbors().empty()) ||
+						!c->is_leaf()) {
+				clear_contracted_neighbors();
+				p->remove_neighbor(this);
+				c->remove_neighbor(this);
+				c->add_parent(p);
+				p->add_contracted_neighbor(c);
+				if (p->get_distance() > distance &&
+						c->get_distance() > distance) {
+					p->set_distance(distance-1);
+					c->set_distance(distance);
+				}
+				else {
+					c->set_distance(p->get_distance()+1);
+				}
+				if (!get_terminal()) {
+					p->set_terminal(false);
+				}
+				else {
+					p->set_terminal(true);
+				}
+				if (component > -1) {
+					p->set_component(component);
+				}
+				if (is_protected()) {
+					c->set_protected(true);
+				}
+				return p;
+			}
+		}
+		*/
+		else if (num_neighbors == 2 && contracted_neighbors.empty()) {
+			unode *p = neighbors.front();
+			unode *c = *(next(neighbors.begin(), 1));
+			/*
+			debug(
+				cout << "contracting:" << endl;
+				cout << p << endl;
+				cout << c << endl;
+			)
+			*/
 			if (!p->is_leaf() ||
 						!(p->get_contracted_neighbors().empty()) ||
 						!c->is_leaf()) {
@@ -275,7 +350,7 @@ class unode {
 					p->set_component(component);
 				}
 				if (is_protected()) {
-					p->set_protected(true);
+					c->set_protected(true);
 				}
 				return p;
 			}

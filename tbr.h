@@ -3,7 +3,7 @@
 
 class nodemapping;
 
-//#define DEBUG 1
+#define DEBUG 1
 #ifdef DEBUG
 	#define debug(x) x
 #else
@@ -1338,6 +1338,13 @@ int dummy_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, int dummy) {
 }
 
 int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<uforest, uforest> T) {
+
+	// cleanup AFs - TODO: make this unnecessary
+	F1.uncontract();
+	F1.contract_degree_two();
+	F2.uncontract();
+	F2.contract_degree_two();
+
 	debug_replug(
 		cout << endl << "REPLUG_HLPR" << endl;
 		cout << "\t" << "k:  " << k << endl;

@@ -77,7 +77,7 @@ class uforest: public utree {
 			//cout << "d_Y: " << Y->get_distance() << endl;
 			bool swapped = false;
 			if (Y->get_distance() > X->get_distance()) {
-				//cout << "AHH!" << endl;
+				cout << "AHH!" << endl;
 				X = get_node(y);
 				Y = get_node(x);
 				swapped = true;
@@ -128,6 +128,17 @@ class uforest: public utree {
 
 		int num_components() {
 			return components.size();
+		}
+
+		void uncontract() {
+			for (unode *c : components) {
+				c->uncontract_subtree();
+			}
+		}
+		void contract_degree_two() {
+			for (unode *c : components) {
+				c->contract_degree_two_subtree();
+			}
 		}
 };
 
