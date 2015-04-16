@@ -3,7 +3,10 @@
 
 class nodemapping;
 
-#define DEBUG 1
+typedef enum {ALIVE, DEAD, SOCKET, UNKNOWN} nodestatus;
+string nodestatus_name[] = {"ALIVE", "DEAD", "SOCKET", "UNKNOWN"};
+
+//#define DEBUG 1
 #ifdef DEBUG
 	#define debug(x) x
 #else
@@ -25,7 +28,8 @@ class nodemapping;
 #endif
 
 
-bool OPTIMIZE_2B = true;
+// NOTE: okay for TBR distance only, not for all mAFs / replug
+bool OPTIMIZE_2B = false;
 bool OPTIMIZE_PROTECT_A = true;
 bool OPTIMIZE_PROTECT_B = true;
 bool OPTIMIZE_BRANCH_AND_BOUND = true;
@@ -96,6 +100,20 @@ class nodemapping {
 				return -1;
 			}
 		}
+};
+
+class socket {
+	public:
+	socket(int x, int y, int t, int n) {
+		i = x;
+		j = y;
+		tree = t;
+		num = n;
+	}
+	int i;
+	int j;
+	int tree;
+	int num;
 };
 
 // compute the tbr distance
@@ -1339,17 +1357,21 @@ int dummy_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, int dummy) {
 
 int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<uforest, uforest> T) {
 
+	// tree alias
+	uforest &T1 = T.first;
+	uforest &T2 = T.second;
+
 	// cleanup AFs - TODO: make this unnecessary
 	F1.uncontract();
-	F1.contract_degree_two();
 	F2.uncontract();
+	F1.contract_degree_two();
 	F2.contract_degree_two();
 
 	debug_replug(
 		cout << endl << "REPLUG_HLPR" << endl;
 		cout << "\t" << "k:  " << k << endl;
-		cout << "\t" << "T1: " << T.first << endl;
-		cout << "\t" << "T2: " << T.second << endl;
+		cout << "\t" << "T1: " << T1 << endl;
+		cout << "\t" << "T2: " << T2 << endl;
 		cout << "\t" << "F1: " << F1.str() << endl;
 		cout << "\t" << "F1: " << F1.str(true) << endl;
 		cout << "\t" << "F2: " << F2.str() << endl;
@@ -1365,9 +1387,43 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 		}
 	)
 
-	// Need F1 <-> F2 node mapping?
+	// todo make this a socketcontainer class
+	// add, find, remove, clear
+	vector<vector<list<socket *>  > > sockets = vector<vector<list<socket *>  > >();
+
+	// node status
+	map<int, nodestatus> T1_status = map<int, nodestatus>();
+	map<int, nodestatus> T2_status = map<int, nodestatus>();
+
+	// initialize unknown status
+	for (unode *n : T1.get_node_list()) {
+		T1_status.insert(make_pair(n->get_label(), UNKNOWN));
+	}
+	for (unode *n : T2.get_node_list()) {
+		T2_status.insert(make_pair(n->get_label(), UNKNOWN));
+	}
 
 	// 1. Map alive nodes T1 <-> F1 and T2 <-> F2
+	for (unode *n : F1.get_alive_nodes()) {
+		T1_status[n->get_label()] = ALIVE;
+	}
+	for (unode *n : F2.get_alive_nodes()) {
+		T2_status[n->get_label()] = ALIVE;
+	}
+
+	// test node status
+	cout << "T1 node status" << endl;
+	for (unode *n : T1.get_node_list()) {
+		cout << n->get_label() << ": " <<
+			nodestatus_name[T1_status[n->get_label()]] << endl;
+	}
+	cout << endl;
+
+
+	// TODO: careful - are there "hidden" sockets due to contractions?
+	// TODO: don't forget that leaf components have sockets
+
+
 
 	// 2. Map sockets (T nodes on F paths)
 	// 	Socket format: s(i,j,T,l)

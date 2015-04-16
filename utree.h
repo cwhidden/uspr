@@ -242,6 +242,12 @@ class utree {
 		return ss.str();
 	}
 
+	string str_subtree(unode *n, unode *p, bool print_internal_labels = false) {
+		stringstream ss;
+		str_subtree(ss, n, p, print_internal_labels);
+		return ss.str();
+	}
+
 	void str_subtree(stringstream &s, unode *n, unode *prev, bool print_internal_labels = false) const {
 		// only leaf labels
 		if (print_internal_labels || n->get_label() >= 0) {

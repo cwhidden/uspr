@@ -77,7 +77,7 @@ class uforest: public utree {
 			//cout << "d_Y: " << Y->get_distance() << endl;
 			bool swapped = false;
 			if (Y->get_distance() > X->get_distance()) {
-				cout << "AHH!" << endl;
+				//cout << "AHH!" << endl;
 				X = get_node(y);
 				Y = get_node(x);
 				swapped = true;
@@ -97,6 +97,9 @@ class uforest: public utree {
 				//cout << "boo" << endl;
 				add_component(Yprime);
 				update_component(Xprime->get_component(), Xprime);
+				if (Yprime->get_component() > -1) {
+					update_component(Yprime->get_component(), Yprime);
+				}
 			}
 			else {
 				//cout << "urns" << endl;
@@ -132,14 +135,35 @@ class uforest: public utree {
 
 		void uncontract() {
 			for (unode *c : components) {
-				c->uncontract_subtree();
+				unode *root = c;
+				if (root->get_label() > -1) {
+					if (root->is_leaf()) {
+						root = root->get_neighbors().front();
+					}
+					else if (!(root->get_contracted_neighbors().empty())){
+						root = root->get_contracted_neighbors().front();
+					}
+				}
+				root->uncontract_subtree();
 			}
 		}
 		void contract_degree_two() {
-			for (unode *c : components) {
-				c->contract_degree_two_subtree();
+			for(int i = 0; i < components.size(); i++) {
+				unode *c = components[i];
+				unode *result = c->contract_degree_two_subtree();
+				if (result != c) {
+					components[i] = result;
+				}
 			}
 		}
+
+	list<unode *> get_alive_nodes() {
+		list<unode *> alive = list<unode *>();
+		for (unode *c : components) {
+			c->get_connected_nodes(alive);
+		}
+		return alive;
+	}
 };
 
 ostream& operator<<(ostream &os, const uforest& f) {

@@ -245,16 +245,22 @@ class unode {
 				n->uncontract_subtree(this);
 			}
 		}
+		for (unode *n : contracted_neighbors) {
+			if (last == NULL || n != last) {
+				n->uncontract_subtree(this);
+			}
+		}
 		uncontract_neighbors();
 	}
 
-	void contract_degree_two_subtree(unode *last = NULL) {
+	unode *contract_degree_two_subtree(unode *last = NULL) {
+		cout << label << ".contract_degree_two_subtree()" << endl;
 		for (unode *n : neighbors) {
 			if (last == NULL || n != last) {
 				n->contract_degree_two_subtree(this);
 			}
 		}
-		contract();
+		return contract();
 	}
 
 	unode *contract() {
@@ -378,6 +384,20 @@ class unode {
 
 	void set_protected(bool b) {
 		b_protected = b;
+	}
+
+	void get_connected_nodes(list<unode *> &connected_nodes, unode *last = NULL) {
+		for (unode *n : neighbors) {
+			if (last == NULL || n != last) {
+				n->get_connected_nodes(connected_nodes,this);
+			}
+		}
+		for (unode *n : contracted_neighbors) {
+			if (last == NULL || n != last) {
+				n->get_connected_nodes(connected_nodes,this);
+			}
+		}
+		connected_nodes.push_back(this);
 	}
 
 };
