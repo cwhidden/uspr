@@ -137,9 +137,14 @@ int count_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, int *count);
 int print_and_count_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, int *count);
 int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<uforest, uforest> T);
 
-// compute the tbr distance
+// compute the TBR distance
 int tbr_distance(uforest &T1, uforest &T2) {
-	return tbr_distance(T1, T2, &dummy_mAFs);
+	bool old_value = OPTIMIZE_2B;
+	// always safe for the TBR distance
+	OPTIMIZE_2B = true;
+	int d = tbr_distance(T1, T2, &dummy_mAFs);
+	OPTIMIZE_2B = old_value;
+	return d;
 }
 
 template <typename T>
@@ -541,6 +546,7 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 			if (num_pendants < 2 || num_pendants > (k+1)) {
 				cut_b = false;
 			}
+			// safe for getting the TBR distance but not for exploring all mAFs
 			else if (OPTIMIZE_2B && num_pendants == 2) {
 				cut_a = false;
 				cut_c = false;
