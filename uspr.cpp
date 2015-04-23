@@ -93,6 +93,7 @@ int main(int argc, char *argv[]) {
 		cout << "a_TBR: " << tbr_high_lower_bound(F1, F2) << " <= d_TBR <= " << tbr_low_upper_bound(F1, F2) << endl;
 		int distance = tbr_distance(F1, F2);
 		cout << "d_TBR = " << distance << endl;
+		/*
 		int count;
 		if (PRINT_mAFS) {
 			count = tbr_print_mAFs(F1, F2);
@@ -102,6 +103,7 @@ int main(int argc, char *argv[]) {
 		}
 //		cout << count << " MAFs" << endl;
 		cout << count << " mAFs" << endl;
+		*/
 
 		int d_replug = replug_distance(F1, F2);
 		cout << "d_R = " << d_replug << endl;

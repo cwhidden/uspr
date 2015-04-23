@@ -1452,7 +1452,9 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 
 	cout << "T1 sockets: " << endl;
 	for (socket *s: T1_sockets) {
-		T1_status[s->dead] = SOCKET;
+		if (s->i != s->j) {
+			T1_status[s->dead] = SOCKET;
+		}
 		cout << "\t" << "s(";
 		cout << s->i << ", ";
 		cout << s->j << ", ";
@@ -1462,7 +1464,9 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 	cout << endl;
 	cout << "T2 sockets: " << endl;
 	for (socket *s: T2_sockets) {
-		T2_status[s->dead] = SOCKET;
+		if (s->i != s->j) {
+			T2_status[s->dead] = SOCKET;
+		}
 		cout << "\t" << "s(";
 		cout << s->i << ", ";
 		cout << s->j << ", ";
@@ -1475,12 +1479,18 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 	// 3. Map dead nodes (not alive or sockets)
 	for (pair<const int, nodestatus> &p : T1_status) {
 		if (p.second == UNKNOWN) {
-			p.second = DEAD;
+			// ignore a node not in T1
+			if (T1.get_node(p.first)->get_num_neighbors() > 0) {
+				p.second = DEAD;
+			}
 		}
 	}
 	for (pair<const int, nodestatus> &p : T2_status) {
 		if (p.second == UNKNOWN) {
-			p.second = DEAD;
+			// ignore a node not in T2
+			if (T2.get_node(p.first)->get_num_neighbors() > 0) {
+				p.second = DEAD;
+			}
 		}
 	}
 
@@ -1489,6 +1499,13 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 	for (unode *n : T1.get_node_list()) {
 		cout << n->get_label() << ": " <<
 			nodestatus_name[T1_status[n->get_label()]] << endl;
+	}
+	cout << endl;
+
+	cout << "T2 node status" << endl;
+	for (unode *n : T2.get_node_list()) {
+		cout << n->get_label() << ": " <<
+			nodestatus_name[T2_status[n->get_label()]] << endl;
 	}
 	cout << endl;
 
@@ -1519,7 +1536,7 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 
 void find_sockets(uforest &T, uforest &F, list<socket *> &sockets) {
 	for (unode *c : F.get_components()) {
-		if (c->get_neighbors().empty()) {
+		if (c->get_neighbors().empty() || c->get_neighbors().size() == 2) {
 			find_sockets_hlpr(c, c, T, sockets);
 		}
 		else {
@@ -1560,8 +1577,8 @@ void add_sockets(unode *xstart, unode *ystart, list<socket *> &sockets) {
 	list<socket *> x_path = list<socket *>();
 	list<socket *> y_path = list<socket *>();
 
-	// singleton leaf component
-	if (x == y && start > 0) {
+	// singleton leaf or cherry component
+	if (x == y) {
 		x_path.push_back(new socket(start, end, x->get_parent()->get_label(), -1));
 		debug_sockets(
 			cout << "\t" << "finding socket s(";
@@ -1571,6 +1588,11 @@ void add_sockets(unode *xstart, unode *ystart, list<socket *> &sockets) {
 			cout << ")" << endl;
 		)
 	}
+
+
+	// TODO: How to identify a socket adjacent to LCA(xstart, ystart) ?
+	//  easy for xstart==ystart
+	//  Is there always a socket at a component root unless it is the original root?
 
 	while (x != y) {
 		debug_sockets(
