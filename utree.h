@@ -348,8 +348,6 @@ bool build_utree(utree &t, string &s, map<string, int> &label_map, map<int, stri
 	root->remove_neighbor(&dummy);
 	root->contract();
 
-
-
 	int end = t.num_leaves();
 	int start = -1;
 	for(int i = 0; i < end; i++) {

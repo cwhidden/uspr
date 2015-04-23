@@ -254,7 +254,9 @@ class unode {
 	}
 
 	unode *contract_degree_two_subtree(unode *last = NULL) {
-		cout << label << ".contract_degree_two_subtree()" << endl;
+		debug(
+			cout << label << ".contract_degree_two_subtree()" << endl;
+		)
 		for (unode *n : neighbors) {
 			if (last == NULL || n != last) {
 				n->contract_degree_two_subtree(this);

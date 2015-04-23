@@ -27,6 +27,15 @@ string nodestatus_name[] = {"ALIVE", "DEAD", "SOCKET", "UNKNOWN"};
 	#define debug_replug(x) 
 #endif
 
+//#define DEBUG_SOCKETS 1
+#ifdef DEBUG_SOCKETS
+	#define debug_sockets(x) x
+#else
+	#define debug_sockets(x) 
+#endif
+
+
+
 
 // NOTE: okay for TBR distance only, not for all mAFs / replug
 bool OPTIMIZE_2B = false;
@@ -34,36 +43,7 @@ bool OPTIMIZE_PROTECT_A = true;
 bool OPTIMIZE_PROTECT_B = true;
 bool OPTIMIZE_BRANCH_AND_BOUND = true;
 
-// function prototypes
-int tbr_distance(uforest &F1, uforest &F2);
-template<typename T>
-int tbr_distance(uforest &T1, uforest &T2, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s));
-int tbr_count_MAFs(uforest &F1, uforest &F2);
-int tbr_count_mAFs(uforest &F1, uforest &F2);
-int tbr_print_mAFs(uforest &F1, uforest &F2);
-int tbr_count_mAFs(uforest &T1, uforest &T2, bool print);
-template<typename T>
-int tbr_distance(uforest &T1, uforest &T2, T t, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s));
-template<typename T>
-int tbr_distance_hlpr(uforest &T1, uforest &T2, int k, T t, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s));
-template<typename T>
-int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons, T t, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s));
-list<pair<int,int> > find_pendants(unode *a, unode *c);
-int tbr_approx(uforest &T1, uforest &T2);
-int tbr_approx(uforest &T1, uforest &T2, bool low);
-int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons);
-int tbr_high_lower_bound(uforest &T1, uforest &T2);
-int tbr_low_lower_bound(uforest &T1, uforest &T2);
-int tbr_high_upper_bound(uforest &T1, uforest &T2);
-int tbr_low_upper_bound(uforest &T1, uforest &T2);
-int tbr_branch_bound(uforest &F1, uforest &F2, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons);
-
-// AF helpers
-int dummy_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, int dummy);
-int print_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, int dummy);
-int count_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, int *count);
-int print_and_count_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, int *count);
-int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<uforest, uforest> T);
+// classes
 
 class nodemapping {
 	private:
@@ -104,17 +84,58 @@ class nodemapping {
 
 class socket {
 	public:
-	socket(int x, int y, int t, int n) {
-		i = x;
-		j = y;
-		tree = t;
+	socket(int x, int y, int c, int n) {
+		if (x <= y) {
+			i = x;
+			j = y;
+		}
+		else {
+			i = y;
+			j = x;
+		}
+		dead = c;
 		num = n;
 	}
 	int i;
 	int j;
-	int tree;
+	int dead;
 	int num;
 };
+
+
+// function prototypes
+int tbr_distance(uforest &F1, uforest &F2);
+template<typename T>
+int tbr_distance(uforest &T1, uforest &T2, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s));
+int tbr_count_MAFs(uforest &F1, uforest &F2);
+int tbr_count_mAFs(uforest &F1, uforest &F2);
+int tbr_print_mAFs(uforest &F1, uforest &F2);
+int tbr_count_mAFs(uforest &T1, uforest &T2, bool print);
+template<typename T>
+int tbr_distance(uforest &T1, uforest &T2, T t, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s));
+template<typename T>
+int tbr_distance_hlpr(uforest &T1, uforest &T2, int k, T t, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s));
+template<typename T>
+int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons, T t, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s));
+list<pair<int,int> > find_pendants(unode *a, unode *c);
+int tbr_approx(uforest &T1, uforest &T2);
+int tbr_approx(uforest &T1, uforest &T2, bool low);
+int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons);
+int tbr_high_lower_bound(uforest &T1, uforest &T2);
+int tbr_low_lower_bound(uforest &T1, uforest &T2);
+int tbr_high_upper_bound(uforest &T1, uforest &T2);
+int tbr_low_upper_bound(uforest &T1, uforest &T2);
+int tbr_branch_bound(uforest &F1, uforest &F2, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons);
+void find_sockets(uforest &T1, uforest &F1, list<socket *> &sockets);
+void find_sockets_hlpr(unode *n, unode *prev, uforest &T, list<socket *> &sockets);
+void add_sockets(unode *x, unode *y, list<socket *> &sockets);
+
+// AF helpers
+int dummy_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, int dummy);
+int print_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, int dummy);
+int count_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, int *count);
+int print_and_count_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, int *count);
+int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<uforest, uforest> T);
 
 // compute the tbr distance
 int tbr_distance(uforest &T1, uforest &T2) {
@@ -1371,18 +1392,23 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 		cout << endl << "REPLUG_HLPR" << endl;
 		cout << "\t" << "k:  " << k << endl;
 		cout << "\t" << "T1: " << T1 << endl;
+		cout << "\t" << "T1: " << T1.str(true) << endl;
 		cout << "\t" << "T2: " << T2 << endl;
+		cout << "\t" << "T2: " << T2.str(true) << endl;
 		cout << "\t" << "F1: " << F1.str() << endl;
 		cout << "\t" << "F1: " << F1.str(true) << endl;
 		cout << "\t" << "F2: " << F2.str() << endl;
 		cout << "\t" << "F2: " << F2.str(true) << endl;
 
-		cout << "\t" << "nodemapping: " << endl;
+		cout << "\t" << "num: nodemapping (distance)" << endl;
 		for (unode *i: F1.get_node_list()) {
 			cout << "\t\t";
 			cout << i->get_label();
 			cout << ": ";
 			cout << twins.get_forward(i->get_label());
+			cout << "  (";
+			cout << i->get_distance();
+			cout << ")";
 			cout << endl;
 		}
 	)
@@ -1411,6 +1437,53 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 		T2_status[n->get_label()] = ALIVE;
 	}
 
+	// 2. Map sockets (T nodes on F paths)
+	// 	Socket format: s(i,j,T,l)
+	// 	(i,j) - F edge
+	// 	T - corresponding tree, 1 or 2
+	// 	l - socket order from i to j
+	//
+	// 	note: need to normalize with F1 <-> F2 mapping
+	list <socket *> T1_sockets = list<socket *>();
+	list <socket *> T2_sockets = list<socket *>();
+
+	find_sockets(T1, F1, T1_sockets);
+	find_sockets(T2, F2, T2_sockets);
+
+	cout << "T1 sockets: " << endl;
+	for (socket *s: T1_sockets) {
+		T1_status[s->dead] = SOCKET;
+		cout << "\t" << "s(";
+		cout << s->i << ", ";
+		cout << s->j << ", ";
+		cout << s->dead  << ", ";
+		cout << s->num << ")" << endl;
+	}
+	cout << endl;
+	cout << "T2 sockets: " << endl;
+	for (socket *s: T2_sockets) {
+		T2_status[s->dead] = SOCKET;
+		cout << "\t" << "s(";
+		cout << s->i << ", ";
+		cout << s->j << ", ";
+		cout << s->dead  << ", ";
+		cout << s->num << ")" << endl;
+	}
+	cout << endl;
+
+
+	// 3. Map dead nodes (not alive or sockets)
+	for (pair<const int, nodestatus> &p : T1_status) {
+		if (p.second == UNKNOWN) {
+			p.second = DEAD;
+		}
+	}
+	for (pair<const int, nodestatus> &p : T2_status) {
+		if (p.second == UNKNOWN) {
+			p.second = DEAD;
+		}
+	}
+
 	// test node status
 	cout << "T1 node status" << endl;
 	for (unode *n : T1.get_node_list()) {
@@ -1419,21 +1492,6 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 	}
 	cout << endl;
 
-
-	// TODO: careful - are there "hidden" sockets due to contractions?
-	// TODO: don't forget that leaf components have sockets
-
-
-
-	// 2. Map sockets (T nodes on F paths)
-	// 	Socket format: s(i,j,T,l)
-	// 	(i,j) - F edge
-	// 	T - corresponding tree, 1 or 2
-	// 	l - socket order from i to j
-	//
-	// 	note: need to normalize with F1 <-> F2 mapping
-
-	// 3. Map dead nodes (not alive or sockets)
 
 	// 4. Identify dead components and corresponding socket sets
 	//
@@ -1458,6 +1516,118 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 
 	return k;
 }
+
+void find_sockets(uforest &T, uforest &F, list<socket *> &sockets) {
+	for (unode *c : F.get_components()) {
+		if (c->get_neighbors().empty()) {
+			find_sockets_hlpr(c, c, T, sockets);
+		}
+		else {
+			find_sockets_hlpr(c, NULL, T, sockets);
+		}
+	}
+}
+void find_sockets_hlpr(unode *n, unode *prev, uforest &T, list<socket *> &sockets) {
+	for (unode *x : n->get_neighbors()) {
+		if (x != prev) {
+			find_sockets_hlpr(x, n, T, sockets);
+		}
+	}
+	// follow path of sockets
+	if (prev != NULL) {
+		add_sockets(T.get_node(n->get_label()), T.get_node(prev->get_label()), sockets);
+	}
+}
+
+void add_sockets(unode *xstart, unode *ystart, list<socket *> &sockets) {
+	int start, end;
+	unode *x, *y;
+	if (xstart->get_label() <= ystart->get_label()) {
+		x = xstart;
+		y = ystart;
+	}
+	else {
+		x = ystart;
+		y = xstart;
+	}
+	start = x->get_label();
+	end = y->get_label();
+	debug_sockets(
+		cout << "add_sockets(" << x->get_label() << ", " << y->get_label() << ")" << endl;
+	)
+
+	// store each side of the walk separately to maintain the correct order
+	list<socket *> x_path = list<socket *>();
+	list<socket *> y_path = list<socket *>();
+
+	// singleton leaf component
+	if (x == y && start > 0) {
+		x_path.push_back(new socket(start, end, x->get_parent()->get_label(), -1));
+		debug_sockets(
+			cout << "\t" << "finding socket s(";
+			cout << start << ", ";
+			cout << end << ", ";
+			cout << x->get_parent()->get_label();
+			cout << ")" << endl;
+		)
+	}
+
+	while (x != y) {
+		debug_sockets(
+			cout << "\t" << "x: " << x->get_label() << "  (" << x->get_distance() << ")" << endl;
+			cout << "\t" << "y: " << y->get_label() << "  (" << y->get_distance() << ")" << endl;
+		)
+		if (x->get_distance() >= y->get_distance()) {
+			unode *next = x->get_parent();
+			if (next != y) {
+				x_path.push_back(new socket(start, end, next->get_label(), -1));
+				debug_sockets(
+					cout << "\t" << "finding socket s(";
+					cout << start << ", ";
+					cout << end << ", ";
+					cout << next->get_label();
+					cout << ")" << endl;
+				)
+			}
+			x = next;
+		}
+		else {
+			unode *next = y->get_parent();
+			if (next != x) {
+				y_path.push_front(new socket(start, end, next->get_label(), -1));
+				debug_sockets(
+					cout << "\t" << "finding socket s(";
+					cout << start << ", ";
+					cout << end << ", ";
+					cout << next->get_label();
+					cout << ")" << endl;
+				)
+			}
+			y = next;
+		}
+	}
+
+	int count = 0;
+
+	x_path.splice(x_path.end(), y_path);
+
+	for (socket *s : x_path) {
+		s->num = ++count;
+		debug_sockets(
+			cout << "\t" << "adding socket s(";
+			cout << s->i << ", ";
+			cout << s->j << ", ";
+			cout << s->dead  << ", ";
+			cout << s->num << ")" << endl;
+		)
+	}
+
+	sockets.splice(sockets.end(), x_path);
+
+
+}
+
+
 
 
 #endif

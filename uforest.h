@@ -164,6 +164,10 @@ class uforest: public utree {
 		}
 		return alive;
 	}
+
+	vector<unode *> get_components() {
+		return components;
+	}
 };
 
 ostream& operator<<(ostream &os, const uforest& f) {
