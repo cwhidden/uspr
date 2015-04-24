@@ -102,6 +102,60 @@ class socket {
 	int num;
 };
 
+class socketcontainer {
+	public:
+	map<pair<int, int>, vector<socket *> > sockets;
+	map<int, socket *> dead_map;
+
+	socketcontainer(list<socket *> &socketlist) {
+		sockets = map<pair<int, int>, vector<socket *> >();
+		dead_map = map<int, socket *>();
+		for (socket *s : socketlist) {
+			dead_map[s->dead] = s;
+			map<pair<int, int>, vector<socket *> >::iterator i = 
+				sockets.find(make_pair(s->i, s->j));
+			if (i == sockets.end()) {
+				
+				auto new_i = sockets.insert(make_pair(make_pair(s->i, s->j), vector<socket *>()));
+					i = new_i.first;
+			}
+			if (i->second.size() < s->num) {
+				i->second.resize(s->num);
+			}
+			i->second[s->num] = s;
+		}
+	}
+
+	~socketcontainer() {
+		for (auto &i : sockets) {
+			for (socket *s : i.second) {
+				delete s;
+			}
+		}
+		sockets.clear();
+		dead_map.clear();
+	}
+
+	vector<socket *> &find(int i, int j) {
+		return sockets[make_pair(i, j)];
+	}
+
+	socket *find_dead(int n) {
+		return dead_map[n];
+	}
+
+	list<socket *> get_list() {
+		list<socket *> socket_list = list<socket *>();
+		for (auto &i : sockets) {
+			for (socket *s : i.second) {
+				socket_list.push_back(s);
+			}
+		}
+		return socket_list;
+	}
+	 
+};
+
 
 // function prototypes
 int tbr_distance(uforest &F1, uforest &F2);
@@ -129,6 +183,8 @@ int tbr_branch_bound(uforest &F1, uforest &F2, nodemapping &twins, map<int, int>
 void find_sockets(uforest &T1, uforest &F1, list<socket *> &sockets);
 void find_sockets_hlpr(unode *n, unode *prev, uforest &T, list<socket *> &sockets);
 void add_sockets(unode *x, unode *y, list<socket *> &sockets);
+void find_dead_components(uforest &T, socketcontainer &S, map<int, nodestatus> &T_status, vector<list<int> > &T_dead_components);
+void find_dead_components_hlpr(unode *n, unode *prev, int component, uforest &T, socketcontainer &S, map<int, nodestatus> &T_status, vector<list<int> > &T_dead_components);
 
 // AF helpers
 int dummy_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, int dummy);
@@ -1419,9 +1475,6 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 		}
 	)
 
-	// todo make this a socketcontainer class
-	// add, find, remove, clear
-	vector<vector<list<socket *>  > > sockets = vector<vector<list<socket *>  > >();
 
 	// node status
 	map<int, nodestatus> T1_status = map<int, nodestatus>();
@@ -1450,17 +1503,20 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 	// 	l - socket order from i to j
 	//
 	// 	note: need to normalize with F1 <-> F2 mapping
-	list <socket *> T1_sockets = list<socket *>();
-	list <socket *> T2_sockets = list<socket *>();
+	list <socket *> T1_socketlist = list<socket *>();
+	list <socket *> T2_socketlist = list<socket *>();
 
-	find_sockets(T1, F1, T1_sockets);
-	find_sockets(T2, F2, T2_sockets);
+	find_sockets(T1, F1, T1_socketlist);
+	find_sockets(T2, F2, T2_socketlist);
+
+	socketcontainer T1_sockets = socketcontainer(T1_socketlist);
+	socketcontainer T2_sockets = socketcontainer(T2_socketlist);
 
 	cout << "T1 sockets: " << endl;
-	for (socket *s: T1_sockets) {
-		if (s->i != s->j) {
+	for (socket *s: T1_socketlist) {
+//		if (s->i != s->j) {
 			T1_status[s->dead] = SOCKET;
-		}
+//		}
 		cout << "\t" << "s(";
 		cout << s->i << ", ";
 		cout << s->j << ", ";
@@ -1469,10 +1525,10 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 	}
 	cout << endl;
 	cout << "T2 sockets: " << endl;
-	for (socket *s: T2_sockets) {
-		if (s->i != s->j) {
+	for (socket *s: T2_socketlist) {
+//		if (s->i != s->j) {
 			T2_status[s->dead] = SOCKET;
-		}
+//		}
 		cout << "\t" << "s(";
 		cout << s->i << ", ";
 		cout << s->j << ", ";
@@ -1518,6 +1574,40 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 
 	// 4. Identify dead components and corresponding socket sets
 	//
+	vector<list<int> > T1_dead_components = vector<list<int> >();
+	vector<list<int> > T2_dead_components = vector<list<int> >();
+
+	find_dead_components(T1, T1_sockets, T1_status, T1_dead_components);
+	find_dead_components(T2, T2_sockets, T2_status, T2_dead_components);
+
+	// test dead components
+	int i = 0;
+	cout << "T1 dead components" << endl;
+	for(list<int> &l : T1_dead_components) {
+		i++;
+		cout << "\t" << i << ":" << endl;
+		cout << "\t\t";
+		for (int x : l) {
+			cout << x << ",";
+		}
+		cout << endl;
+	}
+
+	i = 0;
+	cout << "T2 dead components" << endl;
+	for(list<int> &l : T2_dead_components) {
+		i++;
+		cout << "\t" << i << ":" << endl;
+		cout << "\t\t";
+		for (int x : l) {
+			cout << x << ",";
+		}
+		cout << endl;
+	}
+
+
+
+
 	// 5. Preprocessing - find obvious phi-nodes (or not phi-nodes)
 	//
 	// 6. Convert to set of constraints - 2 CNF+ <=2
@@ -1585,12 +1675,12 @@ void add_sockets(unode *xstart, unode *ystart, list<socket *> &sockets) {
 
 	// singleton leaf or cherry component
 	if (x == y) {
-		x_path.push_back(new socket(start, end, x->get_parent()->get_label(), -1));
+		x_path.push_back(new socket(start, end, start, -1));
 		debug_sockets(
 			cout << "\t" << "finding socket s(";
 			cout << start << ", ";
 			cout << end << ", ";
-			cout << x->get_parent()->get_label();
+			cout << start;
 			cout << ")" << endl;
 		)
 	}
@@ -1653,6 +1743,59 @@ void add_sockets(unode *xstart, unode *ystart, list<socket *> &sockets) {
 	sockets.splice(sockets.end(), x_path);
 
 
+}
+
+void find_dead_components(uforest &T, socketcontainer &S, map<int, nodestatus> &T_status, vector<list<int> > &T_dead_components) {
+	unode *root = T.get_leaf(T.get_smallest_leaf());
+	find_dead_components_hlpr(root, NULL, -1, T, S, T_status, T_dead_components);
+}
+
+// TODO: problem when a node has multiple sockets
+
+void find_dead_components_hlpr(unode *n, unode *prev, int component, uforest &T, socketcontainer &S, map<int, nodestatus> &T_status, vector<list<int> > &T_dead_components) {
+	if (prev != NULL) {
+		int n_label = n->get_label();
+		int prev_label = prev->get_label();
+		cout << "checking " << prev_label << " -> " << n_label << endl;
+		if (T_status[prev_label] == SOCKET) {
+			// found a new dead component
+			if (T_status[n_label] == SOCKET) {
+				// check that this isn't an adjacent socket
+				socket *n_socket = S.find_dead(n_label);
+				socket *prev_socket = S.find_dead(prev_label);
+				if (n_socket->i != prev_socket->i ||
+						n_socket->j != prev_socket->j) {
+
+					cout << "found" << endl;
+				
+					component = T_dead_components.size();
+					T_dead_components.push_back(list<int>());
+					T_dead_components[component].push_back(prev_label);
+					T_dead_components[component].push_back(n_label);
+					component = -1;
+				}
+			}
+			// found a new dead component
+			else if (T_status[n_label] == DEAD) {
+				component = T_dead_components.size();
+				T_dead_components.push_back(list<int>());
+				T_dead_components[component].push_back(prev_label);
+			}
+		}
+		else if (T_status[prev_label] == DEAD) {
+			// found end of a dead component
+			if (T_status[n_label] == SOCKET) {
+				T_dead_components[component].push_back(n_label);
+				component = -1;
+			}
+		}
+	}
+	// explore neighbors, carrying a dead component number if necessary
+	for (unode *x : n->get_neighbors()) {
+		if (x != prev) {
+			find_dead_components_hlpr(x, n, component, T, S, T_status, T_dead_components);
+		}
+	}
 }
 
 
