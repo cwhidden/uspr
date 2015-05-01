@@ -42,7 +42,6 @@ class unode {
 		neighbors = list<unode *>();
 		contracted_neighbors = list<unode *>();
 		num_neighbors = 0;
-		num_neighbors = 0;
 		component = -1;
 		terminal = false;
 		distance = -1;
@@ -139,6 +138,10 @@ class unode {
 
 	int get_num_neighbors() {
 		return num_neighbors;
+	}
+
+	int get_num_all_neighbors() {
+		return num_neighbors + contracted_neighbors.size();
 	}
 
 	bool is_leaf() {
@@ -301,7 +304,7 @@ class unode {
 				return p;
 			}
 		}
-		/*
+//		/*
 		else if (num_neighbors == 0 && contracted_neighbors.size() == 2) {
 //			uncontract_neighbors();
 			unode *p = contracted_neighbors.front();
@@ -311,9 +314,12 @@ class unode {
 				cout << p << endl;
 				cout << c << endl;
 			)
-			if (!p->is_leaf() ||
-						!(p->get_contracted_neighbors().empty()) ||
-						!c->is_leaf()) {
+			if (p->get_num_all_neighbors() < c->get_num_all_neighbors()) {
+				unode *temp = p;
+				p = c;
+				c = temp;
+			}
+			if (p->get_num_all_neighbors() > 1) {
 				clear_contracted_neighbors();
 				p->remove_neighbor(this);
 				c->remove_neighbor(this);
@@ -342,7 +348,7 @@ class unode {
 				return p;
 			}
 		}
-		*/
+//		*/
 		else if (num_neighbors == 2 && contracted_neighbors.empty()) {
 			unode *p = neighbors.front();
 			unode *c = *(next(neighbors.begin(), 1));

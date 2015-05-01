@@ -185,6 +185,7 @@ void find_sockets_hlpr(unode *n, unode *prev, uforest &T, list<socket *> &socket
 void add_sockets(unode *x, unode *y, list<socket *> &sockets);
 void find_dead_components(uforest &T, socketcontainer &S, map<int, nodestatus> &T_status, vector<list<int> > &T_dead_components);
 void find_dead_components_hlpr(unode *n, unode *prev, int component, uforest &T, socketcontainer &S, map<int, nodestatus> &T_status, vector<list<int> > &T_dead_components);
+void update_nodemapping(nodemapping &twins, uforest &F, int original_label, int new_label, bool forward);
 
 // AF helpers
 int dummy_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, int dummy);
@@ -387,7 +388,12 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 			if (F1_a->get_parent() == NULL) {
 				continue;
 			}
-			pair<int,int> components = F1.cut_edge(F1_a->get_label(), F1_a->get_parent()->get_label());
+			int first_label = F1_a->get_label();
+			int second_label = F1_a->get_parent()->get_label();
+			pair<int,int> components = F1.cut_edge(first_label, second_label);
+			update_nodemapping(twins, F1, first_label, components.first, true);
+			update_nodemapping(twins, F1, second_label, components.second, true);
+
 			debug(cout << F1 << endl);
 
 			// check for new sibling pair
@@ -629,7 +635,11 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 				list<int> singletons_copy = list<int>(singletons);
 	
 				debug(cout << F2_copy << endl);
-				pair<int,int> components = F2_copy.cut_edge(e_a.first, e_a.second);
+				int first_label = e_a.first;
+				int second_label = e_a.second;
+				pair<int,int> components = F2_copy.cut_edge(first_label, second_label);
+				update_nodemapping(twins_copy, F2_copy, first_label, components.first, false);
+				update_nodemapping(twins_copy, F2_copy, second_label, components.second, false);
 				debug(
 					cout << F2_copy << endl;
 					cout << components.first << endl;
@@ -669,7 +679,11 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 				list<int> singletons_copy = list<int>(singletons);
 	
 				debug(cout << F2_copy << endl);
-				pair<int, int> components = F2_copy.cut_edge(e_c.first, e_c.second);
+				int first_label = e_c.first;
+				int second_label = e_c.second;
+				pair<int,int> components = F2_copy.cut_edge(first_label, second_label);
+				update_nodemapping(twins_copy, F2_copy, first_label, components.first, false);
+				update_nodemapping(twins_copy, F2_copy, second_label, components.second, false);
 				if (OPTIMIZE_PROTECT_A) {
 					F2_copy.get_node(F2_a->get_label())->set_protected(true);
 				}
@@ -721,7 +735,11 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 								}
 							}
 
-							pair<int, int> components = F2_copy.cut_edge(e_b.first, e_b.second);
+							int first_label = e_b.first;
+							int second_label = e_b.second;
+							pair<int,int> components = F2_copy.cut_edge(first_label, second_label);
+							update_nodemapping(twins_copy, F2_copy, first_label, components.first, false);
+							update_nodemapping(twins_copy, F2_copy, second_label, components.second, false);
 							debug(cout << F2_copy << endl);
 							if (F2_copy.get_node(components.first)->is_singleton()) {
 								singletons_copy.push_back(components.first);
@@ -770,7 +788,11 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 				list<int> singletons_copy = list<int>(singletons);
 	
 				debug(cout << F2_copy << endl);
-				pair<int, int> components = F2_copy.cut_edge(e_b.first, e_b.second);
+				int first_label = e_b.first;
+				int second_label = e_b.second;
+				pair<int,int> components = F2_copy.cut_edge(first_label, second_label);
+				update_nodemapping(twins_copy, F2_copy, first_label, components.first, false);
+				update_nodemapping(twins_copy, F2_copy, second_label, components.second, false);
 				debug(cout << F2_copy << endl);
 				if (F2_copy.get_node(components.first)->is_singleton()) {
 					singletons_copy.push_back(components.first);
@@ -800,7 +822,12 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 				list<int> singletons_copy = list<int>(singletons);
 	
 				debug(cout << F2_copy << endl);
-				pair<int, int> components = F2_copy.cut_edge(e_d.first, e_d.second);
+				int first_label = e_d.first;
+				int second_label = e_d.second;
+				pair<int,int> components = F2_copy.cut_edge(first_label, second_label);
+				update_nodemapping(twins_copy, F2_copy, first_label, components.first, false);
+				update_nodemapping(twins_copy, F2_copy, second_label, components.second, false);
+
 				debug(cout << F2_copy << endl);
 				if (F2_copy.get_node(components.first)->is_singleton()) {
 					singletons_copy.push_back(components.first);
@@ -982,7 +1009,14 @@ int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int
 			if (F1_a->get_parent() == NULL) {
 				continue;
 			}
-			pair<int,int> components = F1.cut_edge(F1_a->get_label(), F1_a->get_parent()->get_label());
+				int first_label = F1_a->get_label();
+				int second_label = F1_a->get_parent()->get_label();
+				pair<int,int> components = F1.cut_edge(first_label, second_label);
+				update_nodemapping(twins, F2, first_label, components.first, true);
+				update_nodemapping(twins, F2, second_label, components.second, true);
+
+
+
 			debug_approx(cout << F1 << endl);
 
 			// check for new sibling pair
@@ -1211,7 +1245,11 @@ int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int
 				debug_approx(cout  << "cut e_a" << endl);
 	
 				debug_approx(cout << F2 << endl;)
-				pair<int,int> components = F2.cut_edge(e_a.first, e_a.second);
+				int first_label = e_a.first;
+				int second_label = e_a.second;
+				pair<int,int> components = F2.cut_edge(first_label, second_label);
+				update_nodemapping(twins, F2, first_label, components.first, false);
+				update_nodemapping(twins, F2, second_label, components.second, false);
 				debug_approx(
 					cout << F2 << endl;
 					cout << components.first << endl;
@@ -1240,7 +1278,11 @@ int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int
 				debug_approx(cout  << "cut e_c" << endl);
 	
 				debug_approx(cout << F2 << endl;)
-				pair<int,int> components = F2.cut_edge(e_c.first, e_c.second);
+				int first_label = e_c.first;
+				int second_label = e_c.second;
+				pair<int,int> components = F2.cut_edge(first_label, second_label);
+				update_nodemapping(twins, F2, first_label, components.first, false);
+				update_nodemapping(twins, F2, second_label, components.second, false);
 				debug_approx(
 					cout << F2 << endl;
 					cout << components.first << endl;
@@ -1269,7 +1311,11 @@ int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int
 				debug_approx(cout  << "cut e_b" << endl);
 	
 				debug_approx(cout << F2 << endl;)
-				pair<int,int> components = F2.cut_edge(e_b.first, e_b.second);
+				int first_label = e_b.first;
+				int second_label = e_b.second;
+				pair<int,int> components = F2.cut_edge(first_label, second_label);
+				update_nodemapping(twins, F2, first_label, components.first, false);
+				update_nodemapping(twins, F2, second_label, components.second, false);
 				debug_approx(cout << F2 << endl;)
 
 				if (components.first != -1 && components.second != -1) {
@@ -1299,7 +1345,11 @@ int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int
 				debug_approx(cout  << "cut e_d" << endl);
 	
 				debug_approx(cout << F2 << endl;)
-				pair<int,int> components = F2.cut_edge(e_d.first, e_d.second);
+				int first_label = e_d.first;
+				int second_label = e_d.second;
+				pair<int,int> components = F2.cut_edge(first_label, second_label);
+				update_nodemapping(twins, F2, first_label, components.first, false);
+				update_nodemapping(twins, F2, second_label, components.second, false);
 				debug_approx(cout << F2 << endl;)
 
 				if (components.first != -1 && components.second != -1) {
@@ -1462,7 +1512,7 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 		cout << "\t" << "F2: " << F2.str() << endl;
 		cout << "\t" << "F2: " << F2.str(true) << endl;
 
-		cout << "\t" << "num: nodemapping (distance)" << endl;
+		cout << "\t" << "F1 num: nodemapping (distance)" << endl;
 		for (unode *i: F1.get_node_list()) {
 			cout << "\t\t";
 			cout << i->get_label();
@@ -1473,7 +1523,20 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 			cout << ")";
 			cout << endl;
 		}
+
+		cout << "\t" << "F2 num: nodemapping (distance)" << endl;
+		for (unode *i: F2.get_node_list()) {
+			cout << "\t\t";
+			cout << i->get_label();
+			cout << ": ";
+			cout << twins.get_backward(i->get_label());
+			cout << "  (";
+			cout << i->get_distance();
+			cout << ")";
+			cout << endl;
+		}
 	)
+
 
 
 	// node status
@@ -1605,6 +1668,40 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 		cout << endl;
 	}
 
+	// 4.5. Identify Multifurcating socket resolutions
+	//
+	// Normalize T2 sockets
+	list<socket *> T2_normalized_socketlist = list<socket *>();
+	for (socket *s : T2_socketlist) {
+		int new_i = twins.get_backward(s->i);
+		int new_j = twins.get_backward(s->j);
+		T2_normalized_socketlist.push_back(new socket(new_i, new_j, s->dead, s->num));
+	}
+	cout << "T1 sockets: " << endl;
+	for (socket *s: T1_socketlist) {
+		cout << "\t" << "s(";
+		cout << s->i << ", ";
+		cout << s->j << ", ";
+		cout << s->dead  << ", ";
+		cout << s->num << ")" << endl;
+	}
+	cout << endl;
+
+	cout << "T2 sockets normalized: " << endl;
+	for (socket *s: T2_normalized_socketlist) {
+		cout << "\t" << "s(";
+		cout << s->i << ", ";
+		cout << s->j << ", ";
+		cout << s->dead  << ", ";
+		cout << s->num << ")" << endl;
+	}
+	cout << endl;
+
+	socketcontainer T2_sockets_normalized = socketcontainer(T2_normalized_socketlist);
+	//
+	// identify sets of T1 and T2 sockets that map to the same AF edge
+	//
+	// datastructure containing pairs of matched sockets
 
 
 
@@ -1756,7 +1853,7 @@ void find_dead_components_hlpr(unode *n, unode *prev, int component, uforest &T,
 	if (prev != NULL) {
 		int n_label = n->get_label();
 		int prev_label = prev->get_label();
-		cout << "checking " << prev_label << " -> " << n_label << endl;
+//		cout << "checking " << prev_label << " -> " << n_label << endl;
 		if (T_status[prev_label] == SOCKET) {
 			// found a new dead component
 			if (T_status[n_label] == SOCKET) {
@@ -1766,7 +1863,7 @@ void find_dead_components_hlpr(unode *n, unode *prev, int component, uforest &T,
 				if (n_socket->i != prev_socket->i ||
 						n_socket->j != prev_socket->j) {
 
-					cout << "found" << endl;
+//					cout << "found" << endl;
 				
 					component = T_dead_components.size();
 					T_dead_components.push_back(list<int>());
@@ -1794,6 +1891,37 @@ void find_dead_components_hlpr(unode *n, unode *prev, int component, uforest &T,
 	for (unode *x : n->get_neighbors()) {
 		if (x != prev) {
 			find_dead_components_hlpr(x, n, component, T, S, T_status, T_dead_components);
+		}
+	}
+}
+
+void update_nodemapping(nodemapping &twins, uforest &F, int original_label, int new_label, bool forward) {
+	// odd bug
+	if (new_label == -1) {
+		return;
+	}
+	if (original_label != new_label) {
+//		cout << endl << "FOO" << endl << endl;
+//		cout << "\t" << original_label << "->" << new_label << endl;
+		int twin;
+		if (forward) {
+			twin = twins.get_forward(original_label);
+		}
+		else {
+			twin = twins.get_backward(original_label);
+		}
+//		cout << "\t" << twin << endl;
+		if (twin != -1) {
+			int parent_label = new_label;
+			if (F.get_node(new_label)->get_parent() != NULL) {
+				parent_label = F.get_node(new_label)->get_parent()->get_label();
+			}
+			if (forward) {
+				twins.add(parent_label, twin);
+			}
+			else {
+				twins.add(twin, parent_label);
+			}
 		}
 	}
 }
