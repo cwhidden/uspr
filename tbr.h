@@ -1698,9 +1698,21 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 	cout << endl;
 
 	socketcontainer T2_sockets_normalized = socketcontainer(T2_normalized_socketlist);
+
 	//
 	// identify sets of T1 and T2 sockets that map to the same AF edge
-	//
+	i = 0;
+	for (pair<pair<int, int>, vector <socket*> > socketgroup : T1_sockets.sockets) {
+		i++;
+		int start = socketgroup.first.first;
+		int end = socketgroup.first.second;
+		vector <socket *> &T1_group = socketgroup.second;
+		vector <socket *> &T2_group = T2_sockets_normalized.find(start, end);
+		cout << "socket group " << i << ": " << start << ", " << end << endl;
+		cout << "\t" << "T1: " << T1_group.size() << endl;
+		cout << "\t" << "T2: " << T2_group.size() << endl;
+	}
+
 	// datastructure containing pairs of matched sockets
 
 
