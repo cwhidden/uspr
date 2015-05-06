@@ -122,7 +122,7 @@ class socketcontainer {
 			if (i->second.size() < s->num) {
 				i->second.resize(s->num);
 			}
-			i->second[s->num] = s;
+			(i->second)[s->num - 1] = s;
 		}
 	}
 
@@ -186,6 +186,8 @@ void add_sockets(unode *x, unode *y, list<socket *> &sockets);
 void find_dead_components(uforest &T, socketcontainer &S, map<int, nodestatus> &T_status, vector<list<int> > &T_dead_components);
 void find_dead_components_hlpr(unode *n, unode *prev, int component, uforest &T, socketcontainer &S, map<int, nodestatus> &T_status, vector<list<int> > &T_dead_components);
 void update_nodemapping(nodemapping &twins, uforest &F, int original_label, int new_label, bool forward);
+int check_socket_group_combinations(int k, int kprime, socketcontainer &T1_sockets, socketcontainer &T2_sockets_normalized, vector<list<int> > &T1_dead_components, vector<list<int> > &T2_dead_components, vector<pair<vector<socket *> , vector<socket *> > > &socketcandidates);
+int check_socket_group_combinations(int n, int i, int j, int last, int k, int kprime, socketcontainer &T1_sockets, socketcontainer &T2_sockets_normalized, vector<list<int> > &T1_dead_components, vector<list<int> > &T2_dead_components, vector<pair<vector<socket *> , vector<socket *> > > &socketcandidates, vector<pair<socket *, socket *> > &sockets);
 
 // AF helpers
 int dummy_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, int dummy);
@@ -1500,6 +1502,8 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 	F1.contract_degree_two();
 	F2.contract_degree_two();
 
+	int kprime = F1.num_components()-1;
+
 	debug_replug(
 		cout << endl << "REPLUG_HLPR" << endl;
 		cout << "\t" << "k:  " << k << endl;
@@ -1574,32 +1578,6 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 
 	socketcontainer T1_sockets = socketcontainer(T1_socketlist);
 	socketcontainer T2_sockets = socketcontainer(T2_socketlist);
-
-	cout << "T1 sockets: " << endl;
-	for (socket *s: T1_socketlist) {
-//		if (s->i != s->j) {
-			T1_status[s->dead] = SOCKET;
-//		}
-		cout << "\t" << "s(";
-		cout << s->i << ", ";
-		cout << s->j << ", ";
-		cout << s->dead  << ", ";
-		cout << s->num << ")" << endl;
-	}
-	cout << endl;
-	cout << "T2 sockets: " << endl;
-	for (socket *s: T2_socketlist) {
-//		if (s->i != s->j) {
-			T2_status[s->dead] = SOCKET;
-//		}
-		cout << "\t" << "s(";
-		cout << s->i << ", ";
-		cout << s->j << ", ";
-		cout << s->dead  << ", ";
-		cout << s->num << ")" << endl;
-	}
-	cout << endl;
-
 
 	// 3. Map dead nodes (not alive or sockets)
 	for (pair<const int, nodestatus> &p : T1_status) {
@@ -1701,7 +1679,9 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 
 	//
 	// identify sets of T1 and T2 sockets that map to the same AF edge
+	vector<pair<vector<socket *> , vector<socket *> > > socketcandidates = vector<pair<vector<socket *> , vector<socket *> > >();
 	i = 0;
+	int max_sockets = 0;
 	for (pair<pair<int, int>, vector <socket*> > socketgroup : T1_sockets.sockets) {
 		i++;
 		int start = socketgroup.first.first;
@@ -1711,7 +1691,29 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 		cout << "socket group " << i << ": " << start << ", " << end << endl;
 		cout << "\t" << "T1: " << T1_group.size() << endl;
 		cout << "\t" << "T2: " << T2_group.size() << endl;
+		if (T1_group.size() < T2_group.size()) {
+			max_sockets += T1_group.size();
+		}
+		else {
+			max_sockets += T2_group.size();
+		}
+		if (!T1_group.empty() && !T2_group.empty()) {
+			socketcandidates.push_back(make_pair(T1_group, T2_group));
+		}
 	}
+
+	cout << socketcandidates.size() << " socket groups " << endl;
+
+	// Branch and bound. We have a lower bound of kprime - max # of sockets
+	int lower_bound = kprime - max_sockets;
+	cout << "lower_bound: " << lower_bound + kprime << endl;
+	cout << "allowed: " << k + kprime << endl;
+
+	if (lower_bound > k) {
+		return -1;
+	}
+
+	k = check_socket_group_combinations(k, kprime, T1_sockets, T2_sockets_normalized, T1_dead_components, T2_dead_components, socketcandidates);
 
 	// datastructure containing pairs of matched sockets
 
@@ -1737,6 +1739,89 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 
 
 	return k;
+}
+
+
+int check_socket_group_combinations(int k, int kprime, socketcontainer &T1_sockets, socketcontainer &T2_sockets_normalized, vector<list<int> > &T1_dead_components, vector<list<int> > &T2_dead_components, vector<pair<vector<socket *> , vector<socket *> > > &socketcandidates) {
+
+	vector<pair<socket *, socket *> > sockets = vector<pair<socket *, socket *> >();
+	return check_socket_group_combinations(0, 0, 0, 0, k, kprime, T1_sockets, T2_sockets_normalized, T1_dead_components, T2_dead_components, socketcandidates, sockets);
+
+	return k;
+}
+
+// enumerate each combination of socket pairings recursively
+int check_socket_group_combinations(int n, int i, int j, int last, int k, int kprime, socketcontainer &T1_sockets, socketcontainer &T2_sockets_normalized, vector<list<int> > &T1_dead_components, vector<list<int> > &T2_dead_components, vector<pair<vector<socket *> , vector<socket *> > > &socketcandidates, vector<pair<socket *, socket *> > &sockets) {
+	cout << "combinations(";
+	cout << n << ", "; 
+	cout << i << ", "; 
+	cout << j << ", "; 
+	cout << last << ")"; 
+	cout << endl;
+	// test this combination
+	if (n >= socketcandidates.size()) {
+		//TODO:
+		cout << "FOO" << endl;
+		for (pair<socket *, socket *> &p : sockets) {
+				cout << p.first << endl;
+				socket *s = p.first;
+				cout << "\t" << "s(";
+				cout << s->i << ", ";
+				cout << s->j << ", ";
+				cout << s->dead  << ", ";
+				cout << s->num << ")";
+				s = p.second;
+				cout << "\t" << "s(";
+				cout << s->i << ", ";
+				cout << s->j << ", ";
+				cout << s->dead  << ", ";
+				cout << s->num << ")";
+				cout << endl;
+		}
+		return k;
+	}
+	// move to next socket group
+	if (i >= socketcandidates[n].first.size() ||
+			j >= socketcandidates[n].second.size()) {
+		// only advance if there is no open assignment
+		if (last != 0) {
+			return -1;
+		}
+		else {
+			n++;
+			return check_socket_group_combinations(n, 0, 0, 0, k, kprime, T1_sockets, T2_sockets_normalized, T1_dead_components, T2_dead_components, socketcandidates, sockets);
+		}
+	}
+
+	int best_k = k - kprime;
+
+	// match i and j
+	sockets.push_back(make_pair(socketcandidates[n].first[i], socketcandidates[n].second[j]));
+	int k1 = check_socket_group_combinations(n, i+1, j+1, 0, k, kprime, T1_sockets, T2_sockets_normalized, T1_dead_components, T2_dead_components, socketcandidates, sockets);
+	if (k1 > best_k) {
+		best_k = k1;
+	}
+	sockets.pop_back();
+
+	// skip i, can't skip j next time
+	int k2 = k;
+	if (last != 1) {
+		k2 = check_socket_group_combinations(n, i+1, j, -1, k, kprime, T1_sockets, T2_sockets_normalized, T1_dead_components, T2_dead_components, socketcandidates, sockets);
+		if (k2 > best_k) {
+			best_k = k2;
+		}
+	}
+
+	// skip j, can't skip i next time
+	int k3 = k;
+	if (last != -1) {
+		k3 = check_socket_group_combinations(n, i, j+1, 1, k, kprime, T1_sockets, T2_sockets_normalized, T1_dead_components, T2_dead_components, socketcandidates, sockets);
+		if (k3 > best_k) {
+			best_k = k3;
+		}
+	}
+
+	return best_k;
 }
 
 void find_sockets(uforest &T, uforest &F, list<socket *> &sockets) {
