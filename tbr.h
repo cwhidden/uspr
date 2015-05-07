@@ -188,6 +188,7 @@ void find_dead_components_hlpr(unode *n, unode *prev, int component, uforest &T,
 void update_nodemapping(nodemapping &twins, uforest &F, int original_label, int new_label, bool forward);
 int check_socket_group_combinations(int k, int kprime, socketcontainer &T1_sockets, socketcontainer &T2_sockets_normalized, vector<list<int> > &T1_dead_components, vector<list<int> > &T2_dead_components, vector<pair<vector<socket *> , vector<socket *> > > &socketcandidates);
 int check_socket_group_combinations(int n, int i, int j, int last, int k, int kprime, socketcontainer &T1_sockets, socketcontainer &T2_sockets_normalized, vector<list<int> > &T1_dead_components, vector<list<int> > &T2_dead_components, vector<pair<vector<socket *> , vector<socket *> > > &socketcandidates, vector<pair<socket *, socket *> > &sockets);
+int check_socket_group_combination(int k, int kprime, socketcontainer &T1_sockets, socketcontainer &T2_sockets_normalized, vector<list<int> > &T1_dead_components, vector<list<int> > &T2_dead_components, vector<pair<vector<socket *> , vector<socket *> > > &socketcandidates, vector<pair<socket *, socket *> > &sockets);
 
 // AF helpers
 int dummy_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, int dummy);
@@ -1014,8 +1015,8 @@ int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int
 				int first_label = F1_a->get_label();
 				int second_label = F1_a->get_parent()->get_label();
 				pair<int,int> components = F1.cut_edge(first_label, second_label);
-				update_nodemapping(twins, F2, first_label, components.first, true);
-				update_nodemapping(twins, F2, second_label, components.second, true);
+				update_nodemapping(twins, F1, first_label, components.first, true);
+				update_nodemapping(twins, F1, second_label, components.second, true);
 
 
 
@@ -1760,25 +1761,7 @@ int check_socket_group_combinations(int n, int i, int j, int last, int k, int kp
 	cout << endl;
 	// test this combination
 	if (n >= socketcandidates.size()) {
-		//TODO:
-		cout << "FOO" << endl;
-		for (pair<socket *, socket *> &p : sockets) {
-				cout << p.first << endl;
-				socket *s = p.first;
-				cout << "\t" << "s(";
-				cout << s->i << ", ";
-				cout << s->j << ", ";
-				cout << s->dead  << ", ";
-				cout << s->num << ")";
-				s = p.second;
-				cout << "\t" << "s(";
-				cout << s->i << ", ";
-				cout << s->j << ", ";
-				cout << s->dead  << ", ";
-				cout << s->num << ")";
-				cout << endl;
-		}
-		return k;
+		return check_socket_group_combination(k, kprime, T1_sockets, T2_sockets_normalized, T1_dead_components, T2_dead_components, socketcandidates, sockets);
 	}
 	// move to next socket group
 	if (i >= socketcandidates[n].first.size() ||
@@ -1823,6 +1806,27 @@ int check_socket_group_combinations(int n, int i, int j, int last, int k, int kp
 
 	return best_k;
 }
+
+int check_socket_group_combination(int k, int kprime, socketcontainer &T1_sockets, socketcontainer &T2_sockets_normalized, vector<list<int> > &T1_dead_components, vector<list<int> > &T2_dead_components, vector<pair<vector<socket *> , vector<socket *> > > &socketcandidates, vector<pair<socket *, socket *> > &sockets) {
+		//TODO:
+		cout << "check_socket_group_combination()" << endl;
+		for (pair<socket *, socket *> &p : sockets) {
+				socket *s = p.first;
+				cout << "\t" << "s(";
+				cout << s->i << ", ";
+				cout << s->j << ", ";
+				cout << s->dead  << ", ";
+				cout << s->num << ")";
+				s = p.second;
+				cout << "\t" << "s(";
+				cout << s->i << ", ";
+				cout << s->j << ", ";
+				cout << s->dead  << ", ";
+				cout << s->num << ")";
+				cout << endl;
+		}
+}
+
 
 void find_sockets(uforest &T, uforest &F, list<socket *> &sockets) {
 	for (unode *c : F.get_components()) {
