@@ -1,6 +1,8 @@
 #ifndef INCLUDE_TBR
 #define INCLUDE_TBR
 
+#include <boost/graph/adjacency_list.hpp>
+
 class nodemapping;
 
 typedef enum {ALIVE, DEAD, SOCKET, UNKNOWN} nodestatus;
