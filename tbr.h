@@ -1994,9 +1994,17 @@ bool get_constraint(list<int> &dead_component, socketcontainer &T_sockets, map<s
 
 void find_sockets(uforest &T, uforest &F, list<socket *> &sockets) {
 	for (unode *c : F.get_components()) {
-		if (c->get_neighbors().empty() || c->get_neighbors().size() == 2) {
+		// leaf component
+		if (c->get_neighbors().empty()) {
 			find_sockets_hlpr(c, c, T, sockets);
 		}
+		// cherry component
+		if (c->get_neighbors().size() == 2) {
+			unode *lc = T.get_node(c->get_neighbors().front()->get_label());
+			unode *rc = T.get_node(c->get_neighbors().back()->get_label());
+			add_sockets(lc, rc, sockets);
+		}
+		// general case
 		else {
 			find_sockets_hlpr(c, NULL, T, sockets);
 		}
