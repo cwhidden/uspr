@@ -2,11 +2,14 @@
 #define INCLUDE_TBR
 
 #include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/max_cardinality_matching.hpp>
 
 class nodemapping;
 
 typedef enum {ALIVE, DEAD, SOCKET, UNKNOWN} nodestatus;
 string nodestatus_name[] = {"ALIVE", "DEAD", "SOCKET", "UNKNOWN"};
+
+typedef boost::adjacency_list <boost::vecS, boost::vecS, boost::undirectedS, boost::no_property> undirected_graph;
 
 //#define DEBUG 1
 #ifdef DEBUG
@@ -201,6 +204,8 @@ int check_socket_group_combinations(int k, int kprime, socketcontainer &T1_socke
 int check_socket_group_combinations(int n, int i, int j, int last, int k, int kprime, socketcontainer &T1_sockets, socketcontainer &T2_sockets_normalized, vector<list<int> > &T1_dead_components, vector<list<int> > &T2_dead_components, vector<pair<vector<socket *> , vector<socket *> > > &socketcandidates, vector<pair<socket *, socket *> > &sockets);
 int check_socket_group_combination(int k, int kprime, socketcontainer &T1_sockets, socketcontainer &T2_sockets_normalized, vector<list<int> > &T1_dead_components, vector<list<int> > &T2_dead_components, vector<pair<vector<socket *> , vector<socket *> > > &socketcandidates, vector<pair<socket *, socket *> > &sockets);
 bool get_constraint(list<int> &dead_component, socketcontainer &T_sockets, map<socket *, int> &socket_pointer_map, vector<int> &constraint);
+int solve_monotonic_2sat_2vars(vector<vector<int> > constraints);
+// function prototypes end
 
 // AF helpers
 int dummy_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, int dummy);
@@ -1817,7 +1822,7 @@ int check_socket_group_combinations(int n, int i, int j, int last, int k, int kp
 	sockets.pop_back();
 
 	// skip i, can't skip j next time
-	int k2 = k;
+	int k2 = -1;
 	if (last != 1) {
 		k2 = check_socket_group_combinations(n, i+1, j, -1, k, kprime, T1_sockets, T2_sockets_normalized, T1_dead_components, T2_dead_components, socketcandidates, sockets);
 		if (k2 > best_k) {
@@ -1826,7 +1831,7 @@ int check_socket_group_combinations(int n, int i, int j, int last, int k, int kp
 	}
 
 	// skip j, can't skip i next time
-	int k3 = k;
+	int k3 = -1;
 	if (last != -1) {
 		k3 = check_socket_group_combinations(n, i, j+1, 1, k, kprime, T1_sockets, T2_sockets_normalized, T1_dead_components, T2_dead_components, socketcandidates, sockets);
 		if (k3 > best_k) {
@@ -1875,12 +1880,83 @@ int check_socket_group_combination(int k, int kprime, socketcontainer &T1_socket
 
 		// if no constraints, every move is a replug not a TBR
 		if (constraints.size() == 0) {
+			int non_phi_nodes = 0;
+			int phi_nodes = kprime;
+			cout << phi_nodes << " phi_nodes" << endl;
+			cout << non_phi_nodes << " non_phi_nodes" << endl;
+			cout << "replug_distance: " << (2 * kprime) - phi_nodes << endl;
 			return k;
 		}
 		else {
 			// TODO: call next step to determine the number of phi-nodes
+			int non_phi_nodes = solve_monotonic_2sat_2vars(constraints);
+			int phi_nodes = sockets.size() - non_phi_nodes;
+			cout << phi_nodes << " phi_nodes" << endl;
+			cout << non_phi_nodes << " non_phi_nodes" << endl;
+			cout << "replug_distance: " << (2 * kprime) - phi_nodes << endl;
+			//return k - (kprime - phi_nodes);
 			return k;
 		}
+}
+
+// determine the minimum number of variables that must be false to satisfy a monotonic 2 SAT set of CNF constraints where each variable occurs at most twice
+// works by converting to a maximum edge cover problem where each vertex is a clause and each edge is a variable spanning two clauses
+int solve_monotonic_2sat_2vars(vector<vector<int> > constraints) {
+
+	cout << "solve_monotonic_2sat_2vars()" << endl;
+
+	// inverse map sockets to constraints
+	map<int, vector<int> > constraint_map = map<int, vector<int> >();
+	for(int i = 0; i < constraints.size(); i++) {
+		for(int socket : constraints[i]) {
+			constraint_map[socket].push_back(i);
+		}
+	}
+
+	// build the constraint graph
+	undirected_graph G(constraints.size());
+	for(int i = 0; i < constraints.size(); i++) {
+		for(int socket : constraints[i]) {
+			for (int constraint : constraint_map[socket]) {
+				if (constraint != i) {
+			// for constraints containing this socket
+				if (i < constraint) {
+					add_edge(i, constraint, G);
+				}
+				}
+			}
+		}
+	}
+
+
+	// print the graph
+	typedef boost::graph_traits<undirected_graph>::edge_iterator edge_iter;
+	edge_iter ei;
+	edge_iter ei_end;
+
+	for (boost::tie(ei, ei_end) = boost::edges(G); ei != ei_end; ei++) {
+		cout << *ei << endl;
+	}
+	cout << endl;
+
+
+	// find a maximum matching
+	
+	// matching data structure
+	vector<boost::graph_traits<undirected_graph>::vertex_descriptor> mate(constraints.size());
+	bool success = boost::checked_edmonds_maximum_cardinality_matching(G, &mate[0]);
+	assert(success);
+
+	int matching_size = boost::matching_size(G, &mate[0]);
+	cout << "found a matching of size " << matching_size << endl;
+
+	// expand to an edge cover by adding (#vertices - (2 * size of matching))
+	// total is #vertices - matching_size
+	int edge_cover_size = constraints.size() - matching_size;
+	cout << "found an edge cover of size " << edge_cover_size << endl;
+
+	return edge_cover_size;
+
 }
 
 bool get_constraint(list<int> &dead_component, socketcontainer &T_sockets, map<socket *, int> &socket_pointer_map, vector<int> &constraint) {
