@@ -1885,7 +1885,7 @@ int check_socket_group_combination(int k, int kprime, socketcontainer &T1_socket
 			cout << phi_nodes << " phi_nodes" << endl;
 			cout << non_phi_nodes << " non_phi_nodes" << endl;
 			cout << "replug_distance: " << (2 * kprime) - phi_nodes << endl;
-			return k;
+			return k - (kprime - phi_nodes);
 		}
 		else {
 			// TODO: call next step to determine the number of phi-nodes
@@ -1894,8 +1894,7 @@ int check_socket_group_combination(int k, int kprime, socketcontainer &T1_socket
 			cout << phi_nodes << " phi_nodes" << endl;
 			cout << non_phi_nodes << " non_phi_nodes" << endl;
 			cout << "replug_distance: " << (2 * kprime) - phi_nodes << endl;
-			//return k - (kprime - phi_nodes);
-			return k;
+			return k - (kprime - phi_nodes);
 		}
 }
 
