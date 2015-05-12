@@ -1881,7 +1881,7 @@ int check_socket_group_combination(int k, int kprime, socketcontainer &T1_socket
 		// if no constraints, every move is a replug not a TBR
 		if (constraints.size() == 0) {
 			int non_phi_nodes = 0;
-			int phi_nodes = kprime;
+			int phi_nodes = sockets.size();
 			cout << phi_nodes << " phi_nodes" << endl;
 			cout << non_phi_nodes << " non_phi_nodes" << endl;
 			cout << "replug_distance: " << (2 * kprime) - phi_nodes << endl;
