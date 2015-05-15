@@ -204,7 +204,8 @@ int check_socket_group_combinations(int k, int kprime, socketcontainer &T1_socke
 int check_socket_group_combinations(int n, int i, int j, int last, int k, int kprime, socketcontainer &T1_sockets, socketcontainer &T2_sockets_normalized, vector<list<int> > &T1_dead_components, vector<list<int> > &T2_dead_components, vector<pair<vector<socket *> , vector<socket *> > > &socketcandidates, vector<pair<socket *, socket *> > &sockets);
 int check_socket_group_combination(int k, int kprime, socketcontainer &T1_sockets, socketcontainer &T2_sockets_normalized, vector<list<int> > &T1_dead_components, vector<list<int> > &T2_dead_components, vector<pair<vector<socket *> , vector<socket *> > > &socketcandidates, vector<pair<socket *, socket *> > &sockets);
 bool get_constraint(list<int> &dead_component, socketcontainer &T_sockets, map<socket *, int> &socket_pointer_map, vector<int> &constraint);
-int solve_monotonic_2sat_2vars(vector<vector<int> > constraints);
+int solve_monotonic_2sat_2vars(vector<vector<int> > &constraints, list<int> &changed_sockets);
+int solve_monotonic_2sat_2vars(vector<vector<int> > &constraints);
 // function prototypes end
 
 // AF helpers
@@ -1900,7 +1901,7 @@ int check_socket_group_combination(int k, int kprime, socketcontainer &T1_socket
 
 // determine the minimum number of variables that must be false to satisfy a monotonic 2 SAT set of CNF constraints where each variable occurs at most twice
 // works by converting to a maximum edge cover problem where each vertex is a clause and each edge is a variable spanning two clauses
-int solve_monotonic_2sat_2vars(vector<vector<int> > constraints) {
+int solve_monotonic_2sat_2vars(vector<vector<int> > &constraints, list<int> &changed_sockets) {
 
 	cout << "solve_monotonic_2sat_2vars()" << endl;
 
@@ -1949,13 +1950,71 @@ int solve_monotonic_2sat_2vars(vector<vector<int> > constraints) {
 	int matching_size = boost::matching_size(G, &mate[0]);
 	cout << "found a matching of size " << matching_size << endl;
 
+
 	// expand to an edge cover by adding (#vertices - (2 * size of matching))
 	// total is #vertices - matching_size
 	int edge_cover_size = constraints.size() - matching_size;
 	cout << "found an edge cover of size " << edge_cover_size << endl;
 
+
+	// determine the sockets that move
+	vector<bool> handled_constraints = vector<bool>(constraints.size(), false);
+	typedef boost::graph_traits<undirected_graph>::vertex_iterator vertex_iter;
+	vertex_iter vi;
+	vertex_iter vi_end;
+	for(boost::tie(vi, vi_end) = vertices(G); vi != vi_end; vi++) {
+		// vertex is matched
+		if (mate[*vi] != boost::graph_traits<undirected_graph>::null_vertex() && *vi < mate[*vi]) {
+			cout << "{" << *vi << ", " << mate[*vi] << "}" << endl;
+			handled_constraints[*vi] = true;
+			handled_constraints[mate[*vi]] = true;
+			// find a socket in both constraints
+			bool done = false;
+			for(int socket : constraints[*vi]) {
+				if (done) {
+					break;
+				}
+				for(int constraint : constraint_map[socket]) {
+					if (constraint == mate[*vi]) {
+						cout << "both contain " << socket << endl;
+						changed_sockets.push_back(socket);
+						done = true;
+						break;
+					}
+				}
+			}
+
+		}
+		else if (!handled_constraints[*vi]) {
+			// vertex is not matched, pick an arbitrary socket
+			int chosen_socket = constraints[*vi][0];
+			cout << "{" << *vi << "}" << endl;
+			cout << "contains " << chosen_socket << endl;
+			changed_sockets.push_back(chosen_socket);
+		}
+	}
+
+	cout << changed_sockets.size();
+	if (changed_sockets.size() == edge_cover_size) {
+		cout << " == ";
+	}
+	else {
+		cout << " !- ";
+	}
+	cout << edge_cover_size << endl;
+
+	cout << "unmatched: " << endl;
+	for (int socket : changed_sockets) {
+		cout << "\t" << socket << endl;
+	}
+
 	return edge_cover_size;
 
+}
+
+int solve_monotonic_2sat_2vars(vector<vector<int> > &constraints) {
+	list<int> changed_sockets = list<int>();
+	return solve_monotonic_2sat_2vars(constraints, changed_sockets);
 }
 
 bool get_constraint(list<int> &dead_component, socketcontainer &T_sockets, map<socket *, int> &socket_pointer_map, vector<int> &constraint) {
