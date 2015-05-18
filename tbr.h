@@ -25,7 +25,7 @@ typedef boost::adjacency_list <boost::vecS, boost::vecS, boost::undirectedS, boo
 	#define debug_approx(x) 
 #endif
 
-#define DEBUG_REPLUG 1
+//#define DEBUG_REPLUG 1
 #ifdef DEBUG_REPLUG
 	#define debug_replug(x) x
 #else
@@ -37,6 +37,13 @@ typedef boost::adjacency_list <boost::vecS, boost::vecS, boost::undirectedS, boo
 	#define debug_sockets(x) x
 #else
 	#define debug_sockets(x) 
+#endif
+
+//#define DEBUG_PHI_NODES 1
+#ifdef DEBUG_PHI_NODES
+	#define debug_phi_nodes(x) x
+#else
+	#define debug_phi_nodes(x) 
 #endif
 
 
@@ -200,12 +207,13 @@ void add_sockets(unode *x, unode *y, list<socket *> &sockets);
 void find_dead_components(uforest &T, socketcontainer &S, map<int, nodestatus> &T_status, vector<list<int> > &T_dead_components);
 void find_dead_components_hlpr(unode *n, unode *prev, int component, uforest &T, socketcontainer &S, map<int, nodestatus> &T_status, vector<list<int> > &T_dead_components);
 void update_nodemapping(nodemapping &twins, uforest &F, int original_label, int new_label, bool forward);
-int check_socket_group_combinations(int k, int kprime, socketcontainer &T1_sockets, socketcontainer &T2_sockets_normalized, vector<list<int> > &T1_dead_components, vector<list<int> > &T2_dead_components, vector<pair<vector<socket *> , vector<socket *> > > &socketcandidates);
-int check_socket_group_combinations(int n, int i, int j, int last, int k, int kprime, socketcontainer &T1_sockets, socketcontainer &T2_sockets_normalized, vector<list<int> > &T1_dead_components, vector<list<int> > &T2_dead_components, vector<pair<vector<socket *> , vector<socket *> > > &socketcandidates, vector<pair<socket *, socket *> > &sockets);
-int check_socket_group_combination(int k, int kprime, socketcontainer &T1_sockets, socketcontainer &T2_sockets_normalized, vector<list<int> > &T1_dead_components, vector<list<int> > &T2_dead_components, vector<pair<vector<socket *> , vector<socket *> > > &socketcandidates, vector<pair<socket *, socket *> > &sockets);
+int check_socket_group_combination(int k, int kprime, socketcontainer &T1_sockets, socketcontainer &T2_sockets_normalized, vector<list<int> > &T1_dead_components, vector<list<int> > &T2_dead_components, vector<pair<vector<socket *> , vector<socket *> > > &socketcandidates, vector<pair<socket *, socket *> > &sockets, vector<pair<socket *, socket *> > &candidate_phi_node_sockets);
+int check_socket_group_combinations(int n, int i, int j, int last, int k, int kprime, socketcontainer &T1_sockets, socketcontainer &T2_sockets_normalized, vector<list<int> > &T1_dead_components, vector<list<int> > &T2_dead_components, vector<pair<vector<socket *> , vector<socket *> > > &socketcandidates, vector<pair<socket *, socket *> > &sockets, vector<pair<socket *, socket *> > &phi_node_sockets);
+int check_socket_group_combinations(int k, int kprime, socketcontainer &T1_sockets, socketcontainer &T2_sockets_normalized, vector<list<int> > &T1_dead_components, vector<list<int> > &T2_dead_components, vector<pair<vector<socket *> , vector<socket *> > > &socketcandidates, vector<pair<socket *, socket *> > &phi_node_sockets);
 bool get_constraint(list<int> &dead_component, socketcontainer &T_sockets, map<socket *, int> &socket_pointer_map, vector<int> &constraint);
 int solve_monotonic_2sat_2vars(vector<vector<int> > &constraints, list<int> &changed_sockets);
 int solve_monotonic_2sat_2vars(vector<vector<int> > &constraints);
+void add_phi_nodes(uforest &F, map<pair<int, int>, int> &F_add_phi_nodes);
 // function prototypes end
 
 // AF helpers
@@ -1598,24 +1606,26 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 	socketcontainer T1_sockets = socketcontainer(T1_socketlist);
 	socketcontainer T2_sockets = socketcontainer(T2_socketlist);
 
-	cout << "T1 sockets: " << endl;
+	for (socket *s: T1_socketlist) {
+		T1_status[s->dead] = SOCKET;
+	}
+
+	for (socket *s: T2_socketlist) {
+		T2_status[s->dead] = SOCKET;
+	}
+
+	debug_replug(
+		cout << "T1 sockets: " << endl;
 		for (socket *s: T1_socketlist) {
-	//		if (s->i != s->j) {
-				T1_status[s->dead] = SOCKET;
-	//		}
 			cout << "\t" << s->str() << endl;
 		}
 		cout << endl;
 		cout << "T2 sockets: " << endl;
 		for (socket *s: T2_socketlist) {
-	//		if (s->i != s->j) {
-				T2_status[s->dead] = SOCKET;
-	//		}
 			cout << "\t" << s->str() << endl;
 		}
 		cout << endl;
-	
-	
+	)
 
 	// 3. Map dead nodes (not alive or sockets)
 	for (pair<const int, nodestatus> &p : T1_status) {
@@ -1636,19 +1646,21 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 	}
 
 	// test node status
-	cout << "T1 node status" << endl;
-	for (unode *n : T1.get_node_list()) {
-		cout << n->get_label() << ": " <<
-			nodestatus_name[T1_status[n->get_label()]] << endl;
-	}
-	cout << endl;
+	debug_replug(
+		cout << "T1 node status" << endl;
+		for (unode *n : T1.get_node_list()) {
+			cout << n->get_label() << ": " <<
+				nodestatus_name[T1_status[n->get_label()]] << endl;
+		}
+		cout << endl;
 
-	cout << "T2 node status" << endl;
-	for (unode *n : T2.get_node_list()) {
-		cout << n->get_label() << ": " <<
-			nodestatus_name[T2_status[n->get_label()]] << endl;
-	}
-	cout << endl;
+		cout << "T2 node status" << endl;
+		for (unode *n : T2.get_node_list()) {
+			cout << n->get_label() << ": " <<
+				nodestatus_name[T2_status[n->get_label()]] << endl;
+		}
+		cout << endl;
+	)
 
 
 	// 4. Identify dead components and corresponding socket sets
@@ -1661,31 +1673,30 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 
 	// test dead components
 	int i = 0;
-	cout << "T1 dead components" << endl;
-//	cout << T1_dead_components.size() << endl;
-//	cout << T1_sockets.dead_map.size() << endl;
-//	cout << T1_sockets.find_dead(-6)->dead << endl;
-	for(list<int> &l : T1_dead_components) {
-		i++;
-		cout << "\t" << i << ":" << endl;
-		cout << "\t\t";
-		for (int x : l) {
-			cout << x << ",";
+	debug_replug(
+		cout << "T1 dead components" << endl;
+		for(list<int> &l : T1_dead_components) {
+			i++;
+			cout << "\t" << i << ":" << endl;
+			cout << "\t\t";
+			for (int x : l) {
+				cout << x << ",";
+			}
+			cout << endl;
 		}
-		cout << endl;
-	}
-
-	i = 0;
-	cout << "T2 dead components" << endl;
-	for(list<int> &l : T2_dead_components) {
-		i++;
-		cout << "\t" << i << ":" << endl;
-		cout << "\t\t";
-		for (int x : l) {
-			cout << x << ",";
+	
+		i = 0;
+		cout << "T2 dead components" << endl;
+		for(list<int> &l : T2_dead_components) {
+			i++;
+			cout << "\t" << i << ":" << endl;
+			cout << "\t\t";
+			for (int x : l) {
+				cout << x << ",";
+			}
+			cout << endl;
 		}
-		cout << endl;
-	}
+	)
 
 	// 4.5. Identify Multifurcating socket resolutions
 	//
@@ -1696,17 +1707,6 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 		int new_j = twins.get_backward(s->j);
 		T2_normalized_socketlist.push_back(new socket(new_i, new_j, s->dead, s->num));
 	}
-	cout << "T1 sockets: " << endl;
-	for (socket *s: T1_socketlist) {
-		cout << "\t" << s->str() << endl;
-	}
-	cout << endl;
-
-	cout << "T2 sockets normalized: " << endl;
-	for (socket *s: T2_normalized_socketlist) {
-		cout << "\t" << s->str() << endl;
-	}
-	cout << endl;
 
 	socketcontainer T2_sockets_normalized = socketcontainer(T2_normalized_socketlist);
 
@@ -1721,9 +1721,11 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 		int end = socketgroup.first.second;
 		vector <socket *> &T1_group = socketgroup.second;
 		vector <socket *> &T2_group = T2_sockets_normalized.find(start, end);
-		cout << "socket group " << i << ": " << start << ", " << end << endl;
-		cout << "\t" << "T1: " << T1_group.size() << endl;
-		cout << "\t" << "T2: " << T2_group.size() << endl;
+		debug_replug(
+			cout << "socket group " << i << ": " << start << ", " << end << endl;
+			cout << "\t" << "T1: " << T1_group.size() << endl;
+			cout << "\t" << "T2: " << T2_group.size() << endl;
+		)
 		if (T1_group.size() < T2_group.size()) {
 			max_sockets += T1_group.size();
 		}
@@ -1735,59 +1737,84 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 		}
 	}
 
-	cout << socketcandidates.size() << " socket groups " << endl;
+	debug_replug(
+		cout << socketcandidates.size() << " socket groups " << endl;
+	)
 
 	// Branch and bound. We have a lower bound of kprime - max # of sockets
 	int lower_bound = kprime - max_sockets;
 	if (lower_bound < 0) {
 		lower_bound = 0;
 	}
-	cout << "lower_bound: " << lower_bound + kprime << endl;
-	cout << "allowed: " << k + kprime << endl;
+	debug_replug(
+		cout << "lower_bound: " << lower_bound + kprime << endl;
+		cout << "allowed: " << k + kprime << endl;
+	)
 
 	if (lower_bound > k) {
 		return -1;
 	}
 
-	k = check_socket_group_combinations(k, kprime, T1_sockets, T2_sockets_normalized, T1_dead_components, T2_dead_components, socketcandidates);
+	// phi-node sockets
+	vector<pair<socket *, socket *> > phi_node_sockets = vector<pair<socket *, socket *> >();
 
-	// datastructure containing pairs of matched sockets
-
-
-
-	// 5. Preprocessing - find obvious phi-nodes (or not phi-nodes)
-	//
-	// 6. Convert to set of constraints - 2 CNF+ <=2
-	//
-	// 7. Solve with edge cover
-	//
-	// 8. Find set of replug moves to test
-	//
-	// 9. return distance
-	//
-	// OPTIONAL - check maximality before enumerating socket pairings
-	//
-	// ?. When to enumerate socket pairings?
-	//
-	// OPTIONAL - clustering
+	// 5. Test each combination of socket assignments for the maximum number
+	// 		of phi-nodes
+	k = check_socket_group_combinations(k, kprime, T1_sockets, T2_sockets_normalized, T1_dead_components, T2_dead_components, socketcandidates, phi_node_sockets);
 
 
+	// number of phi-nodes to add to each edge
+	map<pair<int, int>, int> F1_add_phi_nodes = map<pair<int, int>, int>();
+	map<pair<int, int>, int> F2_add_phi_nodes = map<pair<int, int>, int>();
 
+	for(pair<socket *, socket *> p : phi_node_sockets) {
+		F1_add_phi_nodes[make_pair(p.first->i, p.first->j)]++;
+		socket *T2_p = T2_sockets.find_dead(p.second->dead);
+		F2_add_phi_nodes[make_pair(T2_p->i, T2_p->j)]++;
+	}
+
+	debug_replug(
+		cout << endl;
+		cout << "F1 refresher:" << F1.str(true) << endl;
+		cout << "F2 refresher:" << F2.str(true) << endl;
+		cout << endl;
+
+		cout << "F1 phi-nodes to add:" << endl;
+		for(pair<pair<int, int>, int> phi_node_count : F1_add_phi_nodes) {
+			cout << "\t" << phi_node_count.first.first << ", " << phi_node_count.first.second << ": " << phi_node_count.second << endl;
+		}
+
+		cout << "F2 phi-nodes to add:" << endl;
+		for(pair<pair<int, int>, int> phi_node_count : F2_add_phi_nodes) {
+			cout << "\t" << phi_node_count.first.first << ", " << phi_node_count.first.second << ": " << phi_node_count.second << endl;
+		}
+	)
+
+	add_phi_nodes(F1, F1_add_phi_nodes);
+	add_phi_nodes(F2, F2_add_phi_nodes);
+
+	debug_replug(
+		cout << "F1: " << F1.str() << endl;
+		cout << "F2: " << F1.str() << endl;
+	)
+
+
+	// 6. return distance
 
 	return k;
 }
 
 
-int check_socket_group_combinations(int k, int kprime, socketcontainer &T1_sockets, socketcontainer &T2_sockets_normalized, vector<list<int> > &T1_dead_components, vector<list<int> > &T2_dead_components, vector<pair<vector<socket *> , vector<socket *> > > &socketcandidates) {
+int check_socket_group_combinations(int k, int kprime, socketcontainer &T1_sockets, socketcontainer &T2_sockets_normalized, vector<list<int> > &T1_dead_components, vector<list<int> > &T2_dead_components, vector<pair<vector<socket *> , vector<socket *> > > &socketcandidates, vector<pair<socket *, socket *> > &phi_node_sockets) {
 
 	vector<pair<socket *, socket *> > sockets = vector<pair<socket *, socket *> >();
-	return check_socket_group_combinations(0, 0, 0, 0, k, kprime, T1_sockets, T2_sockets_normalized, T1_dead_components, T2_dead_components, socketcandidates, sockets);
+	return check_socket_group_combinations(0, 0, 0, 0, k, kprime, T1_sockets, T2_sockets_normalized, T1_dead_components, T2_dead_components, socketcandidates, sockets, phi_node_sockets);
 
 	return k;
 }
 
 // enumerate each combination of socket pairings recursively
-int check_socket_group_combinations(int n, int i, int j, int last, int k, int kprime, socketcontainer &T1_sockets, socketcontainer &T2_sockets_normalized, vector<list<int> > &T1_dead_components, vector<list<int> > &T2_dead_components, vector<pair<vector<socket *> , vector<socket *> > > &socketcandidates, vector<pair<socket *, socket *> > &sockets) {
+int check_socket_group_combinations(int n, int i, int j, int last, int k, int kprime, socketcontainer &T1_sockets, socketcontainer &T2_sockets_normalized, vector<list<int> > &T1_dead_components, vector<list<int> > &T2_dead_components, vector<pair<vector<socket *> , vector<socket *> > > &socketcandidates, vector<pair<socket *, socket *> > &sockets, vector<pair<socket *, socket *> > &phi_node_sockets) {
 /*	cout << "combinations(";
 	cout << n << ", "; 
 	cout << i << ", "; 
@@ -1797,7 +1824,7 @@ int check_socket_group_combinations(int n, int i, int j, int last, int k, int kp
 	*/
 	// test this combination
 	if (n >= socketcandidates.size()) {
-		return check_socket_group_combination(k, kprime, T1_sockets, T2_sockets_normalized, T1_dead_components, T2_dead_components, socketcandidates, sockets);
+		return check_socket_group_combination(k, kprime, T1_sockets, T2_sockets_normalized, T1_dead_components, T2_dead_components, socketcandidates, sockets, phi_node_sockets);
 	}
 	// move to next socket group
 	if (i >= socketcandidates[n].first.size() ||
@@ -1808,102 +1835,124 @@ int check_socket_group_combinations(int n, int i, int j, int last, int k, int kp
 		}
 		else {
 			n++;
-			return check_socket_group_combinations(n, 0, 0, 0, k, kprime, T1_sockets, T2_sockets_normalized, T1_dead_components, T2_dead_components, socketcandidates, sockets);
+			return check_socket_group_combinations(n, 0, 0, 0, k, kprime, T1_sockets, T2_sockets_normalized, T1_dead_components, T2_dead_components, socketcandidates, sockets, phi_node_sockets);
 		}
 	}
 
 	int best_k = k - kprime;
+	vector<pair<socket *, socket *> > candidate_phi_node_sockets = vector<pair<socket *, socket *> >();
 
 	// match i and j
 	sockets.push_back(make_pair(socketcandidates[n].first[i], socketcandidates[n].second[j]));
-	int k1 = check_socket_group_combinations(n, i+1, j+1, 0, k, kprime, T1_sockets, T2_sockets_normalized, T1_dead_components, T2_dead_components, socketcandidates, sockets);
+	candidate_phi_node_sockets.clear();
+	int k1 = check_socket_group_combinations(n, i+1, j+1, 0, k, kprime, T1_sockets, T2_sockets_normalized, T1_dead_components, T2_dead_components, socketcandidates, sockets, candidate_phi_node_sockets);
 	if (k1 > best_k) {
 		best_k = k1;
+		phi_node_sockets.swap(candidate_phi_node_sockets);
 	}
 	sockets.pop_back();
 
 	// skip i, can't skip j next time
 	int k2 = -1;
 	if (last != 1) {
-		k2 = check_socket_group_combinations(n, i+1, j, -1, k, kprime, T1_sockets, T2_sockets_normalized, T1_dead_components, T2_dead_components, socketcandidates, sockets);
+		candidate_phi_node_sockets.clear();
+		k2 = check_socket_group_combinations(n, i+1, j, -1, k, kprime, T1_sockets, T2_sockets_normalized, T1_dead_components, T2_dead_components, socketcandidates, sockets, candidate_phi_node_sockets);
 		if (k2 > best_k) {
 			best_k = k2;
+			phi_node_sockets.swap(candidate_phi_node_sockets);
 		}
 	}
 
 	// skip j, can't skip i next time
 	int k3 = -1;
 	if (last != -1) {
-		k3 = check_socket_group_combinations(n, i, j+1, 1, k, kprime, T1_sockets, T2_sockets_normalized, T1_dead_components, T2_dead_components, socketcandidates, sockets);
+		candidate_phi_node_sockets.clear();
+		k3 = check_socket_group_combinations(n, i, j+1, 1, k, kprime, T1_sockets, T2_sockets_normalized, T1_dead_components, T2_dead_components, socketcandidates, sockets, candidate_phi_node_sockets);
 		if (k3 > best_k) {
 			best_k = k3;
+			phi_node_sockets.swap(candidate_phi_node_sockets);
 		}
 	}
 
 	return best_k;
 }
 
-int check_socket_group_combination(int k, int kprime, socketcontainer &T1_sockets, socketcontainer &T2_sockets_normalized, vector<list<int> > &T1_dead_components, vector<list<int> > &T2_dead_components, vector<pair<vector<socket *> , vector<socket *> > > &socketcandidates, vector<pair<socket *, socket *> > &sockets) {
-		//TODO:
+int check_socket_group_combination(int k, int kprime, socketcontainer &T1_sockets, socketcontainer &T2_sockets_normalized, vector<list<int> > &T1_dead_components, vector<list<int> > &T2_dead_components, vector<pair<vector<socket *> , vector<socket *> > > &socketcandidates, vector<pair<socket *, socket *> > &sockets, vector<pair<socket *, socket *> > &candidate_phi_node_sockets) {
+
+	debug_phi_nodes(
 		cout << "check_socket_group_combination()" << endl;
 		for (pair<socket *, socket *> &p : sockets) {
 				cout << p.first->str() << "\t" << p.second->str() << endl;
 		}
+	)
 
-		// map of socket pointers to paired socket numbers
-		map<socket *, int> socket_pointer_map = map<socket *, int>();
-		int i = 0;
-		for(int i = 0; i < sockets.size(); i++) {
-			socket_pointer_map[sockets[i].first] = i;
-			socket_pointer_map[sockets[i].second] = i;
+	// map of socket pointers to paired socket numbers
+	map<socket *, int> socket_pointer_map = map<socket *, int>();
+	int i = 0;
+	for(int i = 0; i < sockets.size(); i++) {
+		socket_pointer_map[sockets[i].first] = i;
+		socket_pointer_map[sockets[i].second] = i;
+	}
+
+	// vector of vectors with socket constraints
+	// one socket from each constraint cannot have a phi node
+	vector<vector<int> > constraints = vector<vector<int> >();
+
+
+	for(list<int> &dead_component : T1_dead_components) {
+		vector<int> constraint = vector<int>();
+		bool trivial = get_constraint(dead_component, T1_sockets, socket_pointer_map, constraint);
+		if (trivial != true) {
+			constraints.push_back(constraint);
 		}
-
-		// vector of vectors with socket constraints
-		// one socket from each constraint cannot have a phi node
-		vector<vector<int> > constraints = vector<vector<int> >();
-
-
-		for(list<int> &dead_component : T1_dead_components) {
-			vector<int> constraint = vector<int>();
-			bool trivial = get_constraint(dead_component, T1_sockets, socket_pointer_map, constraint);
-			if (trivial != true) {
-				constraints.push_back(constraint);
-			}
+	}
+	for(list<int> &dead_component : T2_dead_components) {
+		vector<int> constraint = vector<int>();
+		bool trivial = get_constraint(dead_component, T2_sockets_normalized, socket_pointer_map, constraint);
+		if (trivial != true) {
+			constraints.push_back(constraint);
 		}
-		for(list<int> &dead_component : T2_dead_components) {
-			vector<int> constraint = vector<int>();
-			bool trivial = get_constraint(dead_component, T2_sockets_normalized, socket_pointer_map, constraint);
-			if (trivial != true) {
-				constraints.push_back(constraint);
-			}
-		}
+	}
+	debug_phi_nodes(
 		cout << "found " << constraints.size() << " constraints" << endl; 
+	)
 
-		// if no constraints, every move is a replug not a TBR
-		if (constraints.size() == 0) {
-			int non_phi_nodes = 0;
-			int phi_nodes = sockets.size();
-			cout << phi_nodes << " phi_nodes" << endl;
-			cout << non_phi_nodes << " non_phi_nodes" << endl;
-			cout << "replug_distance: " << (2 * kprime) - phi_nodes << endl;
-			return k - (kprime - phi_nodes);
+	int non_phi_nodes = 0;
+	// determine the number of non_phi_nodes
+	list<int> changed_sockets = list<int>();
+	if (constraints.size() > 0) {
+		non_phi_nodes = solve_monotonic_2sat_2vars(constraints, changed_sockets);
+	}
+	int phi_nodes = sockets.size() - non_phi_nodes;
+
+	// find the phi nodes
+	vector<bool> changed_sockets_vector = vector<bool>(sockets.size(), false);
+	for (int socket : changed_sockets) {
+		changed_sockets_vector[socket] = true;
+	}
+	debug_phi_nodes(
+		cout << "phi-node sockets:" << endl;
+	)
+	for (int i = 0; i < sockets.size(); i++) {
+		if (!changed_sockets_vector[i]) {
+			candidate_phi_node_sockets.push_back(sockets[i]);
+			debug_phi_nodes(cout << sockets[i].first->str() << "\t" << sockets[i].second->str() << endl;)
 		}
-		else {
-			// TODO: call next step to determine the number of phi-nodes
-			int non_phi_nodes = solve_monotonic_2sat_2vars(constraints);
-			int phi_nodes = sockets.size() - non_phi_nodes;
-			cout << phi_nodes << " phi_nodes" << endl;
-			cout << non_phi_nodes << " non_phi_nodes" << endl;
-			cout << "replug_distance: " << (2 * kprime) - phi_nodes << endl;
-			return k - (kprime - phi_nodes);
-		}
+	}
+	debug_phi_nodes(
+		cout << phi_nodes << " phi_nodes" << endl;
+		cout << non_phi_nodes << " non_phi_nodes" << endl;
+		cout << "replug_distance: " << (2 * kprime) - phi_nodes << endl;
+	)
+	return k - (kprime - phi_nodes);
+
 }
 
 // determine the minimum number of variables that must be false to satisfy a monotonic 2 SAT set of CNF constraints where each variable occurs at most twice
 // works by converting to a maximum edge cover problem where each vertex is a clause and each edge is a variable spanning two clauses
 int solve_monotonic_2sat_2vars(vector<vector<int> > &constraints, list<int> &changed_sockets) {
 
-	cout << "solve_monotonic_2sat_2vars()" << endl;
+	debug_phi_nodes(cout << "solve_monotonic_2sat_2vars()" << endl;)
 
 	// inverse map sockets to constraints
 	map<int, vector<int> > constraint_map = map<int, vector<int> >();
@@ -1934,10 +1983,12 @@ int solve_monotonic_2sat_2vars(vector<vector<int> > &constraints, list<int> &cha
 	edge_iter ei;
 	edge_iter ei_end;
 
-	for (boost::tie(ei, ei_end) = boost::edges(G); ei != ei_end; ei++) {
-		cout << *ei << endl;
-	}
-	cout << endl;
+	debug_phi_nodes(
+		for (boost::tie(ei, ei_end) = boost::edges(G); ei != ei_end; ei++) {
+			cout << *ei << endl;
+		}
+		cout << endl;
+	)
 
 
 	// find a maximum matching
@@ -1948,13 +1999,13 @@ int solve_monotonic_2sat_2vars(vector<vector<int> > &constraints, list<int> &cha
 	assert(success);
 
 	int matching_size = boost::matching_size(G, &mate[0]);
-	cout << "found a matching of size " << matching_size << endl;
+	debug_phi_nodes(cout << "found a matching of size " << matching_size << endl;)
 
 
 	// expand to an edge cover by adding (#vertices - (2 * size of matching))
 	// total is #vertices - matching_size
 	int edge_cover_size = constraints.size() - matching_size;
-	cout << "found an edge cover of size " << edge_cover_size << endl;
+	debug_phi_nodes(cout << "found an edge cover of size " << edge_cover_size << endl;)
 
 
 	// determine the sockets that move
@@ -1965,7 +2016,7 @@ int solve_monotonic_2sat_2vars(vector<vector<int> > &constraints, list<int> &cha
 	for(boost::tie(vi, vi_end) = vertices(G); vi != vi_end; vi++) {
 		// vertex is matched
 		if (mate[*vi] != boost::graph_traits<undirected_graph>::null_vertex() && *vi < mate[*vi]) {
-			cout << "{" << *vi << ", " << mate[*vi] << "}" << endl;
+			debug_phi_nodes(cout << "{" << *vi << ", " << mate[*vi] << "}" << endl;)
 			handled_constraints[*vi] = true;
 			handled_constraints[mate[*vi]] = true;
 			// find a socket in both constraints
@@ -1976,7 +2027,7 @@ int solve_monotonic_2sat_2vars(vector<vector<int> > &constraints, list<int> &cha
 				}
 				for(int constraint : constraint_map[socket]) {
 					if (constraint == mate[*vi]) {
-						cout << "both contain " << socket << endl;
+						debug_phi_nodes(cout << "both contain " << socket << endl;)
 						changed_sockets.push_back(socket);
 						done = true;
 						break;
@@ -1988,25 +2039,29 @@ int solve_monotonic_2sat_2vars(vector<vector<int> > &constraints, list<int> &cha
 		else if (!handled_constraints[*vi]) {
 			// vertex is not matched, pick an arbitrary socket
 			int chosen_socket = constraints[*vi][0];
-			cout << "{" << *vi << "}" << endl;
-			cout << "contains " << chosen_socket << endl;
+			debug_phi_nodes(
+				cout << "{" << *vi << "}" << endl;
+				cout << "contains " << chosen_socket << endl;
+			)
 			changed_sockets.push_back(chosen_socket);
 		}
 	}
 
-	cout << changed_sockets.size();
-	if (changed_sockets.size() == edge_cover_size) {
-		cout << " == ";
-	}
-	else {
-		cout << " !- ";
-	}
-	cout << edge_cover_size << endl;
+	debug_phi_nodes(
+		cout << changed_sockets.size();
+		if (changed_sockets.size() == edge_cover_size) {
+			cout << " == ";
+		}
+		else {
+			cout << " !- ";
+		}
+		cout << edge_cover_size << endl;
 
-	cout << "unmatched: " << endl;
-	for (int socket : changed_sockets) {
-		cout << "\t" << socket << endl;
-	}
+		cout << "unmatched: " << endl;
+		for (int socket : changed_sockets) {
+			cout << "\t" << socket << endl;
+		}
+	)
 
 	return edge_cover_size;
 
@@ -2038,14 +2093,16 @@ bool get_constraint(list<int> &dead_component, socketcontainer &T_sockets, map<s
 		}
 		
 	}
-	cout << "constraint: ";
-	for(int i = 0; i < constraint.size(); i++) {
-		if (i != 0) {
-			cout << ",";
+	debug_phi_nodes(
+		cout << "constraint: ";
+		for(int i = 0; i < constraint.size(); i++) {
+			if (i != 0) {
+				cout << ",";
+			}
+			cout << constraint[i]+1;
 		}
-		cout << constraint[i]+1;
-	}
-	cout << endl;
+		cout << endl;
+	)
 	return trivial;
 }
 
@@ -2256,6 +2313,47 @@ void update_nodemapping(nodemapping &twins, uforest &F, int original_label, int 
 		}
 	}
 }
+
+// add the set of phi nodes to the forest
+// TODO: include original socket numbers to reuse nodes?
+void add_phi_nodes(uforest &F, map<pair<int, int>, int> &F_add_phi_nodes) {
+//	cout << "F: " << F.str(true) << endl;
+	for(pair<pair<int, int>, int> phi_node_count : F_add_phi_nodes) {
+		int start_id = phi_node_count.first.first;
+		int end_id = phi_node_count.first.second;
+		int count = phi_node_count.second;
+//		cout << "adding " << start_id << ", " << end_id << ": " << count << endl;
+
+		unode *start = F.get_node(start_id);
+		unode *end = F.get_node(end_id);
+
+		bool skip_last = false;
+		// if start and end are the same, don't connect twice
+		if (start == end) {
+			skip_last = true;
+		}
+
+		while(count > 0) {
+			start->remove_neighbor(end);
+			end->remove_neighbor(start);
+			unode *new_socket = F.get_node(F.add_internal_node());
+			unode *new_phi_node = F.get_node(F.add_phi_node());
+			start->add_neighbor(new_socket);
+			new_socket->add_neighbor(start);
+			new_socket->add_neighbor(new_phi_node);
+			new_phi_node->add_neighbor(new_socket);
+			if (count > 1 || !skip_last) {
+				new_socket->add_neighbor(end);
+				end->add_neighbor(new_socket);
+			}
+			start = new_socket;
+			count--;
+//			cout << "F: " << F.str(true) << endl;
+		}
+	}
+	return;
+}
+
 
 
 

@@ -25,6 +25,7 @@ class unode {
 	bool terminal;
 	int distance;
 	bool b_protected;
+	bool phi;
 
 	public:
 	unode() {
@@ -36,6 +37,7 @@ class unode {
 		terminal = false;
 		distance = -1;
 		b_protected = false;
+		phi = false;
 	}
 	unode(int l) {
 		label = l;
@@ -46,6 +48,7 @@ class unode {
 		terminal = false;
 		distance = -1;
 		b_protected = false;
+		phi = false;
 	}
 	unode(const unode &n) {
 		label = n.label;
@@ -57,6 +60,7 @@ class unode {
 		terminal = n.terminal;
 		distance = n.distance;
 		b_protected = n.b_protected;
+		phi = n.phi;
 	}
 
 	void add_neighbor(unode *n) {
@@ -104,7 +108,12 @@ class unode {
 
 	string str() const {
 		stringstream ss;
-		ss << label;
+		if (phi) {
+			ss << "*";
+		}
+		else {
+			ss << label;
+		}
 		return ss.str();
 	}
 
@@ -154,6 +163,14 @@ class unode {
 
 	int get_component() {
 		return component;
+	}
+
+	void set_phi(bool b) {
+		phi = b;
+	}
+
+	bool is_phi() {
+		return phi;
 	}
 
 	void root(int l) {

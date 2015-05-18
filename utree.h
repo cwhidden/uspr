@@ -121,23 +121,29 @@ class utree {
 		}
 	friend ostream& operator<<(ostream &os, const utree& t);
 
-	 int add_internal_node(unode *foo) {
+	 int add_internal_node() {
 		int label = -(internal_nodes.size() + 2);
-		 unode f = unode(label);
 		internal_nodes.push_back( new unode(label));
 		return label;
 	}
 
 	int add_leaf(int label) {
-		int start = leaves.size() + 1;
+		int start = leaves.size();
 		if (leaves.size() <= label) {
 			leaves.resize(label+1);
 		}
-		for (int i = start; i < label; i++) {
+		for(int i = start; i < label; i++) {
 			leaves[i] = NULL;
 		}
 		leaves[label] = new unode(label);
 		return label;
+	}
+
+	int add_phi_node() {
+		int new_node_label = add_leaf(leaves.size());
+		unode *new_node = get_node(new_node_label);
+		new_node->set_phi(true);
+		return new_node_label;
 	}
 
 	 unode *get_internal_node(int label) {
@@ -395,7 +401,7 @@ int build_utree_helper(utree &t, string &s, map<string, int> &label_map, map<int
 	}
 	else {
 		// internal node
-	int l = t.add_internal_node(parent);
+	int l = t.add_internal_node();
 		unode *new_node = t.get_internal_node(l);
 		loc = build_utree_helper(t, s, label_map, reverse_label_map, loc + 1, new_node, valid);
 		while(s[loc] == ',') {
