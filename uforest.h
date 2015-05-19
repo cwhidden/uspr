@@ -27,6 +27,14 @@ class uforest: public utree {
 //				cout << "\t" << F.components[i] << ", " << components[i] << endl;
 			}
 		}
+		uforest& operator=(uforest F) {
+			swap(*this, F);
+			return *this;
+		}
+		friend void swap(uforest &first, uforest &second) {
+			swap(static_cast<utree&>(first), static_cast<utree&>(second));
+			swap(first.components, second.components);
+		}
 		string str(bool print_internal = false) const {
 			stringstream ss;
 			for(int i = 0; i < components.size(); i++) {

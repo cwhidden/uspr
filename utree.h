@@ -35,8 +35,8 @@ class utree {
 		}
 		utree(const utree &T) {
 			// copy vectors of pointers
-			internal_nodes = vector<unode *>(T.internal_nodes.size());
-			leaves = vector<unode *>(T.leaves.size());
+			internal_nodes = vector<unode *>(T.internal_nodes.size(), NULL);
+			leaves = vector<unode *>(T.leaves.size(), NULL);
 			smallest_leaf = T.smallest_leaf;
 			// create new nodes
 			for(int i = 0; i < T.internal_nodes.size(); i++) {
@@ -118,6 +118,15 @@ class utree {
 					delete leaves[i];
 				}
 			}
+		}
+		utree& operator=(utree T) {
+			swap(*this, T);
+			return *this;
+		}
+		friend void swap(utree &first, utree &second) {
+			swap(first.internal_nodes, second.internal_nodes);
+			swap(first.leaves, second.leaves);
+			swap(first.smallest_leaf, second.smallest_leaf);
 		}
 	friend ostream& operator<<(ostream &os, const utree& t);
 

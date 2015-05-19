@@ -54,7 +54,6 @@ class unode {
 		label = n.label;
 		neighbors = list<unode *>(n.neighbors);
 		contracted_neighbors = list<unode *>(n.contracted_neighbors);
-		num_neighbors = 0;
 		num_neighbors = n.num_neighbors;
 		component = n.component;
 		terminal = n.terminal;
@@ -312,6 +311,7 @@ class unode {
 			unode *p = neighbors.front();
 			if (p->is_leaf() && this->get_label() < -1) {
 				p->remove_neighbor(this);
+				this->remove_neighbor(p);
 				if (component > -1) {
 					p->set_component(component);
 				}
@@ -339,7 +339,9 @@ class unode {
 			if (p->get_num_all_neighbors() > 1) {
 				clear_contracted_neighbors();
 				p->remove_neighbor(this);
+				this->remove_neighbor(p);
 				c->remove_neighbor(this);
+				this->remove_neighbor(c);
 				c->add_parent(p);
 				p->add_contracted_neighbor(c);
 				if (p->get_distance() > distance &&
