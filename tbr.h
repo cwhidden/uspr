@@ -2458,6 +2458,16 @@ void add_phi_nodes(uforest &F, map<pair<int, int>, int> &F_add_phi_nodes) {
 		unode *start = F.get_node(start_id);
 		unode *end = F.get_node(end_id);
 
+		// use the root of a cherry
+		if (start->get_num_neighbors() == 1 &&
+				end->get_num_neighbors() == 1) {
+			unode *mid = start->get_neighbors().front();
+			if (mid == end->get_neighbors().front()) {
+				start = mid;
+				end = mid;
+			}
+		}
+
 		bool skip_last = false;
 		// if start and end are the same, don't connect twice
 		if (start == end) {
