@@ -11,7 +11,7 @@ string nodestatus_name[] = {"ALIVE", "DEAD", "SOCKET", "UNKNOWN"};
 
 typedef boost::adjacency_list <boost::vecS, boost::vecS, boost::undirectedS, boost::no_property> undirected_graph;
 
-//#define DEBUG 1
+#define DEBUG 1
 #ifdef DEBUG
 	#define debug(x) x
 #else
@@ -1553,8 +1553,8 @@ list<pair<int,int> > find_pendants(unode *a, unode *c) {
 	// use a list of pairs of ints instead?
 	bool same_component = true;
 	while(a->get_parent() != c->get_parent()) {
-		debug(cout << "a:" << a->get_distance() << endl;
-		cout << "c:" << c->get_distance() << endl;)
+		debug(cout << "a:" << a->get_label() << "(" << a->get_distance() << ")" << endl;
+		cout << "c:" << c->get_label() << "(" << c->get_distance() << ")" << endl;)
 		if (a->get_distance() > c->get_distance() ||
 				 (a->get_parent()->get_distance() >= c->get_parent()->get_distance())) {
 			unode *prev_a = a;
@@ -2448,12 +2448,12 @@ void update_nodemapping(nodemapping &twins, uforest &F, int original_label, int 
 // add the set of phi nodes to the forest
 // TODO: include original socket numbers to reuse nodes?
 void add_phi_nodes(uforest &F, map<pair<int, int>, int> &F_add_phi_nodes) {
-//	cout << "F: " << F.str(true) << endl;
+	debug_phi_nodes(cout << "F: " << F.str(true) << endl;)
 	for(pair<pair<int, int>, int> phi_node_count : F_add_phi_nodes) {
 		int start_id = phi_node_count.first.first;
 		int end_id = phi_node_count.first.second;
 		int count = phi_node_count.second;
-//		cout << "adding " << start_id << ", " << end_id << ": " << count << endl;
+		debug_phi_nodes(cout << "adding " << start_id << ", " << end_id << ": " << count << endl;)
 
 		unode *start = F.get_node(start_id);
 		unode *end = F.get_node(end_id);
@@ -2475,21 +2475,33 @@ void add_phi_nodes(uforest &F, map<pair<int, int>, int> &F_add_phi_nodes) {
 		}
 
 		while(count > 0) {
+			// check for neighbor slot before removing the edge
+			unode *new_socket;
+			if (start->get_num_neighbors() != 2) {
+				new_socket = F.get_node(F.add_internal_node());
+			}
+			else {
+				new_socket = start;
+			}
 			start->remove_neighbor(end);
 			end->remove_neighbor(start);
-			unode *new_socket = F.get_node(F.add_internal_node());
 			unode *new_phi_node = F.get_node(F.add_phi_node());
-			start->add_neighbor(new_socket);
-			new_socket->add_neighbor(start);
+			if (start != new_socket) {
+				start->add_neighbor(new_socket);
+				new_socket->add_neighbor(start);
+			}
 			new_socket->add_neighbor(new_phi_node);
 			new_phi_node->add_neighbor(new_socket);
-			if (count > 1 || !skip_last) {
+			if (!skip_last) {
 				new_socket->add_neighbor(end);
 				end->add_neighbor(new_socket);
 			}
+			else {
+				end = new_socket;
+			}
 			start = new_socket;
 			count--;
-//			cout << "F: " << F.str(true) << endl;
+			debug_phi_nodes(cout << "F: " << F.str(true) << endl;)
 		}
 	}
 	return;
