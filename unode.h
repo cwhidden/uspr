@@ -105,13 +105,19 @@ class unode {
 		return ret;
 	}
 
-	string str() const {
+	string str(map<int, string> *reverse_label_map = NULL) const {
 		stringstream ss;
 		if (phi) {
 			ss << "*";
 		}
 		else {
-			ss << label;
+			if (reverse_label_map != NULL &&
+					reverse_label_map->find(label) != reverse_label_map->end()) {
+				ss << (*reverse_label_map)[label];
+			}
+			else {
+				ss << label;
+			}
 		}
 		return ss.str();
 	}

@@ -199,16 +199,16 @@ class utree {
 		return leaves.size();
 	}
 
-	string str() const {
+	string str(map<int, string> *reverse_label_map = NULL) const{
 		stringstream s;
 		int start = smallest_leaf;
 		if (start == -1) {
 			return "empty tree";
 		}
 		unode *root = leaves[start]->get_neighbors().front();
-		str_subtree(s, root, root);
+		str_subtree(s, root, root, false, reverse_label_map);
 		return s.str();
-	 }
+	}
 
 	list<int> find_leaves() {
 		list<int> leaf_list = list<int>();
@@ -251,22 +251,22 @@ class utree {
 		}
 	}
 
-	string str_subtree(unode *n, bool print_internal_labels = false) {
+	string str_subtree(unode *n, bool print_internal_labels = false, map<int, string> *reverse_label_map = NULL) {
 		stringstream ss;
-		str_subtree(ss, n, n->get_parent(), print_internal_labels);
+		str_subtree(ss, n, n->get_parent(), print_internal_labels, reverse_label_map);
 		return ss.str();
 	}
 
-	string str_subtree(unode *n, unode *p, bool print_internal_labels = false) {
+	string str_subtree(unode *n, unode *p, bool print_internal_labels = false, map<int, string> *reverse_label_map = NULL) {
 		stringstream ss;
-		str_subtree(ss, n, p, print_internal_labels);
+		str_subtree(ss, n, p, print_internal_labels, reverse_label_map);
 		return ss.str();
 	}
 
-	void str_subtree(stringstream &s, unode *n, unode *prev, bool print_internal_labels = false) const {
+	void str_subtree(stringstream &s, unode *n, unode *prev, bool print_internal_labels = false, map<int, string> *reverse_label_map = NULL) const {
 		// only leaf labels
 		if (print_internal_labels || n->get_label() >= 0) {
-			s << n->str();
+			s << n->str(reverse_label_map);
 		}
 		list<unode *>::const_iterator i;
 		const list<unode *> &cn = n->const_neighbors();
@@ -281,7 +281,7 @@ class utree {
 					s << ",";
 				}
 				count++;
-				str_subtree(s, i, n, print_internal_labels);
+				str_subtree(s, i, n, print_internal_labels, reverse_label_map);
 			}
 		}
 		for(unode *i : n->const_contracted_neighbors()) {
@@ -294,7 +294,7 @@ class utree {
 				}
 				count++;
 				has_contracted = true;
-				str_subtree(s, i, n, print_internal_labels);
+				str_subtree(s, i, n, print_internal_labels, reverse_label_map);
 			}
 		}
 		if (has_contracted) {
