@@ -3,6 +3,7 @@
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/max_cardinality_matching.hpp>
+#include <iterator>
 
 class nodemapping;
 
@@ -11,7 +12,7 @@ string nodestatus_name[] = {"ALIVE", "DEAD", "SOCKET", "UNKNOWN"};
 
 typedef boost::adjacency_list <boost::vecS, boost::vecS, boost::undirectedS, boost::no_property> undirected_graph;
 
-#define DEBUG 1
+//#define DEBUG 1
 #ifdef DEBUG
 	#define debug(x) x
 #else
@@ -203,6 +204,7 @@ int tbr_low_upper_bound(uforest &T1, uforest &T2);
 int tbr_branch_bound(uforest &F1, uforest &F2, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons);
 void find_sockets(uforest &T1, uforest &F1, list<socket *> &sockets);
 void find_sockets_hlpr(unode *n, unode *prev, uforest &T, list<socket *> &sockets);
+bool get_path(unode *xstart, unode *ystart, list<unode *> &path);
 void add_sockets(unode *x, unode *y, list<socket *> &sockets);
 void find_dead_components(uforest &T, socketcontainer &S, map<int, nodestatus> &T_status, vector<list<int> > &T_dead_components);
 void find_dead_components_hlpr(unode *n, unode *prev, int component, uforest &T, socketcontainer &S, map<int, nodestatus> &T_status, vector<list<int> > &T_dead_components);
@@ -655,6 +657,16 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 			
 			list<pair<int,int> > pendants = find_pendants(F2_a, F2_c);
 			int num_pendants = pendants.size();
+			debug(
+				cout << "path:" << endl;
+				list<unode *> path = list<unode *>();
+				get_path(F2_a, F2_c, path);
+	
+				for (unode *x : path) {
+					cout << "\t" << F2.str_subtree(x) << endl;
+				}
+				cout << endl;
+			)
 			debug(
 				cout << "pendants: " << endl;
 				for (auto p : pendants) {
@@ -1544,82 +1556,30 @@ int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int
 	return k;
 }
 
-// assume a is deeper than c
 list<pair<int,int> > find_pendants(unode *a, unode *c) {
 	debug(cout << "find_pendants()" << endl);
-	list<pair<int,int> > pendants = list<pair<int,int> >();
-	// don't forget c's grandparent
-	// move through "parents" until we reach the same node
-	// use a list of pairs of ints instead?
-	bool same_component = true;
-	while(a->get_parent() != c->get_parent()) {
-		debug(cout << "a:" << a->get_label() << "(" << a->get_distance() << ")" << endl;
-		cout << "c:" << c->get_label() << "(" << c->get_distance() << ")" << endl;)
-		if (a->get_distance() > c->get_distance() ||
-				 (a->get_parent()->get_distance() >= c->get_parent()->get_distance())) {
-			unode *prev_a = a;
-			a = a->get_parent();
-			if (a->get_distance() > prev_a->get_distance()) {
-				same_component = false;
-				break;
-			}
-			debug(
-				cout << prev_a->get_distance() << endl;
-				cout << a->get_distance() << endl;
-				cout << a->get_parent()->get_distance() << endl;
-				//cout << a->get_neighbor_not(prev_a, a->get_parent())->get_distance() << endl;
-				cout << endl;
-			)
-			if (a->get_parent() != NULL && a->get_neighbor_not(prev_a, a->get_parent()) != NULL) {
-				pendants.push_back(make_pair(a->get_label(), a->get_neighbor_not(prev_a, a->get_parent())->get_label()));
-			}
-		}
-		else {
-			unode *prev_c = c;
-			c = c->get_parent();
-			if (c->get_distance() > prev_c->get_distance()) {
-				debug(cout << "c's new distance is " << c->get_distance() << endl;)
-				same_component = false;
-				break;
-			}
-			debug(
-				cout << prev_c->get_distance() << endl;
-				cout << c->get_distance() << endl;
-				cout << c->get_parent()->get_distance() << endl;
-				//cout << a->get_neighbor_not(prev_a, a->get_parent())->get_distance() << endl;
-				cout << endl;
-			)
-			if (c->get_parent() != NULL && c->get_neighbor_not(prev_c, c->get_parent()) != NULL) {
-				pendants.push_back(make_pair(c->get_label(), c->get_neighbor_not(prev_c, c->get_parent())->get_label()));
-			}
-		}
-	}
-	// return empty list if they are in different components
-	if (!same_component) {
-		pendants.clear();
-	}
-	// add the final parent edge (or last
-	else {
-		debug(
-			cout << "FOO: " << a->get_label() << endl;
-			cout << "FOO: " << c->get_label() << endl;
-			cout << "FOO: " << c->get_parent()->get_label() << endl;
-			cout << "FOO: " << a->get_parent()->get_neighbor_not(a,c) << endl;
-	//		cout << "FOO: " << a->get_parent()->get_neighbor_not(a,c)->get_label() << endl;
-		)
-		if (a->get_parent()->get_distance() > a->get_distance()) {
-			// a = c = root
-			if (a->get_neighbor_not(a,c) != NULL) {
-				pendants.push_back(make_pair(a->get_label(), a->get_neighbor_not(a,c)->get_label()));
-		 }
-		}
-		else {
-			// a = c = not root
-			if (a->get_parent()->get_neighbor_not(a,c) != NULL) {
-				pendants.push_back(make_pair(a->get_parent()->get_label(), a->get_parent()->get_neighbor_not(a,c)->get_label()));
 
-			}
+	list<pair<int,int> > pendants = list<pair<int,int> >();
+	list<unode *> path = list<unode *>();
+	// get the path from a to c, return an empty list if no path exists
+	if (!get_path(a, c, path)) {
+		return pendants;
+	}
+	list<unode *>::iterator x;
+	unode *prev = a;
+	for(x = path.begin(); x != path.end(); x++) {
+		int x_label = (*x)->get_label();
+		unode *next_node;
+		if (next(x) == path.end()) {
+			next_node = c;
 		}
+		else {
+			next_node = *(next(x));
+		}
+		unode *pendant = (*x)->get_neighbor_not(prev, next_node);
+		int pendant_label = pendant->get_label();
+		pendants.push_back(make_pair(x_label, pendant_label));
+		prev = *x;
 	}
 	return pendants;
 }
@@ -2266,6 +2226,46 @@ void find_sockets_hlpr(unode *n, unode *prev, uforest &T, list<socket *> &socket
 	if (prev != NULL) {
 		add_sockets(T.get_node(n->get_label()), T.get_node(prev->get_label()), sockets);
 	}
+}
+
+// append a path from xstart to ystart to path if one exists
+// return true iff a path exists
+bool get_path(unode *xstart, unode *ystart, list<unode *> &path) {
+	list<unode *> x_path = list<unode *>();
+	list<unode *> y_path = list<unode *>();
+	unode *x = xstart;
+	unode *y = ystart;
+	bool same_component = true;
+	while(x != y) {
+		if (x->get_distance() >= y->get_distance()) {
+			unode *next = x->get_parent();
+			if (next->get_distance() > x->get_distance()) {
+				same_component = false;
+				break;
+			}
+			if (next != y) {
+				x_path.push_back(next);
+			}
+			x = next;
+		}
+		else {
+			unode *next = y->get_parent();
+			if (next->get_distance() > y->get_distance()) {
+				same_component = false;
+				break;
+			}
+			if (next != x) {
+				y_path.push_front(next);
+			}
+			y = next;
+		}
+	}
+	if (same_component) {
+		path.splice(path.end(), x_path);
+		path.splice(path.end(), y_path);
+		return true;
+	}
+	return false;
 }
 
 void add_sockets(unode *xstart, unode *ystart, list<socket *> &sockets) {
