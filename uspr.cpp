@@ -29,6 +29,12 @@ string USAGE =
 
 bool DEFAULT_OPTIMIZATIONS = true;
 bool PRINT_mAFS = false;
+bool COUNT_mAFS = false;
+
+bool ALL_DISTANCES = true;
+bool TBR_APPROX = false;
+bool TBR = false;
+bool REPLUG = false;
 
 
 
@@ -42,6 +48,9 @@ int main(int argc, char *argv[]) {
 		if (strcmp(arg, "--print-mAFs") == 0) {
 			PRINT_mAFS = true;
 		}
+		if (strcmp(arg, "--count-mAFs") == 0) {
+			COUNT_mAFS = true;
+		}
 		else if (strcmp(arg, "--keep-labels") == 0) {
 			KEEP_LABELS = true;
 				cout << "KEEP_LABELS=true" << endl;
@@ -52,6 +61,18 @@ int main(int argc, char *argv[]) {
 		}
 		else if (strcmp(arg, "--no-protect-b") == 0) {
 			OPTIMIZE_PROTECT_B = false;
+		}
+		else if (strcmp(arg, "--tbr-approx") == 0) {
+			TBR_APPROX = true;
+			ALL_DISTANCES = false;
+		}
+		else if (strcmp(arg, "--tbr") == 0) {
+			TBR = true;
+			ALL_DISTANCES = false;
+		}
+		else if (strcmp(arg, "--replug") == 0) {
+			REPLUG = true;
+			ALL_DISTANCES = false;
 		}
 		else if (strcmp(arg, "--help") == 0 ||
 				strcmp(arg, "-h") == 0 ||
@@ -67,6 +88,12 @@ int main(int argc, char *argv[]) {
 		OPTIMIZE_PROTECT_B = false;
 		OPTIMIZE_BRANCH_AND_BOUND = false;
 		cout << "NO OPTIMIZATIONS" << endl;
+	}
+
+	if (ALL_DISTANCES) {
+		TBR_APPROX = true;
+		TBR = true;
+		REPLUG = true;
 	}
 
 	// label maps to allow string labels
@@ -86,27 +113,27 @@ int main(int argc, char *argv[]) {
 		cout << "T1: " << F1 << endl;
 		cout << "T2: " << F2 << endl;
 		// compute TBR distance
-//		cout << "a_TBR high upper bound = " << tbr_high_upper_bound(F1, F2) << endl;
-//		cout << "a_TBR high lower bound = " << tbr_high_lower_bound(F1, F2) << endl;
-//		cout << "a_TBR low upper bound = " << tbr_low_upper_bound(F1, F2) << endl;
-//		cout << "a_TBR low lower bound = " << tbr_low_lower_bound(F1, F2) << endl;
+		if (TBR_APPROX) {
 		cout << "a_TBR: " << tbr_high_lower_bound(F1, F2) << " <= d_TBR <= " << tbr_low_upper_bound(F1, F2) << endl;
-//		int distance = tbr_distance(F1, F2, true);
-//		cout << "d_TBR = " << distance << endl;
-		/*
+		}
+		if (TBR) {
+			int distance = tbr_distance(F1, F2, true);
+			cout << "d_TBR = " << distance << endl;
+		}
 		int count;
 		if (PRINT_mAFS) {
 			count = tbr_print_mAFs(F1, F2);
+			cout << count << " mAFs" << endl;
 		}
-		else {
+		else if (COUNT_mAFS) {
 			count = tbr_count_mAFs(F1, F2);
+			cout << count << " mAFs" << endl;
 		}
-//		cout << count << " MAFs" << endl;
-		cout << count << " mAFs" << endl;
-		*/
 
-		int d_replug = replug_distance(F1, F2, true);
-		cout << "d_R = " << d_replug << endl;
+		if (REPLUG) {
+			int d_replug = replug_distance(F1, F2, true);
+			cout << "d_R = " << d_replug << endl;
+		}
 
 
 
