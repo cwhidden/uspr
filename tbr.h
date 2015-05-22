@@ -1946,37 +1946,36 @@ int check_socket_group_combinations(int n, int i, int j, int last, int k, int kp
 	}
 
 	int best_k = k - kprime;
-	vector<pair<socket *, socket *> > candidate_phi_node_sockets = vector<pair<socket *, socket *> >();
 
 	// match i and j
 	sockets.push_back(make_pair(socketcandidates[n].first[i], socketcandidates[n].second[j]));
-	candidate_phi_node_sockets.clear();
+	vector<pair<socket *, socket *> > candidate_phi_node_sockets = vector<pair<socket *, socket *> >();
 	int k1 = check_socket_group_combinations(n, i+1, j+1, 0, k, kprime, T1_sockets, T2_sockets_normalized, T1_dead_components, T2_dead_components, socketcandidates, sockets, candidate_phi_node_sockets);
 	if (k1 > best_k) {
 		best_k = k1;
-		phi_node_sockets.swap(candidate_phi_node_sockets);
+			phi_node_sockets.swap(candidate_phi_node_sockets);
 	}
 	sockets.pop_back();
 
 	// skip i, can't skip j next time
 	int k2 = -1;
 	if (last != 1) {
-		candidate_phi_node_sockets.clear();
-		k2 = check_socket_group_combinations(n, i+1, j, -1, k, kprime, T1_sockets, T2_sockets_normalized, T1_dead_components, T2_dead_components, socketcandidates, sockets, candidate_phi_node_sockets);
+		vector<pair<socket *, socket *> > candidate_phi_node_sockets_2 = vector<pair<socket *, socket *> >();
+		k2 = check_socket_group_combinations(n, i+1, j, -1, k, kprime, T1_sockets, T2_sockets_normalized, T1_dead_components, T2_dead_components, socketcandidates, sockets, candidate_phi_node_sockets_2);
 		if (k2 > best_k) {
 			best_k = k2;
-			phi_node_sockets.swap(candidate_phi_node_sockets);
+			phi_node_sockets.swap(candidate_phi_node_sockets_2);
 		}
 	}
 
 	// skip j, can't skip i next time
 	int k3 = -1;
 	if (last != -1) {
-		candidate_phi_node_sockets.clear();
-		k3 = check_socket_group_combinations(n, i, j+1, 1, k, kprime, T1_sockets, T2_sockets_normalized, T1_dead_components, T2_dead_components, socketcandidates, sockets, candidate_phi_node_sockets);
+		vector<pair<socket *, socket *> > candidate_phi_node_sockets_3 = vector<pair<socket *, socket *> >();
+		k3 = check_socket_group_combinations(n, i, j+1, 1, k, kprime, T1_sockets, T2_sockets_normalized, T1_dead_components, T2_dead_components, socketcandidates, sockets, candidate_phi_node_sockets_3);
 		if (k3 > best_k) {
 			best_k = k3;
-			phi_node_sockets.swap(candidate_phi_node_sockets);
+			phi_node_sockets.swap(candidate_phi_node_sockets_3);
 		}
 	}
 
@@ -1986,7 +1985,7 @@ int check_socket_group_combinations(int n, int i, int j, int last, int k, int kp
 int check_socket_group_combination(int k, int kprime, socketcontainer &T1_sockets, socketcontainer &T2_sockets_normalized, vector<list<int> > &T1_dead_components, vector<list<int> > &T2_dead_components, vector<pair<vector<socket *> , vector<socket *> > > &socketcandidates, vector<pair<socket *, socket *> > &sockets, vector<pair<socket *, socket *> > &candidate_phi_node_sockets) {
 
 	debug_phi_nodes(
-		cout << "check_socket_group_combination()" << endl;
+		cout << candidate_phi_node_sockets.size() << endl;
 		for (pair<socket *, socket *> &p : sockets) {
 				cout << p.first->str() << "\t" << p.second->str() << endl;
 		}
@@ -2219,6 +2218,19 @@ void find_sockets(uforest &T, uforest &F, list<socket *> &sockets) {
 		if (c->get_neighbors().empty()) {
 			find_sockets_hlpr(c, c, T, sockets);
 		}
+		// cherry component
+		else if (c->get_neighbors().size() == 1 &&
+			c->get_neighbors().front()->get_neighbors().size() == 2) {
+			unode *n = c->get_neighbors().front();
+			unode *lc = T.get_node(n->get_neighbors().front()->get_label());
+			unode *rc = T.get_node(n->get_neighbors().back()->get_label());
+			add_sockets(lc, rc, sockets);
+		}
+		else if (c->get_neighbors().size() == 2) {
+			unode *lc = T.get_node(c->get_neighbors().front()->get_label());
+			unode *rc = T.get_node(c->get_neighbors().back()->get_label());
+			add_sockets(lc, rc, sockets);
+		}
 		// general case
 		else {
 			find_sockets_hlpr(c, NULL, T, sockets);
@@ -2230,12 +2242,6 @@ void find_sockets_hlpr(unode *n, unode *prev, uforest &T, list<socket *> &socket
 		if (x != prev) {
 			find_sockets_hlpr(x, n, T, sockets);
 		}
-	}
-	// cherry component
-	if (n->get_neighbors().size() == 2) {
-		unode *lc = T.get_node(n->get_neighbors().front()->get_label());
-		unode *rc = T.get_node(n->get_neighbors().back()->get_label());
-		add_sockets(lc, rc, sockets);
 	}
 	// follow path of sockets
 	if (prev != NULL) {
