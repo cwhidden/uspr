@@ -2182,8 +2182,10 @@ bool get_constraint(list<int> &dead_component, socketcontainer &T_sockets, map<s
 	bool trivial = false;
 	for(int dead : dead_component) {
 		socket *s = T_sockets.find_dead(dead);
-//		cout << "dead: " << dead << endl;
-//		cout << "socket: " << s->str() << endl;
+		debug_phi_nodes(
+		cout << "dead: " << dead << endl;
+		cout << "socket: " << s->str() << endl;
+		)
 		map<socket *, int>::iterator socket_pointer_map_iterator =
 				socket_pointer_map.find(s);
 		if (socket_pointer_map_iterator != socket_pointer_map.end()) {
@@ -2192,8 +2194,6 @@ bool get_constraint(list<int> &dead_component, socketcontainer &T_sockets, map<s
 		}
 		else {
 			trivial = true;
-//					break;
-//					debugging only
 				constraint.push_back(-1);
 		}
 		
@@ -2393,7 +2393,9 @@ void find_dead_components_hlpr(unode *n, unode *prev, int component, uforest &T,
 	int n_label = n->get_label();
 	// enter a dead component directly
 	if (T_status[n_label] == DEAD) {
-		if (prev == NULL || T_status[prev->get_label()] != ALIVE) {
+		if (prev == NULL ||
+				(T_status[prev->get_label()] != ALIVE &&
+				T_status[prev->get_label()] != DEAD)) {
 				component = T_dead_components.size();
 				T_dead_components.push_back(list<int>());
 		}
