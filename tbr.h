@@ -180,7 +180,7 @@ class socketcontainer {
 
 
 // function prototypes
-int tbr_distance(uforest &F1, uforest &F2, bool print_forest);
+int tbr_distance(uforest &T1, uforest &T2, uforest **MAF1_out = NULL, uforest **MAF2_out = NULL);
 template<typename T>
 int tbr_distance(uforest &T1, uforest &T2, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s), uforest **MAF1 = NULL, uforest **MAF2 = NULL);
 int tbr_count_MAFs(uforest &F1, uforest &F2);
@@ -193,6 +193,7 @@ template<typename T>
 int tbr_distance_hlpr(uforest &T1, uforest &T2, int k, T t, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s), uforest **MAF1 = NULL, uforest **MAF2 = NULL);
 template<typename T>
 int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons, T t, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s), uforest **MAF1 = NULL, uforest **MAF2 = NULL);
+int replug_distance(uforest &T1, uforest &T2, uforest **MAF1_out = NULL, uforest **MAF2_out = NULL);
 list<pair<int,int> > find_pendants(unode *a, unode *c);
 int tbr_approx(uforest &T1, uforest &T2);
 int tbr_approx(uforest &T1, uforest &T2, bool low);
@@ -226,26 +227,28 @@ int print_and_count_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, in
 int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<uforest, uforest> T);
 
 // compute the TBR distance
-int tbr_distance(uforest &T1, uforest &T2, bool print_forest = false) {
+int tbr_distance(uforest &T1, uforest &T2, uforest **MAF1_out /*= NULL*/, uforest **MAF2_out /*= NULL*/) {
 	bool old_value = OPTIMIZE_2B;
 	// always safe for the TBR distance
 	OPTIMIZE_2B = true;
 	uforest *MAF1 = NULL;
 	uforest *MAF2 = NULL;
 	int d = tbr_distance(T1, T2, &dummy_mAFs, &MAF1, &MAF2);
-	if (print_forest) {
-		if (MAF1 != NULL) {
-			cout << "F1: " << MAF1->str() << endl;
-		}
-		if (MAF2 != NULL) {
-			cout << "F2: " << MAF2->str() << endl;
-		}
-	}
 	if (MAF1 != NULL) {
-		delete MAF1;
+		if (MAF1_out != NULL) {
+			*MAF1_out = MAF1;
+		}
+		else {
+			delete MAF1;
+		}
 	}
 	if (MAF2 != NULL) {
-		delete MAF2;
+		if (MAF2_out != NULL) {
+			*MAF2_out = MAF2;
+		}
+		else {
+			delete MAF2;
+		}
 	}
 	OPTIMIZE_2B = old_value;
 	return d;
@@ -331,7 +334,7 @@ int tbr_count_mAFs(uforest &T1, uforest &T2, bool print) {
 	return count;
 }
 
-int replug_distance(uforest &T1, uforest &T2, bool print_forest = false) {
+int replug_distance(uforest &T1, uforest &T2, uforest **MAF1_out /*= NULL*/, uforest **MAF2_out /*= NULL*/) {
 	// may be needed
 	T1.root(T1.get_smallest_leaf());
 	T2.root(T2.get_smallest_leaf());
@@ -340,19 +343,21 @@ int replug_distance(uforest &T1, uforest &T2, bool print_forest = false) {
 	uforest *MAF1 = NULL;
 	uforest *MAF2 = NULL;
 	int d = tbr_distance(T1, T2, make_pair(T1, T2), &replug_hlpr, &MAF1, &MAF2);
-	if (print_forest) {
-		if (MAF1 != NULL) {
-			cout << "F1: " << MAF1->str() << endl;
-		}
-		if (MAF2 != NULL) {
-			cout << "F2: " << MAF2->str() << endl;
-		}
-	}
 	if (MAF1 != NULL) {
-		delete MAF1;
+		if (MAF1_out != NULL) {
+			*MAF1_out = MAF1;
+		}
+		else {
+			delete MAF1;
+		}
 	}
 	if (MAF2 != NULL) {
-		delete MAF2;
+		if (MAF2_out != NULL) {
+			*MAF2_out = MAF2;
+		}
+		else {
+			delete MAF2;
+		}
 	}
 	return d;
 }
@@ -1040,7 +1045,13 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 		cout << "\t" << F2.str() << endl;
 	)
 	int ret_k = k;
+	// cleanup the forests
+	F1.uncontract();
+	F1.contract_degree_two();
+	F2.uncontract();
+	F2.contract_degree_two();
 	// apply a secondary branching step. Note: may modify the AF (e.g. to a phi-forest)
+
 	if (func_pointer != NULL) {
 		ret_k = (*func_pointer)(F1, F2, twins, k, t);
 	}
@@ -1613,12 +1624,6 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 	// tree alias
 	uforest &T1 = T.first;
 	uforest &T2 = T.second;
-
-	// cleanup AFs - TODO: make this unnecessary
-	F1.uncontract();
-	F2.uncontract();
-	F1.contract_degree_two();
-	F2.contract_degree_two();
 
 	int kprime = F1.num_components()-1;
 
