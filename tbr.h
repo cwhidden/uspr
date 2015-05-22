@@ -1704,7 +1704,9 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 	list <socket *> T1_socketlist = list<socket *>();
 	list <socket *> T2_socketlist = list<socket *>();
 
+	debug_sockets(cout << "finding T1 sockets" << endl;)
 	find_sockets(T1, F1, T1_socketlist);
+	debug_sockets(cout << "finding T2 sockets" << endl;)
 	find_sockets(T2, F2, T2_socketlist);
 
 	socketcontainer T1_sockets = socketcontainer(T1_socketlist);
@@ -2217,12 +2219,6 @@ void find_sockets(uforest &T, uforest &F, list<socket *> &sockets) {
 		if (c->get_neighbors().empty()) {
 			find_sockets_hlpr(c, c, T, sockets);
 		}
-		// cherry component
-		if (c->get_neighbors().size() == 2) {
-			unode *lc = T.get_node(c->get_neighbors().front()->get_label());
-			unode *rc = T.get_node(c->get_neighbors().back()->get_label());
-			add_sockets(lc, rc, sockets);
-		}
 		// general case
 		else {
 			find_sockets_hlpr(c, NULL, T, sockets);
@@ -2234,6 +2230,12 @@ void find_sockets_hlpr(unode *n, unode *prev, uforest &T, list<socket *> &socket
 		if (x != prev) {
 			find_sockets_hlpr(x, n, T, sockets);
 		}
+	}
+	// cherry component
+	if (n->get_neighbors().size() == 2) {
+		unode *lc = T.get_node(n->get_neighbors().front()->get_label());
+		unode *rc = T.get_node(n->get_neighbors().back()->get_label());
+		add_sockets(lc, rc, sockets);
 	}
 	// follow path of sockets
 	if (prev != NULL) {
@@ -2382,12 +2384,19 @@ void find_dead_components(uforest &T, socketcontainer &S, map<int, nodestatus> &
 // TODO: problem when a node has multiple sockets
 
 void find_dead_components_hlpr(unode *n, unode *prev, int component, uforest &T, socketcontainer &S, map<int, nodestatus> &T_status, vector<list<int> > &T_dead_components) {
+	int n_label = n->get_label();
+	// enter a dead component directly
+	if (T_status[n_label] == DEAD) {
+		if (prev == NULL || T_status[prev->get_label()] != ALIVE) {
+				component = T_dead_components.size();
+				T_dead_components.push_back(list<int>());
+		}
+	}
 	if (prev != NULL) {
-		int n_label = n->get_label();
 		int prev_label = prev->get_label();
 //		cout << "checking " << prev_label << " -> " << n_label << endl;
 		if (T_status[prev_label] == SOCKET) {
-			// found a new dead component
+			// found a new 2-socket dead component
 			if (T_status[n_label] == SOCKET) {
 				// check that this isn't an adjacent socket
 				socket *n_socket = S.find_dead(n_label);
@@ -2404,10 +2413,8 @@ void find_dead_components_hlpr(unode *n, unode *prev, int component, uforest &T,
 					component = -1;
 				}
 			}
-			// found a new dead component
+			// entered a new dead component
 			else if (T_status[n_label] == DEAD) {
-				component = T_dead_components.size();
-				T_dead_components.push_back(list<int>());
 				T_dead_components[component].push_back(prev_label);
 			}
 		}
