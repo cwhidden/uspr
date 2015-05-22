@@ -565,12 +565,12 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 			F1_new_terminal->contract_neighbor(F1_c);
 
 
-			if (F1_c->get_component() > -1) {
+			if (F1_c != F1_new_terminal && F1_c->get_component() > -1) {
 				F1.update_component(F1_c->get_component(), F1_new_terminal->get_label());
 				F1_new_terminal->set_component(F1_c->get_component());
 				F1_c->set_component(-1);
 			}
-			else if (F1_a->get_component() > -1) {
+			if (F1_a != F1_new_terminal && F1_a->get_component() > -1) {
 				F1.update_component(F1_a->get_component(), F1_new_terminal->get_label());
 				F1_new_terminal->set_component(F1_a->get_component());
 				F1_a->set_component(-1);
@@ -614,12 +614,12 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 				F2_new_terminal->contract_neighbor(F2_c);
 			}
 
-			if (F2_c->get_component() > -1) {
+			if (F2_c != F2_new_terminal && F2_c->get_component() > -1) {
 				F2.update_component(F2_c->get_component(), F2_new_terminal->get_label());
 				F2_new_terminal->set_component(F2_c->get_component());
 				F2_c->set_component(-1);
 			}
-			else if (F2_a->get_component() > -1) {
+			if (F2_a != F2_new_terminal && F2_a->get_component() > -1) {
 				F2.update_component(F2_a->get_component(), F2_new_terminal->get_label());
 				F2_new_terminal->set_component(F2_a->get_component());
 				F2_a->set_component(-1);
