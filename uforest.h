@@ -43,6 +43,9 @@ class uforest: public utree {
 					ss << " ";
 				}
 				unode *root = components[i];
+				if (root->get_component() != i) {
+					ss << "@";
+				}
 				if (root->get_label() > -1) {
 					if (root->is_leaf()) {
 						root = root->get_neighbors().front();
