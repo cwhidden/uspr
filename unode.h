@@ -97,6 +97,21 @@ class unode {
 		return result;
 	}
 
+	bool remove_contracted_neighbor(unode *n) {
+		list<unode *>::iterator i;
+		bool result = false;
+		for(i = contracted_neighbors.begin(); i != contracted_neighbors.end(); i++) {
+			if ((*i) == n) {
+				result = true;
+				break;
+			}
+		}
+		if (result) {
+			contracted_neighbors.remove(*i);
+		}
+		return result;
+	}
+
 	bool contract_neighbor(unode *n) {
 		bool ret = remove_neighbor(n);
 		if (ret) {
@@ -105,13 +120,19 @@ class unode {
 		return ret;
 	}
 
-	string str() const {
+	string str(map<int, string> *reverse_label_map = NULL) const {
 		stringstream ss;
 		if (phi) {
 			ss << "*";
 		}
 		else {
-			ss << label;
+			if (reverse_label_map != NULL &&
+					reverse_label_map->find(label) != reverse_label_map->end()) {
+				ss << (*reverse_label_map)[label];
+			}
+			else {
+				ss << label;
+			}
 		}
 		return ss.str();
 	}
@@ -329,8 +350,8 @@ class unode {
 			unode *c = *(next(contracted_neighbors.begin(), 1));
 			debug(
 				cout << "contracting:" << endl;
-				cout << p << endl;
-				cout << c << endl;
+				cout << p << "\t" << p->get_num_all_neighbors() << endl;
+				cout << c << "\t" << c->get_num_all_neighbors() << endl;
 			)
 			if (p->get_num_all_neighbors() < c->get_num_all_neighbors()) {
 				unode *temp = p;
@@ -340,9 +361,9 @@ class unode {
 			if (p->get_num_all_neighbors() > 1) {
 				clear_contracted_neighbors();
 				p->remove_neighbor(this);
-				this->remove_neighbor(p);
+				p->remove_contracted_neighbor(this);
 				c->remove_neighbor(this);
-				this->remove_neighbor(c);
+				c->remove_contracted_neighbor(this);
 				c->add_parent(p);
 				p->add_contracted_neighbor(c);
 				if (p->get_distance() > distance &&
@@ -372,13 +393,11 @@ class unode {
 		else if (num_neighbors == 2 && contracted_neighbors.empty()) {
 			unode *p = neighbors.front();
 			unode *c = *(next(neighbors.begin(), 1));
-			/*
 			debug(
 				cout << "contracting:" << endl;
 				cout << p << endl;
 				cout << c << endl;
 			)
-			*/
 			if (!p->is_leaf() ||
 						!(p->get_contracted_neighbors().empty()) ||
 						!c->is_leaf()) {

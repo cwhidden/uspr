@@ -110,15 +110,25 @@ int main(int argc, char *argv[]) {
 		// load into data structures
 		uforest F1 = uforest(T1_line, label_map, reverse_label_map);
 		uforest F2 = uforest(T2_line, label_map, reverse_label_map);
-		cout << "T1: " << F1 << endl;
-		cout << "T2: " << F2 << endl;
+		cout << "T1: " << F1.str(false, &reverse_label_map) << endl;
+		cout << "T2: " << F2.str(false, &reverse_label_map) << endl;
 		// compute TBR distance
 		if (TBR_APPROX) {
 		cout << "a_TBR: " << tbr_high_lower_bound(F1, F2) << " <= d_TBR <= " << tbr_low_upper_bound(F1, F2) << endl;
 		}
 		if (TBR) {
-			int distance = tbr_distance(F1, F2, true);
+			uforest *MAF1 = NULL;
+			uforest *MAF2 = NULL;
+			int distance = tbr_distance(F1, F2, &MAF1, &MAF2);
 			cout << "d_TBR = " << distance << endl;
+			if (MAF1 != NULL) {
+				cout << "F1: " << MAF1->str(false, &reverse_label_map) << endl;
+				delete MAF1;
+			}
+			if (MAF2 != NULL) {
+				cout << "F2: " << MAF2->str(false, &reverse_label_map) << endl;
+				delete MAF2;
+			}
 		}
 		int count;
 		if (PRINT_mAFS) {
@@ -131,8 +141,18 @@ int main(int argc, char *argv[]) {
 		}
 
 		if (REPLUG) {
-			int d_replug = replug_distance(F1, F2, true);
+			uforest *MAF1 = NULL;
+			uforest *MAF2 = NULL;
+			int d_replug = replug_distance(F1, F2, &MAF1, &MAF2);
 			cout << "d_R = " << d_replug << endl;
+			if (MAF1 != NULL) {
+				cout << "F1: " << MAF1->str(false, &reverse_label_map) << endl;
+				delete MAF1;
+			}
+			if (MAF2 != NULL) {
+				cout << "F2: " << MAF2->str(false, &reverse_label_map) << endl;
+				delete MAF2;
+			}
 		}
 
 

@@ -180,7 +180,7 @@ class socketcontainer {
 
 
 // function prototypes
-int tbr_distance(uforest &F1, uforest &F2, bool print_forest);
+int tbr_distance(uforest &T1, uforest &T2, uforest **MAF1_out = NULL, uforest **MAF2_out = NULL);
 template<typename T>
 int tbr_distance(uforest &T1, uforest &T2, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s), uforest **MAF1 = NULL, uforest **MAF2 = NULL);
 int tbr_count_MAFs(uforest &F1, uforest &F2);
@@ -193,6 +193,7 @@ template<typename T>
 int tbr_distance_hlpr(uforest &T1, uforest &T2, int k, T t, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s), uforest **MAF1 = NULL, uforest **MAF2 = NULL);
 template<typename T>
 int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons, T t, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s), uforest **MAF1 = NULL, uforest **MAF2 = NULL);
+int replug_distance(uforest &T1, uforest &T2, uforest **MAF1_out = NULL, uforest **MAF2_out = NULL);
 list<pair<int,int> > find_pendants(unode *a, unode *c);
 int tbr_approx(uforest &T1, uforest &T2);
 int tbr_approx(uforest &T1, uforest &T2, bool low);
@@ -226,26 +227,28 @@ int print_and_count_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, in
 int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<uforest, uforest> T);
 
 // compute the TBR distance
-int tbr_distance(uforest &T1, uforest &T2, bool print_forest = false) {
+int tbr_distance(uforest &T1, uforest &T2, uforest **MAF1_out /*= NULL*/, uforest **MAF2_out /*= NULL*/) {
 	bool old_value = OPTIMIZE_2B;
 	// always safe for the TBR distance
 	OPTIMIZE_2B = true;
 	uforest *MAF1 = NULL;
 	uforest *MAF2 = NULL;
 	int d = tbr_distance(T1, T2, &dummy_mAFs, &MAF1, &MAF2);
-	if (print_forest) {
-		if (MAF1 != NULL) {
-			cout << "F1: " << MAF1->str() << endl;
-		}
-		if (MAF2 != NULL) {
-			cout << "F2: " << MAF2->str() << endl;
-		}
-	}
 	if (MAF1 != NULL) {
-		delete MAF1;
+		if (MAF1_out != NULL) {
+			*MAF1_out = MAF1;
+		}
+		else {
+			delete MAF1;
+		}
 	}
 	if (MAF2 != NULL) {
-		delete MAF2;
+		if (MAF2_out != NULL) {
+			*MAF2_out = MAF2;
+		}
+		else {
+			delete MAF2;
+		}
 	}
 	OPTIMIZE_2B = old_value;
 	return d;
@@ -331,7 +334,7 @@ int tbr_count_mAFs(uforest &T1, uforest &T2, bool print) {
 	return count;
 }
 
-int replug_distance(uforest &T1, uforest &T2, bool print_forest = false) {
+int replug_distance(uforest &T1, uforest &T2, uforest **MAF1_out /*= NULL*/, uforest **MAF2_out /*= NULL*/) {
 	// may be needed
 	T1.root(T1.get_smallest_leaf());
 	T2.root(T2.get_smallest_leaf());
@@ -340,19 +343,21 @@ int replug_distance(uforest &T1, uforest &T2, bool print_forest = false) {
 	uforest *MAF1 = NULL;
 	uforest *MAF2 = NULL;
 	int d = tbr_distance(T1, T2, make_pair(T1, T2), &replug_hlpr, &MAF1, &MAF2);
-	if (print_forest) {
-		if (MAF1 != NULL) {
-			cout << "F1: " << MAF1->str() << endl;
-		}
-		if (MAF2 != NULL) {
-			cout << "F2: " << MAF2->str() << endl;
-		}
-	}
 	if (MAF1 != NULL) {
-		delete MAF1;
+		if (MAF1_out != NULL) {
+			*MAF1_out = MAF1;
+		}
+		else {
+			delete MAF1;
+		}
 	}
 	if (MAF2 != NULL) {
-		delete MAF2;
+		if (MAF2_out != NULL) {
+			*MAF2_out = MAF2;
+		}
+		else {
+			delete MAF2;
+		}
 	}
 	return d;
 }
@@ -560,11 +565,15 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 			F1_new_terminal->contract_neighbor(F1_c);
 
 
-			if (F1_c->get_component() > -1) {
+			if (F1_c != F1_new_terminal && F1_c->get_component() > -1) {
 				F1.update_component(F1_c->get_component(), F1_new_terminal->get_label());
+				F1_new_terminal->set_component(F1_c->get_component());
+				F1_c->set_component(-1);
 			}
-			else if (F1_a->get_component() > -1) {
+			if (F1_a != F1_new_terminal && F1_a->get_component() > -1) {
 				F1.update_component(F1_a->get_component(), F1_new_terminal->get_label());
+				F1_new_terminal->set_component(F1_a->get_component());
+				F1_a->set_component(-1);
 			}
 
 			// check for sibling pair
@@ -605,11 +614,15 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 				F2_new_terminal->contract_neighbor(F2_c);
 			}
 
-			if (F2_c->get_component() > -1) {
+			if (F2_c != F2_new_terminal && F2_c->get_component() > -1) {
 				F2.update_component(F2_c->get_component(), F2_new_terminal->get_label());
+				F2_new_terminal->set_component(F2_c->get_component());
+				F2_c->set_component(-1);
 			}
-			else if (F2_a->get_component() > -1) {
+			if (F2_a != F2_new_terminal && F2_a->get_component() > -1) {
 				F2.update_component(F2_a->get_component(), F2_new_terminal->get_label());
+				F2_new_terminal->set_component(F2_a->get_component());
+				F2_a->set_component(-1);
 			}
 
 			// add to nodemapping
@@ -1040,7 +1053,13 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 		cout << "\t" << F2.str() << endl;
 	)
 	int ret_k = k;
+	// cleanup the forests
+	F1.uncontract();
+	F1.contract_degree_two();
+	F2.uncontract();
+	F2.contract_degree_two();
 	// apply a secondary branching step. Note: may modify the AF (e.g. to a phi-forest)
+
 	if (func_pointer != NULL) {
 		ret_k = (*func_pointer)(F1, F2, twins, k, t);
 	}
@@ -1614,12 +1633,6 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 	uforest &T1 = T.first;
 	uforest &T2 = T.second;
 
-	// cleanup AFs - TODO: make this unnecessary
-	F1.uncontract();
-	F2.uncontract();
-	F1.contract_degree_two();
-	F2.contract_degree_two();
-
 	int kprime = F1.num_components()-1;
 
 	debug_replug(
@@ -1691,7 +1704,9 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 	list <socket *> T1_socketlist = list<socket *>();
 	list <socket *> T2_socketlist = list<socket *>();
 
+	debug_sockets(cout << "finding T1 sockets" << endl;)
 	find_sockets(T1, F1, T1_socketlist);
+	debug_sockets(cout << "finding T2 sockets" << endl;)
 	find_sockets(T2, F2, T2_socketlist);
 
 	socketcontainer T1_sockets = socketcontainer(T1_socketlist);
@@ -1931,37 +1946,36 @@ int check_socket_group_combinations(int n, int i, int j, int last, int k, int kp
 	}
 
 	int best_k = k - kprime;
-	vector<pair<socket *, socket *> > candidate_phi_node_sockets = vector<pair<socket *, socket *> >();
 
 	// match i and j
 	sockets.push_back(make_pair(socketcandidates[n].first[i], socketcandidates[n].second[j]));
-	candidate_phi_node_sockets.clear();
+	vector<pair<socket *, socket *> > candidate_phi_node_sockets = vector<pair<socket *, socket *> >();
 	int k1 = check_socket_group_combinations(n, i+1, j+1, 0, k, kprime, T1_sockets, T2_sockets_normalized, T1_dead_components, T2_dead_components, socketcandidates, sockets, candidate_phi_node_sockets);
 	if (k1 > best_k) {
 		best_k = k1;
-		phi_node_sockets.swap(candidate_phi_node_sockets);
+			phi_node_sockets.swap(candidate_phi_node_sockets);
 	}
 	sockets.pop_back();
 
 	// skip i, can't skip j next time
 	int k2 = -1;
 	if (last != 1) {
-		candidate_phi_node_sockets.clear();
-		k2 = check_socket_group_combinations(n, i+1, j, -1, k, kprime, T1_sockets, T2_sockets_normalized, T1_dead_components, T2_dead_components, socketcandidates, sockets, candidate_phi_node_sockets);
+		vector<pair<socket *, socket *> > candidate_phi_node_sockets_2 = vector<pair<socket *, socket *> >();
+		k2 = check_socket_group_combinations(n, i+1, j, -1, k, kprime, T1_sockets, T2_sockets_normalized, T1_dead_components, T2_dead_components, socketcandidates, sockets, candidate_phi_node_sockets_2);
 		if (k2 > best_k) {
 			best_k = k2;
-			phi_node_sockets.swap(candidate_phi_node_sockets);
+			phi_node_sockets.swap(candidate_phi_node_sockets_2);
 		}
 	}
 
 	// skip j, can't skip i next time
 	int k3 = -1;
 	if (last != -1) {
-		candidate_phi_node_sockets.clear();
-		k3 = check_socket_group_combinations(n, i, j+1, 1, k, kprime, T1_sockets, T2_sockets_normalized, T1_dead_components, T2_dead_components, socketcandidates, sockets, candidate_phi_node_sockets);
+		vector<pair<socket *, socket *> > candidate_phi_node_sockets_3 = vector<pair<socket *, socket *> >();
+		k3 = check_socket_group_combinations(n, i, j+1, 1, k, kprime, T1_sockets, T2_sockets_normalized, T1_dead_components, T2_dead_components, socketcandidates, sockets, candidate_phi_node_sockets_3);
 		if (k3 > best_k) {
 			best_k = k3;
-			phi_node_sockets.swap(candidate_phi_node_sockets);
+			phi_node_sockets.swap(candidate_phi_node_sockets_3);
 		}
 	}
 
@@ -1971,7 +1985,7 @@ int check_socket_group_combinations(int n, int i, int j, int last, int k, int kp
 int check_socket_group_combination(int k, int kprime, socketcontainer &T1_sockets, socketcontainer &T2_sockets_normalized, vector<list<int> > &T1_dead_components, vector<list<int> > &T2_dead_components, vector<pair<vector<socket *> , vector<socket *> > > &socketcandidates, vector<pair<socket *, socket *> > &sockets, vector<pair<socket *, socket *> > &candidate_phi_node_sockets) {
 
 	debug_phi_nodes(
-		cout << "check_socket_group_combination()" << endl;
+		cout << candidate_phi_node_sockets.size() << endl;
 		for (pair<socket *, socket *> &p : sockets) {
 				cout << p.first->str() << "\t" << p.second->str() << endl;
 		}
@@ -2168,8 +2182,10 @@ bool get_constraint(list<int> &dead_component, socketcontainer &T_sockets, map<s
 	bool trivial = false;
 	for(int dead : dead_component) {
 		socket *s = T_sockets.find_dead(dead);
-//		cout << "dead: " << dead << endl;
-//		cout << "socket: " << s->str() << endl;
+		debug_phi_nodes(
+		cout << "dead: " << dead << endl;
+		cout << "socket: " << s->str() << endl;
+		)
 		map<socket *, int>::iterator socket_pointer_map_iterator =
 				socket_pointer_map.find(s);
 		if (socket_pointer_map_iterator != socket_pointer_map.end()) {
@@ -2178,8 +2194,6 @@ bool get_constraint(list<int> &dead_component, socketcontainer &T_sockets, map<s
 		}
 		else {
 			trivial = true;
-//					break;
-//					debugging only
 				constraint.push_back(-1);
 		}
 		
@@ -2205,7 +2219,14 @@ void find_sockets(uforest &T, uforest &F, list<socket *> &sockets) {
 			find_sockets_hlpr(c, c, T, sockets);
 		}
 		// cherry component
-		if (c->get_neighbors().size() == 2) {
+		else if (c->get_neighbors().size() == 1 &&
+			c->get_neighbors().front()->get_neighbors().size() == 2) {
+			unode *n = c->get_neighbors().front();
+			unode *lc = T.get_node(n->get_neighbors().front()->get_label());
+			unode *rc = T.get_node(n->get_neighbors().back()->get_label());
+			add_sockets(lc, rc, sockets);
+		}
+		else if (c->get_neighbors().size() == 2) {
 			unode *lc = T.get_node(c->get_neighbors().front()->get_label());
 			unode *rc = T.get_node(c->get_neighbors().back()->get_label());
 			add_sockets(lc, rc, sockets);
@@ -2369,12 +2390,21 @@ void find_dead_components(uforest &T, socketcontainer &S, map<int, nodestatus> &
 // TODO: problem when a node has multiple sockets
 
 void find_dead_components_hlpr(unode *n, unode *prev, int component, uforest &T, socketcontainer &S, map<int, nodestatus> &T_status, vector<list<int> > &T_dead_components) {
+	int n_label = n->get_label();
+	// enter a dead component directly
+	if (T_status[n_label] == DEAD) {
+		if (prev == NULL ||
+				(T_status[prev->get_label()] != ALIVE &&
+				T_status[prev->get_label()] != DEAD)) {
+				component = T_dead_components.size();
+				T_dead_components.push_back(list<int>());
+		}
+	}
 	if (prev != NULL) {
-		int n_label = n->get_label();
 		int prev_label = prev->get_label();
 //		cout << "checking " << prev_label << " -> " << n_label << endl;
 		if (T_status[prev_label] == SOCKET) {
-			// found a new dead component
+			// found a new 2-socket dead component
 			if (T_status[n_label] == SOCKET) {
 				// check that this isn't an adjacent socket
 				socket *n_socket = S.find_dead(n_label);
@@ -2391,10 +2421,8 @@ void find_dead_components_hlpr(unode *n, unode *prev, int component, uforest &T,
 					component = -1;
 				}
 			}
-			// found a new dead component
+			// entered a new dead component
 			else if (T_status[n_label] == DEAD) {
-				component = T_dead_components.size();
-				T_dead_components.push_back(list<int>());
 				T_dead_components[component].push_back(prev_label);
 			}
 		}

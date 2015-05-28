@@ -35,13 +35,17 @@ class uforest: public utree {
 			swap(static_cast<utree&>(first), static_cast<utree&>(second));
 			swap(first.components, second.components);
 		}
-		string str(bool print_internal = false) const {
+		string str(bool print_internal = false, map<int, string> *reverse_label_map = NULL) const {
+
 			stringstream ss;
 			for(int i = 0; i < components.size(); i++) {
 				if (i > 0) {
 					ss << " ";
 				}
 				unode *root = components[i];
+				if (root->get_component() != i) {
+					ss << "@";
+				}
 				if (root->get_label() > -1) {
 					if (root->is_leaf()) {
 						root = root->get_neighbors().front();
@@ -50,7 +54,7 @@ class uforest: public utree {
 						root = root->get_contracted_neighbors().front();
 					}
 				}
-				str_subtree(ss, root, root, print_internal);
+				str_subtree(ss, root, root, print_internal, reverse_label_map);
 				ss << ";";
 			}
 			return ss.str();
