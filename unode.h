@@ -294,7 +294,8 @@ class unode {
 		debug(
 			cout << label << ".contract_degree_two_subtree()" << endl;
 		)
-		for (unode *n : neighbors) {
+		list<unode *> neighbor_copy = list<unode *>(get_neighbors());
+		for (unode *n : neighbor_copy) {
 			if (last == NULL || n != last) {
 				n->contract_degree_two_subtree(this);
 			}
