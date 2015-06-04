@@ -53,7 +53,7 @@ typedef boost::adjacency_list <boost::vecS, boost::vecS, boost::undirectedS, boo
 // NOTE: okay for TBR distance only, not for all mAFs / replug
 bool OPTIMIZE_2B = false;
 bool OPTIMIZE_PROTECT_A = true;
-bool OPTIMIZE_PROTECT_B = true;
+bool OPTIMIZE_PROTECT_B = false;
 bool OPTIMIZE_BRANCH_AND_BOUND = true;
 
 // classes
