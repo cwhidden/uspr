@@ -26,7 +26,7 @@ typedef boost::adjacency_list <boost::vecS, boost::vecS, boost::undirectedS, boo
 	#define debug_approx(x) 
 #endif
 
-//#define DEBUG_REPLUG 1
+#define DEBUG_REPLUG 1
 #ifdef DEBUG_REPLUG
 	#define debug_replug(x) x
 #else
@@ -40,7 +40,7 @@ typedef boost::adjacency_list <boost::vecS, boost::vecS, boost::undirectedS, boo
 	#define debug_sockets(x) 
 #endif
 
-//#define DEBUG_PHI_NODES 1
+#define DEBUG_PHI_NODES 1
 #ifdef DEBUG_PHI_NODES
 	#define debug_phi_nodes(x) x
 #else
@@ -749,18 +749,22 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 				}
 				int branch_a = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy, t, func_pointer, &MAF1_copy, &MAF2_copy);
 	
+				bool delete_copy = true;
 				if (branch_a > result) {
-					if (*MAF1 != NULL) {
-						delete *MAF1;
+					if (MAF1 != NULL && MAF2 != NULL) {
+						if (*MAF1 != NULL) {
+							delete *MAF1;
+						}
+						if (*MAF2 != NULL) {
+							delete *MAF2;
+						}
+						*MAF1 = MAF1_copy;
+						*MAF2 = MAF2_copy;
+						delete_copy = false;
 					}
-					if (*MAF2 != NULL) {
-						delete *MAF2;
-					}
-					*MAF1 = MAF1_copy;
-					*MAF2 = MAF2_copy;
 					result = branch_a;
 				}
-				else {
+				if (delete_copy) {
 					if (MAF1_copy != NULL) {
 						delete MAF1_copy;
 					}
@@ -803,18 +807,22 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 				}
 				int branch_c = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy, t, func_pointer, &MAF1_copy, &MAF2_copy);
 	
+				bool delete_copy = true;
 				if (branch_c > result) {
-					if (*MAF1 != NULL) {
-						delete *MAF1;
+					if (MAF1 != NULL && MAF2 != NULL) {
+						if (*MAF1 != NULL) {
+							delete *MAF1;
+						}
+						if (*MAF2 != NULL) {
+							delete *MAF2;
+						}
+						*MAF1 = MAF1_copy;
+						*MAF2 = MAF2_copy;
+						delete_copy = false;
 					}
-					if (*MAF2 != NULL) {
-						delete *MAF2;
-					}
-					*MAF1 = MAF1_copy;
-					*MAF2 = MAF2_copy;
 					result = branch_c;
 				}
-				else {
+				if (delete_copy) {
 					if (MAF1_copy != NULL) {
 						delete MAF1_copy;
 					}
@@ -890,18 +898,22 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 					if (valid) {
 						branch_b = tbr_distance_hlpr(F1_copy, F2_copy, k-(num_pendants-1), twins_copy, sibling_pairs_copy, singletons_copy, t, func_pointer, &MAF1_copy, &MAF2_copy);
 					}
+					bool delete_copy = true;
 					if (branch_b > result) {
-						if (*MAF1 != NULL) {
-							delete *MAF1;
+						if (MAF1 != NULL && MAF2 != NULL) {
+							if (*MAF1 != NULL) {
+								delete *MAF1;
+							}
+							if (*MAF2 != NULL) {
+								delete *MAF2;
+							}
+							*MAF1 = MAF1_copy;
+							*MAF2 = MAF2_copy;
+							delete_copy = false;
 						}
-						if (*MAF2 != NULL) {
-							delete *MAF2;
-						}
-						*MAF1 = MAF1_copy;
-						*MAF2 = MAF2_copy;
 						result = branch_b;
 					}
-					else {
+					if (delete_copy) {
 						if (MAF1_copy != NULL) {
 							delete MAF1_copy;
 						}
@@ -910,7 +922,6 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 						}
 					}
 				}
-
 			}
 
 			// Cut F2_b
@@ -945,18 +956,22 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 				}
 				int branch_b = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy, t, func_pointer, &MAF1_copy, &MAF2_copy);
 	
+				bool delete_copy = true;
 				if (branch_b > result) {
-					if (*MAF1 != NULL) {
-						delete *MAF1;
+					if (MAF1 != NULL && MAF2 != NULL) {
+						if (*MAF1 != NULL) {
+							delete *MAF1;
+						}
+						if (*MAF2 != NULL) {
+							delete *MAF2;
+						}
+						*MAF1 = MAF1_copy;
+						*MAF2 = MAF2_copy;
+						delete_copy = false;
 					}
-					if (*MAF2 != NULL) {
-						delete *MAF2;
-					}
-					*MAF1 = MAF1_copy;
-					*MAF2 = MAF2_copy;
 					result = branch_b;
 				}
-				else {
+				if (delete_copy) {
 					if (MAF1_copy != NULL) {
 						delete MAF1_copy;
 					}
@@ -998,18 +1013,22 @@ int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<i
 				}
 				int branch_d = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy, t, func_pointer, &MAF1_copy, &MAF2_copy);
 	
+				bool delete_copy = true;
 				if (branch_d > result) {
-					if (*MAF1 != NULL) {
-						delete *MAF1;
+					if (MAF1 != NULL && MAF2 != NULL) {
+						if (*MAF1 != NULL) {
+							delete *MAF1;
+						}
+						if (*MAF2 != NULL) {
+							delete *MAF2;
+						}
+						*MAF1 = MAF1_copy;
+						*MAF2 = MAF2_copy;
+						delete_copy = false;
 					}
-					if (*MAF2 != NULL) {
-						delete *MAF2;
-					}
-					*MAF1 = MAF1_copy;
-					*MAF2 = MAF2_copy;
 					result = branch_d;
 				}
-				else {
+				if (delete_copy) {
 					if (MAF1_copy != NULL) {
 						delete MAF1_copy;
 					}
@@ -1777,32 +1796,53 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 	find_dead_components(T1, T1_sockets, T1_status, T1_dead_components);
 	find_dead_components(T2, T2_sockets, T2_status, T2_dead_components);
 
+	int max_dead_component_extra_sockets = 0;
+	int temp_dead_component_extra_sockets = 0;
+
 	// test dead components
 	int i = 0;
 	debug_replug(
 		cout << "T1 dead components" << endl;
+	)
 		for(list<int> &l : T1_dead_components) {
-			i++;
-			cout << "\t" << i << ":" << endl;
-			cout << "\t\t";
-			for (int x : l) {
-				cout << x << ",";
+			int size = l.size();
+			if (size > 2) {
+				temp_dead_component_extra_sockets += size - 2;
 			}
-			cout << endl;
+			debug_replug(
+				i++;
+				cout << "\t" << i << ":" << endl;
+				cout << "\t\t";
+				for (int x : l) {
+					cout << x << ",";
+				}
+				cout << endl;
+			)
+		}
+		if (max_dead_component_extra_sockets < temp_dead_component_extra_sockets) {
+			max_dead_component_extra_sockets = temp_dead_component_extra_sockets;
 		}
 	
 		i = 0;
-		cout << "T2 dead components" << endl;
+		debug_replug(cout << "T2 dead components" << endl;)
 		for(list<int> &l : T2_dead_components) {
-			i++;
-			cout << "\t" << i << ":" << endl;
-			cout << "\t\t";
-			for (int x : l) {
-				cout << x << ",";
+			int size = l.size();
+			if (size > 2) {
+				temp_dead_component_extra_sockets += size - 2;
 			}
-			cout << endl;
+			debug_replug(
+				i++;
+				cout << "\t" << i << ":" << endl;
+				cout << "\t\t";
+				for (int x : l) {
+					cout << x << ",";
+				}
+				cout << endl;
+			)
 		}
-	)
+		if (max_dead_component_extra_sockets < temp_dead_component_extra_sockets) {
+			max_dead_component_extra_sockets = temp_dead_component_extra_sockets;
+		}
 
 	// 4.5. Identify Multifurcating socket resolutions
 	//
@@ -1846,6 +1886,9 @@ int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<ufores
 	debug_replug(
 		cout << socketcandidates.size() << " socket groups " << endl;
 	)
+
+	// consider the number of sockets a dead component can add. TODO: better estimate that doesn't count some sockets twice
+	max_sockets += max_dead_component_extra_sockets;
 
 	// Branch and bound. We have a lower bound of kprime - max # of sockets
 	int lower_bound = kprime - max_sockets;
@@ -2003,20 +2046,36 @@ int check_socket_group_combination(int k, int kprime, socketcontainer &T1_socket
 	// one socket from each constraint cannot have a phi node
 	vector<vector<int> > constraints = vector<vector<int> >();
 
+	map<int, int> T1_socket_dead_component_map = map<int, int>();
+	map<int, int> T2_socket_dead_component_map = map<int, int>();
 
+	i = 0;
 	for(list<int> &dead_component : T1_dead_components) {
+		if (dead_component.size() >= 3) {
+			for (int s : dead_component) {
+				T1_socket_dead_component_map.insert(make_pair(s, i));
+			}
+		}
 		vector<int> constraint = vector<int>();
 		bool trivial = get_constraint(dead_component, T1_sockets, socket_pointer_map, constraint);
 		if (trivial != true) {
 			constraints.push_back(constraint);
 		}
+		i++;
 	}
+	i = 0;
 	for(list<int> &dead_component : T2_dead_components) {
+		if (dead_component.size() >= 3) {
+			for (int s : dead_component) {
+				T2_socket_dead_component_map.insert(make_pair(s, i));
+			}
+		}
 		vector<int> constraint = vector<int>();
 		bool trivial = get_constraint(dead_component, T2_sockets_normalized, socket_pointer_map, constraint);
 		if (trivial != true) {
 			constraints.push_back(constraint);
 		}
+		i++;
 	}
 	debug_phi_nodes(
 		cout << "found " << constraints.size() << " constraints" << endl; 
@@ -2049,6 +2108,50 @@ int check_socket_group_combination(int k, int kprime, socketcontainer &T1_socket
 		cout << non_phi_nodes << " non_phi_nodes" << endl;
 		cout << "replug_distance: " << (2 * kprime) - phi_nodes << endl;
 	)
+
+
+	// this might miss possible extra phi-nodes from dead components
+	// addable to a phi-node socket adjacent to a dead component in both trees
+	// guaranteed to be addable to best sat phi-node construction, as either the
+	// appropriate socket is available or all of the dead component sockets are used
+		map<int, list<int>> T1_phi_dead_component_map = map<int, list<int> >();
+		map<int, list<int>> T2_phi_dead_component_map = map<int, list<int> >();
+
+		cout << "phi-node sockets with potential dead component adds:" << endl;
+		for (pair<socket *, socket *> p : candidate_phi_node_sockets) {
+			int dead_1 = p.first->dead;
+			int dead_2 = p.second->dead;
+			map<int, int>::iterator dead_component_1 = T1_socket_dead_component_map.find(dead_1);
+			map<int, int>::iterator dead_component_2 = T2_socket_dead_component_map.find(dead_2);
+			if (dead_component_1 != T1_socket_dead_component_map.end() &&
+					dead_component_2 != T2_socket_dead_component_map.end()) {
+				debug_phi_nodes(cout << p.first->str() << "\t" << p.second->str() << endl;)
+				T1_phi_dead_component_map[dead_component_1->second].push_back(dead_1);
+				T2_phi_dead_component_map[dead_component_2->second].push_back(dead_2);
+			}
+		}
+
+		for (pair<int, list<int> > p : T1_phi_dead_component_map) {
+			if (p.second.size() > 1) {
+				cout << "conflict: " << endl;
+				for (int s : p.second) {
+					cout << "," << s; 
+				}
+				cout << endl;
+			}
+		}
+
+		for (pair<int, list<int> > p : T2_phi_dead_component_map) {
+			if (p.second.size() > 1) {
+				cout << "conflict: " << endl;
+				for (int s : p.second) {
+					cout << "," << s; 
+				}
+				cout << endl;
+			}
+		}
+
+	// return the remaining number of moves (phi-nodes returned in candidate_phi_node_sockets)
 	return k - (kprime - phi_nodes);
 
 }
