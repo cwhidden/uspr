@@ -26,7 +26,7 @@ typedef boost::adjacency_list <boost::vecS, boost::vecS, boost::undirectedS, boo
 	#define debug_approx(x) 
 #endif
 
-#define DEBUG_REPLUG 1
+//#define DEBUG_REPLUG 1
 #ifdef DEBUG_REPLUG
 	#define debug_replug(x) x
 #else
@@ -40,7 +40,7 @@ typedef boost::adjacency_list <boost::vecS, boost::vecS, boost::undirectedS, boo
 	#define debug_sockets(x) 
 #endif
 
-#define DEBUG_PHI_NODES 1
+//#define DEBUG_PHI_NODES 1
 #ifdef DEBUG_PHI_NODES
 	#define debug_phi_nodes(x) x
 #else
@@ -2103,53 +2103,109 @@ int check_socket_group_combination(int k, int kprime, socketcontainer &T1_socket
 			debug_phi_nodes(cout << sockets[i].first->str() << "\t" << sockets[i].second->str() << endl;)
 		}
 	}
+
+	// this might miss possible extra phi-nodes from dead components
+	// addable to a phi-node socket adjacent to a dead component in both trees
+	// guaranteed to be addable to best sat phi-node construction, as either the
+	// appropriate socket is available or all of the dead component sockets are used
+	map<int, list<int>> T1_phi_dead_component_map = map<int, list<int> >();
+	map<int, list<int>> T2_phi_dead_component_map = map<int, list<int> >();
+
+	debug_phi_nodes(cout << "phi-node sockets with potential dead component adds:" << endl;)
+	for (pair<socket *, socket *> p : candidate_phi_node_sockets) {
+		int dead_1 = p.first->dead;
+		int dead_2 = p.second->dead;
+		map<int, int>::iterator dead_component_1 = T1_socket_dead_component_map.find(dead_1);
+		map<int, int>::iterator dead_component_2 = T2_socket_dead_component_map.find(dead_2);
+		if (dead_component_1 != T1_socket_dead_component_map.end() &&
+				dead_component_2 != T2_socket_dead_component_map.end()) {
+			debug_phi_nodes(cout << p.first->str() << "\t" << p.second->str() << endl;)
+			T1_phi_dead_component_map[dead_component_1->second].push_back(dead_1);
+			T2_phi_dead_component_map[dead_component_2->second].push_back(dead_2);
+		}
+	}
+
+	map<int, int> T1_extra_phi_nodes = map<int, int>();
+	map<int, int> T2_extra_phi_nodes = map<int, int>();
+
+
+	int extra_phi_nodes = 0;
+	debug_phi_nodes(cout << "checking T2 dead components" << endl;)
+	for (pair<int, list<int> > p : T2_phi_dead_component_map) {
+		int dead_component = p.first;
+		debug_phi_nodes(
+			cout << "dead component " << dead_component << endl;
+			cout << "\t\t";
+			for (int x : T2_dead_components[dead_component]) {
+				cout << x << ",";
+			}
+			cout << endl;
+		)
+		int max_extra_phi_nodes = T2_dead_components[dead_component].size() - 1 - p.second.size();
+		int allocated_extra_phi_nodes = 0;
+		int remaining_extra_phi_nodes = max_extra_phi_nodes;
+		debug_phi_nodes(
+			if (p.second.size() > 1) {
+				cout << "conflict: " << endl;
+				for (int s : p.second) {
+					cout << "," << s; 
+				}
+				cout << endl;
+			}
+		)
+		for (int s : p.second) {
+			if (remaining_extra_phi_nodes <= 0) {
+				break;
+			}
+			// get the corresponding T1 dead component
+			int socket = socket_pointer_map[T2_sockets_normalized.find_dead(s)];
+			int T1_dead_component = T1_socket_dead_component_map[sockets[socket].first->dead];
+			// determine its capacity
+			int T1_dead_component_capacity = T1_dead_components[T1_dead_component].size() - 1 - T1_phi_dead_component_map[T1_socket_dead_component_map[sockets[socket].first->dead]].size();
+			debug_phi_nodes(
+				cout << "T1_capacity: " << T1_dead_component_capacity << endl;
+			)
+			// allocate as much as possible
+			int allocation = remaining_extra_phi_nodes;
+			if (T1_dead_component_capacity < allocation) {
+				allocation = T1_dead_component_capacity;
+			}
+			debug_phi_nodes(
+				cout << "allocating " << allocation << " dead node";
+				if (allocation > 1) {
+					cout << "s";
+				}
+				cout << endl;
+			)
+			remaining_extra_phi_nodes -= allocation;
+			T2_extra_phi_nodes[s] += allocation;
+			T1_extra_phi_nodes[sockets[socket].first->dead] += allocation;
+			extra_phi_nodes += allocation;
+		}
+	}
+
+	// phi node correction
+	phi_nodes += extra_phi_nodes;
+
+	// TODO: add in the phi nodes
+	for (pair<int, int> p : T1_extra_phi_nodes) {
+		int socket = p.first;
+		int num_to_add = p.second;
+		int socket_pair_num = socket_pointer_map[T1_sockets.find_dead(socket)];
+		for(int i = 0; i < num_to_add; i++) {
+			candidate_phi_node_sockets.push_back(sockets[socket_pair_num]);
+		}
+	}
+
+
 	debug_phi_nodes(
 		cout << phi_nodes << " phi_nodes" << endl;
 		cout << non_phi_nodes << " non_phi_nodes" << endl;
 		cout << "replug_distance: " << (2 * kprime) - phi_nodes << endl;
 	)
 
+			
 
-	// this might miss possible extra phi-nodes from dead components
-	// addable to a phi-node socket adjacent to a dead component in both trees
-	// guaranteed to be addable to best sat phi-node construction, as either the
-	// appropriate socket is available or all of the dead component sockets are used
-		map<int, list<int>> T1_phi_dead_component_map = map<int, list<int> >();
-		map<int, list<int>> T2_phi_dead_component_map = map<int, list<int> >();
-
-		cout << "phi-node sockets with potential dead component adds:" << endl;
-		for (pair<socket *, socket *> p : candidate_phi_node_sockets) {
-			int dead_1 = p.first->dead;
-			int dead_2 = p.second->dead;
-			map<int, int>::iterator dead_component_1 = T1_socket_dead_component_map.find(dead_1);
-			map<int, int>::iterator dead_component_2 = T2_socket_dead_component_map.find(dead_2);
-			if (dead_component_1 != T1_socket_dead_component_map.end() &&
-					dead_component_2 != T2_socket_dead_component_map.end()) {
-				debug_phi_nodes(cout << p.first->str() << "\t" << p.second->str() << endl;)
-				T1_phi_dead_component_map[dead_component_1->second].push_back(dead_1);
-				T2_phi_dead_component_map[dead_component_2->second].push_back(dead_2);
-			}
-		}
-
-		for (pair<int, list<int> > p : T1_phi_dead_component_map) {
-			if (p.second.size() > 1) {
-				cout << "conflict: " << endl;
-				for (int s : p.second) {
-					cout << "," << s; 
-				}
-				cout << endl;
-			}
-		}
-
-		for (pair<int, list<int> > p : T2_phi_dead_component_map) {
-			if (p.second.size() > 1) {
-				cout << "conflict: " << endl;
-				for (int s : p.second) {
-					cout << "," << s; 
-				}
-				cout << endl;
-			}
-		}
 
 	// return the remaining number of moves (phi-nodes returned in candidate_phi_node_sockets)
 	return k - (kprime - phi_nodes);
@@ -2586,6 +2642,7 @@ void add_phi_nodes(uforest &F, map<pair<int, int>, int> &F_add_phi_nodes) {
 		int count = phi_node_count.second;
 		debug_phi_nodes(cout << "adding " << start_id << ", " << end_id << ": " << count << endl;)
 
+
 		unode *start = F.get_node(start_id);
 		unode *end = F.get_node(end_id);
 
@@ -2628,7 +2685,8 @@ void add_phi_nodes(uforest &F, map<pair<int, int>, int> &F_add_phi_nodes) {
 				end->add_neighbor(new_socket);
 			}
 			else {
-				end = new_socket;
+				end = new_phi_node;
+				skip_last = false;
 			}
 			start = new_socket;
 			count--;
