@@ -2141,7 +2141,18 @@ int check_socket_group_combination(int k, int kprime, socketcontainer &T1_socket
 			}
 			cout << endl;
 		)
-		int max_extra_phi_nodes = T2_dead_components[dead_component].size() - 1 - p.second.size();
+		// number of phi nodes in dead component
+		int T2_dead_comp_phi_nodes = 0; 
+		for (int x : T2_dead_components[dead_component]) {
+			if (socket_pointer_map.find(T2_sockets_normalized.find_dead(x)) != socket_pointer_map.end()) {
+				int x_socket = socket_pointer_map[T2_sockets_normalized.find_dead(x)];
+				if (!changed_sockets_vector[x_socket]) {
+					T2_dead_comp_phi_nodes++;
+				}
+			}
+		}
+		int max_extra_phi_nodes = T2_dead_components[dead_component].size() - 1 - T2_dead_comp_phi_nodes;
+		cout << max_extra_phi_nodes << endl;
 		int allocated_extra_phi_nodes = 0;
 		int remaining_extra_phi_nodes = max_extra_phi_nodes;
 		debug_phi_nodes(
@@ -2160,10 +2171,20 @@ int check_socket_group_combination(int k, int kprime, socketcontainer &T1_socket
 			// get the corresponding T1 dead component
 			int socket = socket_pointer_map[T2_sockets_normalized.find_dead(s)];
 			int T1_dead_component = T1_socket_dead_component_map[sockets[socket].first->dead];
+			// determine its phi node count
+			int T1_dead_comp_phi_nodes = 0; 
+			for (int x : T1_dead_components[T1_dead_component]) {
+				if (socket_pointer_map.find(T1_sockets.find_dead(x)) != socket_pointer_map.end()) {
+					int x_socket = socket_pointer_map[T1_sockets.find_dead(x)];
+					if (!changed_sockets_vector[x_socket]) {
+						T1_dead_comp_phi_nodes++;
+					}
+				}
+			}
 			// determine its capacity
 			int T1_dead_component_capacity = 0;
 			if (T1_dead_components[T1_dead_component].size() >= 3) {
-					T1_dead_component_capacity = T1_dead_components[T1_dead_component].size() - 1 - T1_phi_dead_component_map[T1_socket_dead_component_map[sockets[socket].first->dead]].size();
+					T1_dead_component_capacity = T1_dead_components[T1_dead_component].size() - 1 - T1_dead_comp_phi_nodes;
 			}
 			debug_phi_nodes(
 				cout << "T1_capacity: " << T1_dead_component_capacity << endl;
