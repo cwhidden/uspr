@@ -2161,7 +2161,10 @@ int check_socket_group_combination(int k, int kprime, socketcontainer &T1_socket
 			int socket = socket_pointer_map[T2_sockets_normalized.find_dead(s)];
 			int T1_dead_component = T1_socket_dead_component_map[sockets[socket].first->dead];
 			// determine its capacity
-			int T1_dead_component_capacity = T1_dead_components[T1_dead_component].size() - 1 - T1_phi_dead_component_map[T1_socket_dead_component_map[sockets[socket].first->dead]].size();
+			int T1_dead_component_capacity = 0;
+			if (T1_dead_components[T1_dead_component].size() >= 3) {
+					T1_dead_component_capacity = T1_dead_components[T1_dead_component].size() - 1 - T1_phi_dead_component_map[T1_socket_dead_component_map[sockets[socket].first->dead]].size();
+			}
 			debug_phi_nodes(
 				cout << "T1_capacity: " << T1_dead_component_capacity << endl;
 			)
