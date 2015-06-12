@@ -10,6 +10,8 @@
 
 #include <list>
 #include <sstream>
+#include <cstdio>
+#include <climits>
 
 using namespace std;
 
@@ -463,6 +465,51 @@ class unode {
 			}
 		}
 		connected_nodes.push_back(this);
+	}
+
+	int normalize_order_hlpr(unode *prev = NULL) {
+		// return leaf label
+		if (label > 0) {
+			return label;
+		}
+		map<int, unode *> ordered_children = map<int, unode *>();
+		int min_descendant = INT_MAX;
+		unode *parent = NULL;
+		for (unode *n : neighbors) {
+			if (n != prev) {
+				int n_min_descendant = n->normalize_order_hlpr(this);
+				ordered_children.insert(make_pair(n_min_descendant, n));
+				if (n_min_descendant < min_descendant) {
+					min_descendant = n_min_descendant;
+				}
+			}
+			else {
+				parent = n;
+			}
+		}
+		// remove all neighbors
+		clear_neighbors();
+
+		// re-add in correct order
+		if (parent != NULL) {
+			add_neighbor(parent);
+		}
+		while(!ordered_children.empty()) {
+			map<int, unode *>::iterator next = ordered_children.begin();
+			add_neighbor(next->second);
+			ordered_children.erase(next);
+		}
+		return min_descendant;
+	}
+
+
+
+	// normalize branching order by smallest subtree leaf
+	// guaranteed unique if started at the smallest leaf
+	void normalize_order() {
+		cout << "normalizing starting from label " << label << endl;
+		// normalize order
+		normalize_order_hlpr();
 	}
 
 };

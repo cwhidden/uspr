@@ -1,6 +1,19 @@
 #ifndef INCLUDE_TBR
 #define INCLUDE_TBR
 
+#include <iostream>
+#include <cstdio>
+#include <cstring>
+#include <string>
+#include <vector>
+#include <map>
+#include <list>
+#include <memory>
+#include <ctime>
+#include <cstdlib>
+#include "utree.h"
+#include "unode.h"
+#include "uforest.h"
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/max_cardinality_matching.hpp>
 #include <iterator>

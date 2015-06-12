@@ -17,6 +17,13 @@ class uforest: public utree {
 				leaves[smallest_leaf]->set_component(0);
 			}
 		}
+		uforest(string &newick) : utree(newick) {
+			components = vector<unode *>();
+			if (leaves.size() > 0) {
+				components.push_back(leaves[smallest_leaf]);
+				leaves[smallest_leaf]->set_component(0);
+			}
+		}
 		uforest(const uforest &F) : utree(F) {
 			// copy vector of pointers
 			components = vector<unode *>(F.components.size());
@@ -179,6 +186,12 @@ class uforest: public utree {
 
 	vector<unode *> get_components() {
 		return components;
+	}
+
+	void normalize_order() {
+		for (unode *c : components) {
+			c->normalize_order();
+		}
 	}
 };
 

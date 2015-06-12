@@ -13,8 +13,8 @@ class utree;
 bool KEEP_LABELS = false;
 
 // prototypes
-bool build_utree(utree &t, string &s, map<string, int> &label_map, map<int, string> &reverse_label_map);
-int build_utree_helper(utree &t, string &s, map<string, int> &label_map, map<int, string> & reverse_label_map, int start, unode *parent, bool &valid);
+bool build_utree(utree &t, string &s, map<string, int> *label_map = NULL, map<int, string> *reverse_label_map = NULL);
+int build_utree_helper(utree &t, string &s, int start, unode *parent, bool &valid, map<string, int> *label_map = NULL, map<int, string> *reverse_label_map = NULL);
 void find_sibling_pairs_hlpr(utree &t, map<int, int> &sibling_pairs);
 map<int, int> distances_from_leaf(utree &T1, int leaf);
 void distances_from_leaf_hlpr(utree &T1, map<int, int> &distances, unode *prev, unode *current, int distance);
@@ -31,7 +31,12 @@ class utree {
 		utree(string &newick, map<string, int> &label_map, map<int, string> &reverse_label_map) {
 			internal_nodes = vector<unode *>();
 			leaves = vector<unode *>();
-			build_utree(*this, newick, label_map, reverse_label_map);
+			build_utree(*this, newick, &label_map, &reverse_label_map);
+		}
+		utree(string &newick) {
+			internal_nodes = vector<unode *>();
+			leaves = vector<unode *>();
+			build_utree(*this, newick);
 		}
 		utree(const utree &T) {
 			// copy vectors of pointers
@@ -347,6 +352,10 @@ class utree {
 		}
 		s << ":" << n->get_distance();
 	}
+
+	void normalize_order() {
+		get_node(get_smallest_leaf())->normalize_order();
+	}
 	
 };
 
@@ -355,10 +364,10 @@ ostream& operator<<(ostream &os, const utree& t) {
 	return os;
 }
 
-bool build_utree(utree &t, string &s, map<string, int> &label_map, map<int, string> &reverse_label_map) {
+bool build_utree(utree &t, string &s, map<string, int> *label_map, map<int, string> *reverse_label_map) {
 	bool valid = true;
 	unode dummy = unode(-1);
-	build_utree_helper(t, s, label_map, reverse_label_map, 0, &dummy, valid);
+	build_utree_helper(t, s, 0, &dummy, valid, label_map, reverse_label_map);
 	unode *root = dummy.get_parent();
 	root->remove_neighbor(&dummy);
 	root->contract();
@@ -375,7 +384,7 @@ bool build_utree(utree &t, string &s, map<string, int> &label_map, map<int, stri
 	return valid;
 }
 
-int build_utree_helper(utree &t, string &s, map<string, int> &label_map, map<int, string> &reverse_label_map, int start, unode *parent, bool &valid) {
+int build_utree_helper(utree &t, string &s, int start, unode *parent, bool &valid, map<string, int> *label_map, map<int, string> *reverse_label_map) {
 	// next special char
 	int loc = s.find_first_of("(,)", start);
 	if (loc == string::npos) {
@@ -389,20 +398,24 @@ int build_utree_helper(utree &t, string &s, map<string, int> &label_map, map<int
 		while(s[end] == ' ' || s[end] == '\t')
 			end--;
 		string name = s.substr(start, end - start);
-		map<string, int>::iterator m = label_map.find(name);
 		int label = -1;
-		if (m != label_map.end()) {
-			label = m->second;
+		if (label_map != NULL) {
+			map<string, int>::iterator m = label_map->find(name);
+			if (m != label_map->end()) {
+				label = m->second;
+			}
+			else {
+				label = label_map->size();
+				if (KEEP_LABELS) {
+					label = atoi(name.c_str());
+				}
+				label_map->insert(make_pair(name, label));
+				reverse_label_map->insert(make_pair(label, name));
+			}
 		}
 		else {
-			label = label_map.size();
-			//cout << "label=" << label << endl;
-			if (KEEP_LABELS) {
-				label = atoi(name.c_str());
-				//cout << "label=" << label << endl;
-			}
-			label_map.insert(make_pair(name, label));
-			reverse_label_map.insert(make_pair(label, name));
+			// auto keep labels when no label map is given
+			label = atoi(name.c_str());
 		}
 		unode *new_node = t.get_leaf(t.add_leaf(label));
 		parent->add_neighbor(new_node);
@@ -412,9 +425,9 @@ int build_utree_helper(utree &t, string &s, map<string, int> &label_map, map<int
 		// internal node
 	int l = t.add_internal_node();
 		unode *new_node = t.get_internal_node(l);
-		loc = build_utree_helper(t, s, label_map, reverse_label_map, loc + 1, new_node, valid);
+		loc = build_utree_helper(t, s, loc + 1, new_node, valid, label_map, reverse_label_map);
 		while(s[loc] == ',') {
-			loc = build_utree_helper(t, s, label_map, reverse_label_map, loc + 1, new_node, valid);
+			loc = build_utree_helper(t, s, loc + 1, new_node, valid, label_map, reverse_label_map);
 		}
 		if (s[loc] != ')') {
 			valid = false;

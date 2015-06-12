@@ -19,6 +19,7 @@
 #include "unode.h"
 #include "uforest.h"
 #include "tbr.h"
+#include "uspr.h"
 
 using namespace std;
 
@@ -32,9 +33,10 @@ bool PRINT_mAFS = false;
 bool COUNT_mAFS = false;
 
 bool ALL_DISTANCES = true;
-bool TBR_APPROX = false;
-bool TBR = false;
-bool REPLUG = false;
+bool COMPUTE_TBR_APPROX = false;
+bool COMPUTE_TBR = false;
+bool COMPUTE_REPLUG = false;
+bool COMPUTE_USPR = false;
 
 
 
@@ -63,15 +65,19 @@ int main(int argc, char *argv[]) {
 			OPTIMIZE_PROTECT_B = false;
 		}
 		else if (strcmp(arg, "--tbr-approx") == 0) {
-			TBR_APPROX = true;
+			COMPUTE_TBR_APPROX = true;
 			ALL_DISTANCES = false;
 		}
 		else if (strcmp(arg, "--tbr") == 0) {
-			TBR = true;
+			COMPUTE_TBR = true;
 			ALL_DISTANCES = false;
 		}
 		else if (strcmp(arg, "--replug") == 0) {
-			REPLUG = true;
+			COMPUTE_REPLUG = true;
+			ALL_DISTANCES = false;
+		}
+		else if (strcmp(arg, "--uspr") == 0) {
+			COMPUTE_USPR = true;
 			ALL_DISTANCES = false;
 		}
 		else if (strcmp(arg, "--help") == 0 ||
@@ -91,9 +97,10 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (ALL_DISTANCES) {
-		TBR_APPROX = true;
-		TBR = true;
-		REPLUG = true;
+		COMPUTE_TBR_APPROX = true;
+		COMPUTE_TBR = true;
+		COMPUTE_REPLUG = true;
+		COMPUTE_USPR = true;
 	}
 
 	// label maps to allow string labels
@@ -113,10 +120,10 @@ int main(int argc, char *argv[]) {
 		cout << "T1: " << F1.str(false, &reverse_label_map) << endl;
 		cout << "T2: " << F2.str(false, &reverse_label_map) << endl;
 		// compute TBR distance
-		if (TBR_APPROX) {
+		if (COMPUTE_TBR_APPROX) {
 		cout << "a_TBR: " << tbr_high_lower_bound(F1, F2) << " <= d_TBR <= " << tbr_low_upper_bound(F1, F2) << endl;
 		}
-		if (TBR) {
+		if (COMPUTE_TBR) {
 			uforest *MAF1 = NULL;
 			uforest *MAF2 = NULL;
 			int distance = tbr_distance(F1, F2, &MAF1, &MAF2);
@@ -140,7 +147,7 @@ int main(int argc, char *argv[]) {
 			cout << count << " mAFs" << endl;
 		}
 
-		if (REPLUG) {
+		if (COMPUTE_REPLUG) {
 			uforest *MAF1 = NULL;
 			uforest *MAF2 = NULL;
 			int d_replug = replug_distance(F1, F2, &MAF1, &MAF2);
@@ -155,7 +162,10 @@ int main(int argc, char *argv[]) {
 			}
 		}
 
-
+		if (COMPUTE_USPR) {
+			int d_uspr = uspr_distance(F1, F2);
+			cout << "d_USPR = " << d_uspr << endl;
+		}
 
 	}
 }
