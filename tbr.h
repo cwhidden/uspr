@@ -2152,7 +2152,6 @@ int check_socket_group_combination(int k, int kprime, socketcontainer &T1_socket
 			}
 		}
 		int max_extra_phi_nodes = T2_dead_components[dead_component].size() - 1 - T2_dead_comp_phi_nodes;
-		cout << max_extra_phi_nodes << endl;
 		int allocated_extra_phi_nodes = 0;
 		int remaining_extra_phi_nodes = max_extra_phi_nodes;
 		debug_phi_nodes(
