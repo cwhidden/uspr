@@ -232,20 +232,20 @@ class unode {
 	}
 
 	bool is_adjacent(unode *a) {
-		cout << label << "->is_adjacent(" << a->get_label() << ")" << endl;
+//		cout << label << "->is_adjacent(" << a->get_label() << ")" << endl;
 		for (unode *n : neighbors) {
 			if (n == a) {
-				cout << "true" << endl;
+//				cout << "true" << endl;
 				return true;
 			}
 		}
 		for (unode *n : contracted_neighbors) {
 			if (n == a) {
-				cout << "true" << endl;
+//				cout << "true" << endl;
 				return true;
 			}
 		}
-		cout << "false" << endl;
+//		cout << "false" << endl;
 		return false;
 	}
 

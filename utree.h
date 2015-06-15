@@ -204,14 +204,14 @@ class utree {
 		return leaves.size();
 	}
 
-	string str(map<int, string> *reverse_label_map = NULL) const{
+	string str(bool print_internal = false, map<int, string> *reverse_label_map = NULL) const{
 		stringstream s;
 		int start = smallest_leaf;
 		if (start == -1) {
 			return "empty tree";
 		}
 		unode *root = leaves[start]->get_neighbors().front();
-		str_subtree(s, root, root, false, reverse_label_map);
+		str_subtree(s, root, root, print_internal, reverse_label_map);
 		return s.str();
 	}
 
@@ -355,6 +355,59 @@ class utree {
 
 	void normalize_order() {
 		get_node(get_smallest_leaf())->normalize_order();
+	}
+
+	// apply a USPR operation moving (x,y) to (x,yprime) where yprime is adjacent to x, w, and z
+	bool uspr(unode *x, unode *y, unode *w, unode *z, unode **yprime = NULL, unode **y1 = NULL, unode **y2 = NULL) {
+		// y must have 3 neighbors
+		if (y->get_num_neighbors() != 3) {
+			return false;
+		}
+		// remove (x,y)
+		x->remove_neighbor(y);
+		y->remove_neighbor(x);
+
+		// remove y's first other neighbor
+		unode *y1_real = y->get_neighbors().front();
+		y->remove_neighbor(y1_real);
+		y1_real->remove_neighbor(y);
+		if (y1 != NULL) {
+			*y1 = y1_real;
+		}
+		unode *y2_real = y->get_neighbors().front();
+		y->remove_neighbor(y2_real);
+		y2_real->remove_neighbor(y);
+		if (y2 != NULL) {
+			*y2 = y2_real;
+		}
+
+		// connect y's previous neighbors
+		y1_real->add_neighbor(y2_real);
+		y2_real->add_neighbor(y1_real);
+
+		//remove (w,z)
+		w->remove_neighbor(z);
+		z->remove_neighbor(w);
+
+		// add the nodes adjacent to y
+		y->add_neighbor(x);
+		x->add_neighbor(y);
+		y->add_neighbor(w);
+		w->add_neighbor(y);
+		y->add_neighbor(z);
+		z->add_neighbor(y);
+
+		if (yprime != NULL) {
+			*yprime = y;
+		}
+
+		// cleanup the tree
+		// TODO: optional? this is probably slow
+//		unode *root = get_node(get_smallest_leaf());
+//		distances_from_leaf_decorator(this, root);
+//		normalize_order();
+
+		return true;
 	}
 	
 };
