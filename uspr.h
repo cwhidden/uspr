@@ -185,6 +185,7 @@ int uspr_distance(uforest &T1, uforest &T2) {
 //			cout << "target: " << target << endl;
 				if (tree_string == target) {
 //					cout << "returning " << cost+1 << endl;
+					cout << "examined " << visited_trees.size() << " trees" << endl;
 					return cost+1;
 				}
 //				else {
