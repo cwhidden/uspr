@@ -20,6 +20,13 @@
 #include "tbr.h"
 #include "uspr_neighbors.h"
 
+//#define DEBUG_USPR 1
+#ifdef DEBUG_USPR
+	#define debug_uspr(x) x
+#else
+	#define debug_uspr(x) 
+#endif
+
 // options
 bool USE_TBR_APPROX_ESTIMATE = true;
 bool USE_TBR_ESTIMATE = true;
@@ -59,7 +66,7 @@ class tree_distance {
 
 // prefer better estimates when equal
 bool operator < (tree_distance a, tree_distance b) {
-	if (a.distance + a.distance == b.distance) {
+	if (a.distance == b.distance) {
 		return a.estimator < b.estimator;
 	}
 	return a.distance < b.distance; } 
@@ -85,7 +92,7 @@ int uspr_distance(uforest &T1, uforest &T2) {
 	set<string> visited_trees = set<string>();
 
 	// target string
-	string target = T2.str();
+	string target = utree(T2).str();
 
 
 	// priority queue of trees
@@ -93,7 +100,7 @@ int uspr_distance(uforest &T1, uforest &T2) {
 
 	// check if trees are equal
 	// TODO: normalize strings
-	if (T1.str() == target) {
+	if (utree(T1).str() == target) {
 		return 0;
 	}
 
@@ -120,8 +127,10 @@ int uspr_distance(uforest &T1, uforest &T2) {
 		multiset<tree_distance>::iterator it = distance_priority_queue.begin();
 
 		// debugging
-		cout << it->distance << ": " << it->cost << " + " << it->estimate << " using " << estimator_t_name[it->estimator] << endl;
-		cout << "\t" << it->tree << endl;
+		debug_uspr(
+			cout << it->distance << ": " << it->cost << " + " << it->estimate << " using " << estimator_t_name[it->estimator] << endl;
+			cout << "\t" << it->tree << endl;
+		)
 
 		// remove the old entry
 		int cost = it->cost;
@@ -131,6 +140,8 @@ int uspr_distance(uforest &T1, uforest &T2) {
 
 		// build the tree
 		uforest T = uforest(tree);
+		distances_from_leaf_decorator(T, T.get_smallest_leaf());
+		T.normalize_order();
 
 		// check if the distance estimate is final
 		if (prev_estimator != final_estimator) {
@@ -164,10 +175,23 @@ int uspr_distance(uforest &T1, uforest &T2) {
 			// if not then insert it into the queue (initial BFS - cost + 1)
 			// TODO: stop immediately if we find T2?
 
-		list<utree *> neighbors = get_neighbors(&T);
-
-
-
+		list<utree> neighbors = get_neighbors(&T, &visited_trees);
+		debug_uspr(
+			cout << "examining " << neighbors.size() << " neighbors" << endl;
+		)
+		for (utree tree : neighbors) {
+			string tree_string = tree.str();
+//			cout << "neighbor: " << tree_string << endl;
+//			cout << "target: " << target << endl;
+				if (tree_string == target) {
+//					cout << "returning " << cost+1 << endl;
+					return cost+1;
+				}
+//				else {
+//					cout << "cond: " << (tree_string == target) << endl;
+//				}
+				distance_priority_queue.insert(tree_distance(cost+1, 1, tree_string, BFS));
+		}
 
 	}
 

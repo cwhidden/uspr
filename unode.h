@@ -507,7 +507,6 @@ class unode {
 	// normalize branching order by smallest subtree leaf
 	// guaranteed unique if started at the smallest leaf
 	void normalize_order() {
-		cout << "normalizing starting from label " << label << endl;
 		// normalize order
 		normalize_order_hlpr();
 	}

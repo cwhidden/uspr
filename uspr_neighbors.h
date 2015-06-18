@@ -24,21 +24,21 @@ using namespace std;
 
 // FUNCTIONS
 
-list<utree *> get_neighbors(utree *T, set<string> *known_trees = NULL);
-void get_neighbors(utree *T, unode *prev, unode *current, list<utree *> &neighbors, set<string> *known_trees = NULL);
-void get_neighbors(utree *T, unode *x, unode *y, unode *prev, unode *current, list<utree *> &neighbors, set<string> *known_trees = NULL);
-void add_neighbor(utree *T, unode *x, unode *y, unode *w, unode *z, list<utree *> &neighbors, set<string> *known_trees = NULL);
+list<utree> get_neighbors(utree *T, set<string> *known_trees = NULL);
+void get_neighbors(utree *T, unode *prev, unode *current, list<utree> &neighbors, set<string> *known_trees = NULL);
+void get_neighbors(utree *T, unode *x, unode *y, unode *prev, unode *current, list<utree> &neighbors, set<string> *known_trees = NULL);
+void add_neighbor(utree *T, unode *x, unode *y, unode *w, unode *z, list<utree> &neighbors, set<string> *known_trees = NULL);
 
 
-list<utree *> get_neighbors(utree *T, set<string> *known_trees) {
-	list<utree *> neighbors = list<utree *>();
+list<utree> get_neighbors(utree *T, set<string> *known_trees) {
+	list<utree> neighbors = list<utree>();
 	unode *root = T->get_node(T->get_smallest_leaf());
 	get_neighbors(T, NULL, root, neighbors, known_trees);
 	return neighbors;
 }
 
 // enumerate the source edges
-void get_neighbors(utree *T, unode *prev, unode *current, list<utree *> &neighbors, set<string> *known_trees) {
+void get_neighbors(utree *T, unode *prev, unode *current, list<utree> &neighbors, set<string> *known_trees) {
 	// continue enumerating choices of the first edge
 	list<unode *> c_neighbors = current->get_neighbors();
 	for (unode *next : c_neighbors) {
@@ -54,7 +54,7 @@ void get_neighbors(utree *T, unode *prev, unode *current, list<utree *> &neighbo
 }
 
 // enumerate the target edges
-void get_neighbors(utree *T, unode *x, unode *y, unode *prev, unode *current, list<utree *> &neighbors, set<string> *known_trees) {
+void get_neighbors(utree *T, unode *x, unode *y, unode *prev, unode *current, list<utree> &neighbors, set<string> *known_trees) {
 	// continue enumerating choices of the second edge
 	// copy the neighbor list as it may change
 	list<unode *> c_neighbors = current->get_neighbors();
@@ -69,7 +69,7 @@ void get_neighbors(utree *T, unode *x, unode *y, unode *prev, unode *current, li
 	}
 }
 
-void add_neighbor(utree *T, unode *x, unode *y, unode *w, unode *z, list<utree *> &neighbors, set<string> *known_trees) {
+void add_neighbor(utree *T, unode *x, unode *y, unode *w, unode *z, list<utree> &neighbors, set<string> *known_trees) {
 	// check for duplicate SPR moves
 	if (x == y ||
 			y == w ||
@@ -78,27 +78,60 @@ void add_neighbor(utree *T, unode *x, unode *y, unode *w, unode *z, list<utree *
 	}
 	// TODO: other duplicates? probably NNIs, like with rooted SPR?
 
+	if (w == y->get_parent()->get_parent() &&
+			z == y->get_parent()) {
+		return;
+	}
+	if (z == y->get_parent()->get_parent() &&
+			w == y->get_parent()) {
+		return;
+	}
+	if (z->get_parent() == y &&
+			w->get_parent() == z) {
+		return;
+	}
+	if (w->get_parent() == y &&
+			z->get_parent() == w) {
+		return;
+	}
+
 	// node info so the uspr can be reversed
 	unode *yprime = NULL;
 	unode *y1 = NULL;
 	unode *y2 = NULL;
 	// apply the spr
-	cout << endl;
+/*	cout << endl;
 	cout << "T: " << T->str(true) << endl;
 	cout << "\tx: " << x->get_label() << endl;
 	cout << "\ty: " << y->get_label() << endl;
 	cout << "\tw: " << w->get_label() << endl;
 	cout << "\tz: " << z->get_label() << endl;
+*/
 	T->uspr(x, y, w, z, &yprime, &y1, &y2);
 	// normalize the tree
 	T->normalize_order();
 	// print the tree
-	cout << "neighbor: " << T->str() << endl;
+	//	cout << "neighbor: " << T->str() << endl;
+	string tree_string = T->str();
+	bool add_tree = true;
+	if (known_trees != NULL) {
+		if (known_trees->find(tree_string) == known_trees->end()) {
+			known_trees->insert(tree_string);
+		}
+		else {
+			add_tree = false;
+		}
+	}
+	if (add_tree) {
+		neighbors.push_back(utree(*T));
+	}
+
+
 	// revert the SPR
 	T->uspr(x, yprime, y1, y2);
 	T->normalize_order();
-	cout << "T: " << T->str() << endl;
-	cout << endl;
+//	cout << "T: " << T->str() << endl;
+//	cout << endl;
 	return;
 }
 #endif

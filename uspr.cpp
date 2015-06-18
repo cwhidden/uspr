@@ -80,6 +80,15 @@ int main(int argc, char *argv[]) {
 			COMPUTE_USPR = true;
 			ALL_DISTANCES = false;
 		}
+		else if (strcmp(arg, "--no-approx-estimate") == 0) {
+			USE_TBR_APPROX_ESTIMATE = false;
+		}
+		else if (strcmp(arg, "--no-tbr-estimate") == 0) {
+			USE_TBR_ESTIMATE = false;
+		}
+		else if (strcmp(arg, "--no-replug-estimate") == 0) {
+			USE_REPLUG_ESTIMATE = false;
+		}
 		else if (strcmp(arg, "--help") == 0 ||
 				strcmp(arg, "-h") == 0 ||
 				strcmp(arg, "-help") == 0) {
@@ -116,7 +125,9 @@ int main(int argc, char *argv[]) {
 	while (getline(cin, T1_line) && getline(cin, T2_line)) {
 		// load into data structures
 		uforest F1 = uforest(T1_line, label_map, reverse_label_map);
+		F1.normalize_order();
 		uforest F2 = uforest(T2_line, label_map, reverse_label_map);
+		F2.normalize_order();
 		cout << "T1: " << F1.str(false, &reverse_label_map) << endl;
 		cout << "T2: " << F2.str(false, &reverse_label_map) << endl;
 		// compute TBR distance
@@ -126,7 +137,7 @@ int main(int argc, char *argv[]) {
 		if (COMPUTE_TBR) {
 			uforest *MAF1 = NULL;
 			uforest *MAF2 = NULL;
-			int distance = tbr_distance(F1, F2, &MAF1, &MAF2);
+			int distance = tbr_distance(F1, F2, false, &MAF1, &MAF2);
 			cout << "d_TBR = " << distance << endl;
 			if (MAF1 != NULL) {
 				cout << "F1: " << MAF1->str(false, &reverse_label_map) << endl;
@@ -150,7 +161,7 @@ int main(int argc, char *argv[]) {
 		if (COMPUTE_REPLUG) {
 			uforest *MAF1 = NULL;
 			uforest *MAF2 = NULL;
-			int d_replug = replug_distance(F1, F2, &MAF1, &MAF2);
+			int d_replug = replug_distance(F1, F2, false, &MAF1, &MAF2);
 			cout << "d_R = " << d_replug << endl;
 			if (MAF1 != NULL) {
 				cout << "F1: " << MAF1->str(false, &reverse_label_map) << endl;

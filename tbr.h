@@ -193,20 +193,18 @@ class socketcontainer {
 
 
 // function prototypes
-int tbr_distance(uforest &T1, uforest &T2, uforest **MAF1_out = NULL, uforest **MAF2_out = NULL);
+int tbr_distance(uforest &T1, uforest &T2, bool quiet = true, uforest **MAF1_out = NULL, uforest **MAF2_out = NULL);
 template<typename T>
-int tbr_distance(uforest &T1, uforest &T2, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s), uforest **MAF1 = NULL, uforest **MAF2 = NULL);
-int tbr_count_MAFs(uforest &F1, uforest &F2);
-int tbr_count_mAFs(uforest &F1, uforest &F2);
-int tbr_print_mAFs(uforest &F1, uforest &F2);
-int tbr_count_mAFs(uforest &T1, uforest &T2, bool print);
+int tbr_distance(uforest &T1, uforest &T2, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s), bool quiet = true, uforest **MAF1 = NULL, uforest **MAF2 = NULL);
+int tbr_print_mAFs(uforest &F1, uforest &F2, bool quiet = true);
+int tbr_count_mAFs(uforest &T1, uforest &T2, bool quiet = true, bool print = false);
 template<typename T>
-int tbr_distance(uforest &T1, uforest &T2, T t, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s), uforest **MAF1 = NULL, uforest **MAF2 = NULL);
+int tbr_distance(uforest &T1, uforest &T2, T t, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s), bool quiet = true, uforest **MAF1 = NULL, uforest **MAF2 = NULL);
 template<typename T>
 int tbr_distance_hlpr(uforest &T1, uforest &T2, int k, T t, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s), uforest **MAF1 = NULL, uforest **MAF2 = NULL);
 template<typename T>
 int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons, T t, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s), uforest **MAF1 = NULL, uforest **MAF2 = NULL);
-int replug_distance(uforest &T1, uforest &T2, uforest **MAF1_out = NULL, uforest **MAF2_out = NULL);
+int replug_distance(uforest &T1, uforest &T2, bool quiet = true, uforest **MAF1_out = NULL, uforest **MAF2_out = NULL);
 list<pair<int,int> > find_pendants(unode *a, unode *c);
 int tbr_approx(uforest &T1, uforest &T2);
 int tbr_approx(uforest &T1, uforest &T2, bool low);
@@ -240,13 +238,13 @@ int print_and_count_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, in
 int replug_hlpr(uforest &F1, uforest &F2, nodemapping &twins, int k, pair<uforest, uforest> T);
 
 // compute the TBR distance
-int tbr_distance(uforest &T1, uforest &T2, uforest **MAF1_out /*= NULL*/, uforest **MAF2_out /*= NULL*/) {
+int tbr_distance(uforest &T1, uforest &T2, bool quiet /*= true */, uforest **MAF1_out /*= NULL*/, uforest **MAF2_out /*= NULL*/) {
 	bool old_value = OPTIMIZE_2B;
 	// always safe for the TBR distance
 	OPTIMIZE_2B = true;
 	uforest *MAF1 = NULL;
 	uforest *MAF2 = NULL;
-	int d = tbr_distance(T1, T2, &dummy_mAFs, &MAF1, &MAF2);
+	int d = tbr_distance(T1, T2, &dummy_mAFs, quiet, &MAF1, &MAF2);
 	if (MAF1 != NULL) {
 		if (MAF1_out != NULL) {
 			*MAF1_out = MAF1;
@@ -268,86 +266,97 @@ int tbr_distance(uforest &T1, uforest &T2, uforest **MAF1_out /*= NULL*/, ufores
 }
 
 template <typename T>
-int tbr_distance(uforest &T1, uforest &T2, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s), uforest **MAF1, uforest **MAF2) {
+int tbr_distance(uforest &T1, uforest &T2, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s), bool quiet, uforest **MAF1, uforest **MAF2) {
 	T dummy = 0;
-	return tbr_distance(T1, T2, dummy, func_pointer, MAF1, MAF2);
+	return tbr_distance(T1, T2, dummy, func_pointer, quiet, MAF1, MAF2);
 }
 
 template <typename T>
-int tbr_distance(uforest &T1, uforest &T2, T t, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s), uforest **MAF1, uforest **MAF2) {
+int tbr_distance(uforest &T1, uforest &T2, T t, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s), bool quiet, uforest **MAF1, uforest **MAF2) {
 
 	int start = tbr_high_lower_bound(T1, T2);
 
 	for(int k = start; k < 100; k++) {
-			cout << "{" << k << "} ";
-			cout.flush();
+			if (!quiet) {
+				cout << "{" << k << "} ";
+				cout.flush();
+			}
 			// test k
 			int result = tbr_distance_hlpr(T1, T2, k, t, func_pointer, MAF1, MAF2);
 			if (result >= 0) {
-				cout << endl;
+				if (!quiet) {
+					cout << endl;
+				}
 				return k - result;
 			}
 	}
 	return -1;
 }
 
-int tbr_count_MAFs(uforest &T1, uforest &T2) {
+int tbr_count_MAFs(uforest &T1, uforest &T2, bool quiet) {
 	int count = 0;
 	int start = tbr_high_lower_bound(T1, T2);
 
 	for(int k = start; k < 100; k++) {
+		if (!quiet) {
 			cout << "{" << k << "} ";
 			cout.flush();
-			// test k
-			int result = tbr_distance_hlpr(T1, T2, k, &count, &count_mAFs);
-			if (result >= 0) {
+		}
+		// test k
+		int result = tbr_distance_hlpr(T1, T2, k, &count, &count_mAFs);
+		if (result >= 0) {
+			if (!quiet) {
 				cout << endl;
-				return count;
 			}
+			return count;
+		}
 	}
 	return count;
 }
 
-int tbr_print_mAFs(uforest &T1, uforest &T2) {
-	return tbr_count_mAFs(T1, T2, true);
+int tbr_print_mAFs(uforest &T1, uforest &T2, bool quiet) {
+	return tbr_count_mAFs(T1, T2, quiet, true);
 }
 
-int tbr_count_mAFs(uforest &T1, uforest &T2) {
-	return tbr_count_mAFs(T1, T2, false);
-}
 
-int tbr_count_mAFs(uforest &T1, uforest &T2, bool print) {
+int tbr_count_mAFs(uforest &T1, uforest &T2, bool quiet, bool print) {
 	int count = 0;
 	int start = tbr_high_lower_bound(T1, T2);
 
 	for(int k = start; k < 100; k++) {
+		if (!quiet) {
 			cout << "{" << k << "} ";
 			cout.flush();
-			// test k
-			int new_count = 0;
-			int result;
-			if (print) {
-				result = tbr_distance_hlpr(T1, T2, k, &new_count, &print_and_count_mAFs);
-			}
-			else {
-				result = tbr_distance_hlpr(T1, T2, k, &new_count, &count_mAFs);
-			}
-			if (result >= 0) {
+		}
+		// test k
+		int new_count = 0;
+		int result;
+		if (print) {
+			result = tbr_distance_hlpr(T1, T2, k, &new_count, &print_and_count_mAFs);
+		}
+		else {
+			result = tbr_distance_hlpr(T1, T2, k, &new_count, &count_mAFs);
+		}
+		if (result >= 0) {
+			if (!quiet) {
 				cout << endl;
 				cout << "found " << new_count << " mAFs" << endl;
-				if (count < new_count) {
-					count = new_count;
-				}
-				else {
-					cout << endl;
-					return count;
-				}
 			}
+			if (count < new_count) {
+				count = new_count;
+			}
+			else {
+				if (!quiet) {
+					cout << endl;
+				}
+				return count;
+			}
+		}
 	}
 	return count;
 }
 
-int replug_distance(uforest &T1, uforest &T2, uforest **MAF1_out /*= NULL*/, uforest **MAF2_out /*= NULL*/) {
+int replug_distance(uforest &T1, uforest &T2, bool quiet /* = true */, uforest **MAF1_out /*= NULL*/, uforest **MAF2_out /*= NULL*/) {
 	// may be needed
 	T1.root(T1.get_smallest_leaf());
 	T2.root(T2.get_smallest_leaf());
@@ -355,7 +364,7 @@ int replug_distance(uforest &T1, uforest &T2, uforest **MAF1_out /*= NULL*/, ufo
 	distances_from_leaf_decorator(T2, T2.get_smallest_leaf());
 	uforest *MAF1 = NULL;
 	uforest *MAF2 = NULL;
-	int d = tbr_distance(T1, T2, make_pair(T1, T2), &replug_hlpr, &MAF1, &MAF2);
+	int d = tbr_distance(T1, T2, make_pair(T1, T2), &replug_hlpr, quiet, &MAF1, &MAF2);
 	if (MAF1 != NULL) {
 		if (MAF1_out != NULL) {
 			*MAF1_out = MAF1;
