@@ -52,11 +52,19 @@ class unode {
 		b_protected = false;
 		phi = false;
 	}
-	unode(const unode &n) {
+	unode(const unode &n, bool include_neighbors = true) {
 		label = n.label;
-		neighbors = list<unode *>(n.neighbors);
-		contracted_neighbors = list<unode *>(n.contracted_neighbors);
-		num_neighbors = n.num_neighbors;
+		// don't include neighbors when copying as they will be updated later
+		if (include_neighbors) {
+			neighbors = list<unode *>(n.neighbors);
+			contracted_neighbors = list<unode *>(n.contracted_neighbors);
+			num_neighbors = n.num_neighbors;
+		}
+		else {
+			neighbors = list<unode *>();
+			contracted_neighbors = list<unode *>();
+			num_neighbors = 0;
+		}
 		component = n.component;
 		terminal = n.terminal;
 		distance = n.distance;
