@@ -477,7 +477,7 @@ class unode {
 
 	int normalize_order_hlpr(unode *prev = NULL) {
 		// return leaf label
-		if (label > 0) {
+		if (label >= 0 && prev != NULL) {
 			return label;
 		}
 		map<int, unode *> ordered_children = map<int, unode *>();
@@ -507,6 +507,25 @@ class unode {
 			add_neighbor(next->second);
 			ordered_children.erase(next);
 		}
+
+		// contracted neighbors
+		ordered_children.clear();
+		for (unode *n : contracted_neighbors) {
+			int n_min_descendant = n->normalize_order_hlpr(this);
+			ordered_children.insert(make_pair(n_min_descendant, n));
+			if (n_min_descendant < min_descendant) {
+				min_descendant = n_min_descendant;
+			}
+		}
+		// remove all neighbors
+		clear_contracted_neighbors();
+
+		// re-add in correct order
+		while(!ordered_children.empty()) {
+			map<int, unode *>::iterator next = ordered_children.begin();
+			add_contracted_neighbor(next->second);
+			ordered_children.erase(next);
+		}
 		return min_descendant;
 	}
 
@@ -517,6 +536,20 @@ class unode {
 	void normalize_order() {
 		// normalize order
 		normalize_order_hlpr();
+	}
+
+	unode *find_uncontracted_node() {
+		unode *ret = this;
+		unode *prev = this;
+		while (ret->is_leaf()) {
+			unode *next = ret->get_parent();
+			if (prev == next) {
+				return ret;
+			}
+			prev = ret;
+			ret = next;
+		}
+		return ret;
 	}
 
 };

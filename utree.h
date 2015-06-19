@@ -28,15 +28,10 @@ class utree {
 		int smallest_leaf;
 	public:
 		// create the tree
-		utree(string &newick, map<string, int> &label_map, map<int, string> &reverse_label_map) {
+		utree(string &newick, map<string, int> *label_map = NULL, map<int, string> *reverse_label_map = NULL) {
 			internal_nodes = vector<unode *>();
 			leaves = vector<unode *>();
-			build_utree(*this, newick, &label_map, &reverse_label_map);
-		}
-		utree(string &newick) {
-			internal_nodes = vector<unode *>();
-			leaves = vector<unode *>();
-			build_utree(*this, newick);
+			build_utree(*this, newick, label_map, reverse_label_map);
 		}
 		utree(const utree &T) {
 			// copy vectors of pointers
@@ -132,7 +127,7 @@ class utree {
 		return new_node_label;
 	}
 
-	 unode *get_internal_node(int label) {
+	 unode *get_internal_node(int label) const {
 		 return internal_nodes[-(label) - 2];
 	 }
 
@@ -159,11 +154,11 @@ class utree {
 			 return L;
 	 }
 
-	 unode *get_leaf(int label) {
+	 unode *get_leaf(int label) const {
 		 return leaves[label];
 	 }
 
-	 unode *get_node(int label) {
+	 unode *get_node(int label) const {
 		 if (label < 0) {
 			 return get_internal_node(label);
 		 }
@@ -184,6 +179,15 @@ class utree {
 		}
 		unode *root = leaves[start]->get_neighbors().front();
 		str_subtree(s, root, root, print_internal, reverse_label_map);
+		return s.str();
+	}
+	string str(int start, string contracted_sep = ",", bool print_internal = false, map<int, string> *reverse_label_map = NULL) const{
+		stringstream s;
+		if (start == -1) {
+			return "empty tree";
+		}
+		unode *root = get_node(start);
+		str_subtree(s, root, root, contracted_sep, print_internal, reverse_label_map);
 		return s.str();
 	}
 
@@ -216,7 +220,7 @@ class utree {
 	}
 
 	void root(int l) {
-		unode *n = get_leaf(l);
+		unode *n = get_node(l);
 		if (n != NULL) {
 			n->root(n->get_label());
 		}
@@ -237,6 +241,12 @@ class utree {
 	string str_subtree(unode *n, unode *p, bool print_internal_labels = false, map<int, string> *reverse_label_map = NULL) {
 		stringstream ss;
 		str_subtree(ss, n, p, print_internal_labels, reverse_label_map);
+		return ss.str();
+	}
+
+	string str_subtree(unode *n, unode *p, string contracted_sep, bool print_internal_labels = false, map<int, string> *reverse_label_map = NULL) {
+		stringstream ss;
+		str_subtree(ss, n, p, contracted_sep, print_internal_labels, reverse_label_map);
 		return ss.str();
 	}
 
@@ -272,6 +282,48 @@ class utree {
 				count++;
 				has_contracted = true;
 				str_subtree(s, i, n, print_internal_labels, reverse_label_map);
+			}
+		}
+		if (has_contracted) {
+			s << ">";
+		}
+		else if (count > 0) {
+			s << ")";
+		}
+	}
+
+	void str_subtree(stringstream &s, unode *n, unode *prev, string contracted_sep, bool print_internal_labels = false, map<int, string> *reverse_label_map = NULL) const {
+		// only leaf labels
+		if (print_internal_labels || n->get_label() >= 0) {
+			s << n->str(reverse_label_map);
+		}
+		list<unode *>::const_iterator i;
+		const list<unode *> &cn = n->const_neighbors();
+		int count = 0;
+		bool has_contracted = false;
+		for(unode *i : n->const_neighbors()) {
+			if (prev == NULL || (*i).get_label() != prev->get_label()) {
+				if (count == 0) {
+					s << "(";
+				}
+				else {
+					s << ",";
+				}
+				count++;
+				str_subtree(s, i, n, contracted_sep, print_internal_labels, reverse_label_map);
+			}
+		}
+		for(unode *i : n->const_contracted_neighbors()) {
+			if (prev == NULL || (*i).get_label() != prev->get_label()) {
+				if (count == 0) {
+					s << "<";
+				}
+				else {
+					s << contracted_sep;
+				}
+				count++;
+				has_contracted = true;
+				str_subtree(s, i, n, contracted_sep, print_internal_labels, reverse_label_map);
 			}
 		}
 		if (has_contracted) {
@@ -326,7 +378,10 @@ class utree {
 	}
 
 	void normalize_order() {
-		get_node(get_smallest_leaf())->normalize_order();
+		get_node(get_smallest_leaf())->get_parent()->normalize_order();
+	}
+	void normalize_order(int n) {
+		get_node(n)->normalize_order();
 	}
 
 	// apply a USPR operation moving (x,y) to (x,yprime) where yprime is adjacent to x, w, and z

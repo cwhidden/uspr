@@ -10,7 +10,7 @@ class uforest: public utree {
 		vector<unode *> components;
 
 	public:
-		uforest(string &newick, map<string, int> &label_map, map<int, string> &reverse_label_map) : utree(newick, label_map, reverse_label_map) {
+		uforest(string &newick, map<string, int> *label_map, map<int, string> *reverse_label_map) : utree(newick, label_map, reverse_label_map) {
 			components = vector<unode *>();
 			if (leaves.size() > 0) {
 				components.push_back(leaves[smallest_leaf]);
@@ -26,9 +26,10 @@ class uforest: public utree {
 		}
 		uforest(const uforest &F) : utree(F) {
 			// copy vector of pointers
-			components = vector<unode *>(F.components.size());
+			int components_size = F.components.size();
+			components = vector<unode *>(components_size);
 			// update with the new nodes
-			for(int i = 0; i < F.components.size(); i++) {
+			for(int i = 0; i < components_size; i++) {
 //				cout << "components[" << i << "]" << endl;
 				components[i] = get_node(F.components[i]->get_label());
 //				cout << "\t" << F.components[i] << ", " << components[i] << endl;

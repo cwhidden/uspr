@@ -124,9 +124,9 @@ int main(int argc, char *argv[]) {
 	string T2_line = "";
 	while (getline(cin, T1_line) && getline(cin, T2_line)) {
 		// load into data structures
-		uforest F1 = uforest(T1_line, label_map, reverse_label_map);
+		uforest F1 = uforest(T1_line, &label_map, &reverse_label_map);
 		F1.normalize_order();
-		uforest F2 = uforest(T2_line, label_map, reverse_label_map);
+		uforest F2 = uforest(T2_line, &label_map, &reverse_label_map);
 		F2.normalize_order();
 		cout << "T1: " << F1.str(false, &reverse_label_map) << endl;
 		cout << "T2: " << F2.str(false, &reverse_label_map) << endl;

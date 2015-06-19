@@ -82,11 +82,25 @@ bool operator <= (tree_distance a, tree_distance b) {
 int uspr_distance(uforest &T1, uforest &T2);
 
 // functions
-int uspr_distance(uforest &T1, uforest &T2) {
+int uspr_distance(uforest &T1_original, uforest &T2_original) {
+
+	uforest T1 = uforest(T1_original);
+	uforest T2 = uforest(T2_original);
 
 	// normalize tree order
 	T1.normalize_order();
 	T2.normalize_order();
+
+	// leaf reduction
+	map<string, int> label_map = map<string, int>();
+	map<int, string> reverse_label_map = map<int, string>();
+	leaf_reduction(&T1, &T2, &label_map, &reverse_label_map);
+	T1.normalize_order();
+	T2.normalize_order();
+
+//	cout << "T1R: " << T1 << endl;
+//	cout << "T2R: " << T2 << endl;
+
 
 	// set of visited trees
 	set<string> visited_trees = set<string>();
@@ -106,7 +120,7 @@ int uspr_distance(uforest &T1, uforest &T2) {
 
 	// start with the first distance
 	visited_trees.insert(T1.str());
-	distance_priority_queue.insert(tree_distance(0, 1, T1.str(), BFS));
+	distance_priority_queue.insert(tree_distance(0, 1, utree(T1).str(), BFS));
 
 
 

@@ -228,6 +228,8 @@ bool get_constraint(list<int> &dead_component, socketcontainer &T_sockets, map<s
 int solve_monotonic_2sat_2vars(vector<vector<int> > &constraints, list<int> &changed_sockets);
 int solve_monotonic_2sat_2vars(vector<vector<int> > &constraints);
 void add_phi_nodes(uforest &F, map<pair<int, int>, int> &F_add_phi_nodes);
+void leaf_reduction_hlpr(utree &T1, utree &T2, nodemapping &twins, map<int, int> &sibling_pairs);
+void leaf_reduction(utree &T1, utree &T2);
 // function prototypes end
 
 // AF helpers
@@ -383,7 +385,6 @@ int replug_distance(uforest &T1, uforest &T2, bool quiet /* = true */, uforest *
 	}
 	return d;
 }
-
 
 template <typename T>
 int tbr_distance_hlpr(uforest &T1, uforest &T2, int k, T t, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s), uforest **MAF1 = NULL, uforest **MAF2 = NULL) {
@@ -1439,6 +1440,7 @@ int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int
 			bool cut_b = true;
 			bool cut_c = true;
 			bool cut_d = true;
+//			bool cut_d = false;
 
 			if (F2_b1 == NULL || F2_b2 == NULL) {
 				cut_b = false;
@@ -1456,17 +1458,6 @@ int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int
 				F2_b2 = F2_a->get_parent();
 				F2_d1 = F2_c->get_parent();
 			}
-
-			// OPTIMIZATIONS ?
-			/*
-			if (num_pendants < 2 || num_pendants > k) {
-				cut_b = false;
-			}
-			else if (OPTIMIZE_2B && num_pendants == 2) {
-				cut_a = false;
-				cut_c = false;
-			}
-			*/
 
 //				int branch_a = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy, func_pointer);
 
@@ -2740,6 +2731,149 @@ void add_phi_nodes(uforest &F, map<pair<int, int>, int> &F_add_phi_nodes) {
 	}
 	return;
 }
+
+void leaf_reduction(utree *T1, utree *T2, map<string, int> *label_map = NULL, map<int, string> *reverse_label_map = NULL) {
+	list<int> leaves = T1->find_leaves();
+	nodemapping twins = nodemapping(leaves);
+	map<int,int> sibling_pairs = T1->find_sibling_pairs();
+	T1->root(T1->get_smallest_leaf());
+	T2->root(T2->get_smallest_leaf());
+	distances_from_leaf_decorator(*T1, T1->get_smallest_leaf());
+	distances_from_leaf_decorator(*T2, T2->get_smallest_leaf());
+
+	// set leaves as terminal
+	for(unode *u : T1->get_leaves()) {
+		if (u != NULL) {
+			u->set_terminal(true);
+		}
+	}
+	for(unode *u : T2->get_leaves()) {
+		if (u != NULL) {
+			u->set_terminal(true);
+		}
+	}
+	leaf_reduction_hlpr(*T1, *T2, twins, sibling_pairs);
+
+	// collapse the terminal subtrees if a label_map and reverse_label_map are given
+	if (label_map != NULL && reverse_label_map != NULL) {
+		unode *T1_new_root = T1->get_node(T1->get_smallest_leaf())->find_uncontracted_node();
+//		cout << "T1: " << *T1 << endl;
+		T1->root(T1_new_root);
+		T1->normalize_order(T1_new_root->get_label());
+//		cout << "T1: " << T1->str(T1_new_root->get_label(), ";") << endl;
+		string T1_string = T1->str(T1_new_root->get_label(), ";");
+		utree T1_new = utree(T1_string, label_map, reverse_label_map);
+		// clear node lists so they aren't erased after swapping
+		T1->get_leaves().clear();
+		T1->get_internal_nodes().clear();
+		swap(*T1, T1_new);
+	//	cout << "T1_new: " << T1->str() << endl;
+
+		unode *T2_new_root = T2->get_node(T2->get_smallest_leaf())->find_uncontracted_node();
+//		cout << "T2: " << *T2 << endl;
+		T2->root(T2_new_root);
+		T2->normalize_order(T2_new_root->get_label());
+//		cout << "T2: " << T2->str(T2_new_root->get_label(), ";") << endl;
+		string T2_string = T2->str(T2_new_root->get_label(), ";");
+		// clear node lists so they aren't erased after swapping
+		utree T2_new = utree(T2_string, label_map, reverse_label_map);
+		T2->get_leaves().clear();
+		T2->get_internal_nodes().clear();
+		swap(*T2, T2_new);
+//		cout << "T2_new: " << T2->str() << endl;
+
+	}
+}
+
+void leaf_reduction_hlpr(utree &T1, utree &T2, nodemapping &twins, map<int, int> &sibling_pairs) {
+	bool done = false;
+	while (!done) {
+		done = true;
+		map<int, int>::iterator spi;
+		for (spi = sibling_pairs.begin(); spi != sibling_pairs.end(); spi++) {
+			// get sibling pair (a,c) in T1
+			unode *T1_a = T1.get_node(spi->first);
+			unode *T1_c = T1.get_node(spi->second);
+
+			// find a and c in T2
+			unode *T2_a = T2.get_node(twins.get_forward(T1_a->get_label()));
+			unode *T2_c = T2.get_node(twins.get_forward(T1_c->get_label()));
+
+			// found a match
+			if (T2_a->get_parent() == T2_c->get_parent() //||
+//				T2_a->get_parent() == T2_c ||
+//				T2_c->get_parent() == T2_a)
+			) {
+				done = false;
+
+				// make terminal in T1
+				// contract T1_a and T1_c
+				unode *T1_new_terminal = T1_a->get_parent();
+				debug(cout << "T1_new_terminal: " << T1.str_subtree(T1_new_terminal) << endl);
+				T1_new_terminal->set_terminal(true);
+				T1_new_terminal->contract_neighbor(T1_a);
+				T1_new_terminal->contract_neighbor(T1_c);
+
+				// check for sibling pair
+				unode *T1_new_node = T1_new_terminal->get_parent();
+				vector<int> new_sibling_pair = vector<int>();
+				if (T1_new_node != NULL) {
+					for (unode *u : T1_new_node->get_neighbors()) {
+						if (u->get_terminal()) {
+							new_sibling_pair.push_back(u->get_label());
+						}
+					}
+				}
+				int i = new_sibling_pair.size();
+				if (i >= 2) {
+					if (sibling_pairs.find(new_sibling_pair[i-1]) == sibling_pairs.end() && sibling_pairs.find(new_sibling_pair[i-2]) == sibling_pairs.end()) {
+						sibling_pairs.insert(make_pair(new_sibling_pair[i-1], new_sibling_pair[i-2]));
+						sibling_pairs.insert(make_pair(new_sibling_pair[i-2], new_sibling_pair[i-1]));
+					}
+				}
+			
+				// make terminal in T2
+				// contract T2_a and T2_c
+				debug(
+					cout << "d(T2_a): " << T2_a->get_distance() << endl;
+					cout << "d(T2_c): " << T2_c->get_distance() << endl;
+				)
+				unode *T2_new_terminal = T2_a->get_parent();
+				if (T2_c->get_parent() == T2_a &&
+						T2_a->get_label() < -1) {
+					T2_new_terminal = T2_a;
+				}
+				T2_new_terminal->set_terminal(true);
+
+				if (T2_new_terminal != T2_a) {
+					T2_new_terminal->contract_neighbor(T2_a);
+				}
+				if (T2_new_terminal != T2_c) {
+					T2_new_terminal->contract_neighbor(T2_c);
+				}
+
+				// add to nodemapping
+				twins.add(T1_new_terminal->get_label(), T2_new_terminal->get_label());
+
+				spi--;
+				sibling_pairs.erase(T1_a->get_label());
+				sibling_pairs.erase(T1_c->get_label());
+			}
+		}
+	}
+}
+
+/* leaf reduction on forests. Assumes there is only one component, so this is for convenience with a forest that is really a tree. Bad things will happen if there are multiple components.
+*/
+void leaf_reduction(uforest *F1, uforest *F2, map<string, int> *label_map = NULL, map<int, string> *reverse_label_map = NULL) {
+	leaf_reduction(static_cast<utree *>(F1), static_cast<utree *>(F2), label_map, reverse_label_map);
+	F1->update_component(0, F1->get_smallest_leaf());
+	F1->get_node(F1->get_smallest_leaf())->set_component(0);
+	F2->update_component(0, F2->get_smallest_leaf());
+	F2->get_node(F2->get_smallest_leaf())->set_component(0);
+}
+
+
 
 
 
