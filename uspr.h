@@ -67,12 +67,22 @@ class tree_distance {
 // prefer better estimates when equal
 bool operator < (tree_distance a, tree_distance b) {
 	if (a.distance == b.distance) {
-		return a.estimator < b.estimator;
+		if (a.estimate == b.estimate) {
+			return a.estimator < b.estimator;
+		}
+		else {
+			return a.estimate < b.estimate;
+		}
 	}
 	return a.distance < b.distance; } 
 bool operator <= (tree_distance a, tree_distance b) {
 	if (a.distance == b.distance) {
-		return a.estimator <= b.estimator;
+		if (a.estimate == b.estimate) {
+			return a.estimator <= b.estimator;
+		}
+		else {
+			return a.estimate <= b.estimate;
+		}
 	}
 	return a.distance <= b.distance;
 }
