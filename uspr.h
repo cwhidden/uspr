@@ -20,7 +20,7 @@
 #include "tbr.h"
 #include "uspr_neighbors.h"
 
-#define DEBUG_USPR 1
+//#define DEBUG_USPR 1
 #ifdef DEBUG_USPR
 	#define debug_uspr(x) x
 #else
