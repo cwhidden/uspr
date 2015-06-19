@@ -109,6 +109,7 @@ void add_neighbor(utree *T, unode *x, unode *y, unode *w, unode *z, list<utree> 
 */
 	T->uspr(x, y, w, z, &yprime, &y1, &y2);
 	// normalize the tree
+	distances_from_leaf_decorator(*T, T->get_smallest_leaf());
 	T->normalize_order();
 	// print the tree
 	//	cout << "neighbor: " << T->str() << endl;
@@ -129,6 +130,7 @@ void add_neighbor(utree *T, unode *x, unode *y, unode *w, unode *z, list<utree> 
 
 	// revert the SPR
 	T->uspr(x, yprime, y1, y2);
+	distances_from_leaf_decorator(*T, T->get_smallest_leaf());
 	T->normalize_order();
 //	cout << "T: " << T->str() << endl;
 //	cout << endl;

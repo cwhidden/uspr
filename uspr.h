@@ -20,7 +20,7 @@
 #include "tbr.h"
 #include "uspr_neighbors.h"
 
-//#define DEBUG_USPR 1
+#define DEBUG_USPR 1
 #ifdef DEBUG_USPR
 	#define debug_uspr(x) x
 #else
@@ -113,8 +113,10 @@ int uspr_distance(uforest &T1_original, uforest &T2_original) {
 	T1.normalize_order();
 	T2.normalize_order();
 
-//	cout << "T1R: " << T1 << endl;
-//	cout << "T2R: " << T2 << endl;
+	debug_uspr(
+		cout << "T1R: " << T1 << endl;
+		cout << "T2R: " << T2 << endl;
+	)
 
 
 	// set of visited trees
