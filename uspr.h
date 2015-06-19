@@ -101,6 +101,11 @@ int uspr_distance(uforest &T1_original, uforest &T2_original) {
 	T1.normalize_order();
 	T2.normalize_order();
 
+	// check if trees are equal
+	if (utree(T1).str() == utree(T2).str()) {
+		return 0;
+	}
+
 	// leaf reduction
 	map<string, int> label_map = map<string, int>();
 	map<int, string> reverse_label_map = map<int, string>();
@@ -122,11 +127,6 @@ int uspr_distance(uforest &T1_original, uforest &T2_original) {
 	// priority queue of trees
 	multiset<tree_distance> distance_priority_queue = multiset<tree_distance>();
 
-	// check if trees are equal
-	// TODO: normalize strings
-	if (utree(T1).str() == target) {
-		return 0;
-	}
 
 	// start with the first distance
 	visited_trees.insert(T1.str());
