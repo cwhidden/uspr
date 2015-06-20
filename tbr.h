@@ -1452,12 +1452,14 @@ int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int
 				cut_d = false;
 			}
 
+			/*
 			if (F2_a->get_parent()->get_parent() == F2_c->get_parent()) {
 				cut_a = false;
 				cut_c = false;
 				F2_b2 = F2_a->get_parent();
 				F2_d1 = F2_c->get_parent();
 			}
+			*/
 
 //				int branch_a = tbr_distance_hlpr(F1_copy, F2_copy, k-1, twins_copy, sibling_pairs_copy, singletons_copy, func_pointer);
 
