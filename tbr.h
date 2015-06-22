@@ -1123,11 +1123,11 @@ int tbr_approx(uforest &T1, uforest &T2) {
 }
 
 int tbr_high_lower_bound(uforest &T1, uforest &T2) {
-	return (tbr_approx(T1, T2, 0) + 3) / 4;
+	return (tbr_approx(T1, T2, 0) + 2) / 3;
 }
 
 int tbr_low_lower_bound(uforest &T1, uforest &T2) {
-	return (tbr_approx(T1, T2, 1) + 3) / 4;
+	return (tbr_approx(T1, T2, 1) + 2) / 3;
 }
 
 int tbr_high_upper_bound(uforest &T1, uforest &T2) {
@@ -1147,7 +1147,7 @@ int tbr_branch_bound(uforest &F1, uforest &F2, nodemapping &twins, map<int, int>
 	list<int> singletons_copy = list<int>(singletons);
 
 	int result = tbr_approx_hlpr(F1_copy, F2_copy, 0, twins_copy, sibling_pairs_copy, singletons_copy);
-	return (result + 3) / 4;
+	return (result + 2) / 3;
 }
 
 int tbr_approx(uforest &T1, uforest &T2, bool low) {
@@ -1439,25 +1439,25 @@ int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int
 			bool cut_a = true;
 			bool cut_b = true;
 			bool cut_c = true;
-			bool cut_d = true;
-//			bool cut_d = false;
+			bool cut_d = false;
 
 			if (F2_b1 == NULL || F2_b2 == NULL) {
 				cut_b = false;
-				cut_d = false;
 			}
 
 			if (F2_d1 == NULL || F2_d2 == NULL) {
 				cut_b = false;
-				cut_d = false;
 			}
 
 			/*
 			if (F2_a->get_parent()->get_parent() == F2_c->get_parent()) {
 				cut_a = false;
 				cut_c = false;
+				cut_d = true;
+				F2_b1 = F2_a->get_parent()->get_neighbor_not(F2_a, F2_c->get_parent());
 				F2_b2 = F2_a->get_parent();
 				F2_d1 = F2_c->get_parent();
+				F2_d2 = F2_c->get_parent()->get_parent();
 			}
 			*/
 
@@ -1531,6 +1531,15 @@ int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int
 
 			// Cut F2_b
 			if (cut_b) {
+				// recover if one of the nodes was contracted
+				if (F2_b1->get_num_neighbors() == 0 &&
+						F2_b2->get_num_neighbors() > 0) {
+					F2_b1 = F2_b2->get_parent();
+				}
+				else if (F2_b2->get_num_neighbors() == 0 &&
+						F2_b1->get_num_neighbors() > 0) {
+					F2_b2 = F2_b1->get_parent();
+				}
 				pair <int, int> e_b = make_pair(F2_b1->get_label(), F2_b2->get_label());
 	
 				debug_approx(cout  << "cut e_b" << endl);
@@ -1597,7 +1606,7 @@ int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int
 					}
 				}
 			}
-			k += 4;
+			k += 3;
 		}
 	}
 
