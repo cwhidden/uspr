@@ -8,11 +8,14 @@ BOOST_ANY=-L/lib/libboost*
 LFLAGS=$(BOOST_GRAPH)
 DEBUGFLAGS=-g -O0 -std=c++0x
 PROFILEFLAGS=-pg
-OBJS=uspr
+OBJS=uspr uspr_neighbors
 all: $(OBJS)
 
 uspr: uspr.cpp *.h
 	$(CC) $(LFLAGS) $(CFLAGS) -o uspr uspr.cpp
+
+uspr_neighbors: uspr_neighbors.cpp *.h
+	$(CC) $(LFLAGS) $(CFLAGS) -o uspr_neighbors uspr_neighbors.cpp
 
 .PHONY: debug
 .PHONY: profile
