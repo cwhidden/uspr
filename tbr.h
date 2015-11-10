@@ -225,8 +225,8 @@ int check_socket_group_combination(int k, int kprime, socketcontainer &T1_socket
 int check_socket_group_combinations(int n, int i, int j, int last, int k, int kprime, socketcontainer &T1_sockets, socketcontainer &T2_sockets_normalized, vector<list<int> > &T1_dead_components, vector<list<int> > &T2_dead_components, vector<pair<vector<socket *> , vector<socket *> > > &socketcandidates, vector<pair<socket *, socket *> > &sockets, vector<pair<socket *, socket *> > &phi_node_sockets);
 int check_socket_group_combinations(int k, int kprime, socketcontainer &T1_sockets, socketcontainer &T2_sockets_normalized, vector<list<int> > &T1_dead_components, vector<list<int> > &T2_dead_components, vector<pair<vector<socket *> , vector<socket *> > > &socketcandidates, vector<pair<socket *, socket *> > &phi_node_sockets);
 bool get_constraint(list<int> &dead_component, socketcontainer &T_sockets, map<socket *, int> &socket_pointer_map, vector<int> &constraint);
-int solve_monotonic_2sat_2vars(vector<vector<int> > &constraints, list<int> &changed_sockets);
-int solve_monotonic_2sat_2vars(vector<vector<int> > &constraints);
+int solve_monotonic_2sat_2vars(vector<vector<int> > &constraints, vector<bool> &preferred_sockets, list<int> &changed_sockets);
+int solve_monotonic_2sat_2vars(vector<vector<int> > &constraints, vector<bool> &preferred_sockets);
 void add_phi_nodes(uforest &F, map<pair<int, int>, int> &F_add_phi_nodes);
 void leaf_reduction_hlpr(utree &T1, utree &T2, nodemapping &twins, map<int, int> &sibling_pairs);
 void leaf_reduction(utree &T1, utree &T2);
@@ -2073,6 +2073,7 @@ int check_socket_group_combination(int k, int kprime, socketcontainer &T1_socket
 	map<int, int> T1_socket_dead_component_map = map<int, int>();
 	map<int, int> T2_socket_dead_component_map = map<int, int>();
 
+	// T1 dead component map
 	i = 0;
 	for(list<int> &dead_component : T1_dead_components) {
 		if (dead_component.size() >= 3) {
@@ -2080,20 +2081,55 @@ int check_socket_group_combination(int k, int kprime, socketcontainer &T1_socket
 				T1_socket_dead_component_map.insert(make_pair(s, i));
 			}
 		}
-		vector<int> constraint = vector<int>();
-		bool trivial = get_constraint(dead_component, T1_sockets, socket_pointer_map, constraint);
-		if (trivial != true) {
-			constraints.push_back(constraint);
-		}
 		i++;
 	}
-	i = 0;
+
+	// T2 dead component map
+	i=0;
 	for(list<int> &dead_component : T2_dead_components) {
 		if (dead_component.size() >= 3) {
 			for (int s : dead_component) {
 				T2_socket_dead_component_map.insert(make_pair(s, i));
 			}
 		}
+		i++;
+	}
+
+	// list of preferred sockets for building out an edge cover
+	// these are sockets not adjacent to a large dead component in either tree
+	vector<bool> preferred_sockets = vector<bool>(sockets.size(), true);
+	for(int i = 0; i < sockets.size(); i++) {
+		if (T1_socket_dead_component_map.find(sockets[i].first->dead) != T1_socket_dead_component_map.end()) {
+			preferred_sockets[i] = false;
+		}
+		if (T2_socket_dead_component_map.find(sockets[i].second->dead) != T2_socket_dead_component_map.end()) {
+			preferred_sockets[i] = false;
+		}
+	}
+	debug_phi_nodes(
+			cout << "preferred_sockets: " << endl;
+	for (int i = 0; i < sockets.size(); i++) {
+		cout << i+1 << ": ";
+		if (preferred_sockets[i]) {
+			cout << "TRUE" << endl;
+		}
+		else {
+			cout << "FALSE" << endl;
+		}
+	}
+	)
+
+	// T1 Constraints
+	for(list<int> &dead_component : T1_dead_components) {
+		vector<int> constraint = vector<int>();
+		bool trivial = get_constraint(dead_component, T1_sockets, socket_pointer_map, constraint);
+		if (trivial != true) {
+			constraints.push_back(constraint);
+		}
+	}
+
+	// T2 Constraints
+	for(list<int> &dead_component : T2_dead_components) {
 		vector<int> constraint = vector<int>();
 		bool trivial = get_constraint(dead_component, T2_sockets_normalized, socket_pointer_map, constraint);
 		if (trivial != true) {
@@ -2105,11 +2141,12 @@ int check_socket_group_combination(int k, int kprime, socketcontainer &T1_socket
 		cout << "found " << constraints.size() << " constraints" << endl; 
 	)
 
+
 	int non_phi_nodes = 0;
 	// determine the number of non_phi_nodes
 	list<int> changed_sockets = list<int>();
 	if (constraints.size() > 0) {
-		non_phi_nodes = solve_monotonic_2sat_2vars(constraints, changed_sockets);
+		non_phi_nodes = solve_monotonic_2sat_2vars(constraints, preferred_sockets, changed_sockets);
 	}
 	int phi_nodes = sockets.size() - non_phi_nodes;
 
@@ -2261,7 +2298,7 @@ int check_socket_group_combination(int k, int kprime, socketcontainer &T1_socket
 
 // determine the minimum number of variables that must be false to satisfy a monotonic 2 SAT set of CNF constraints where each variable occurs at most twice
 // works by converting to a maximum edge cover problem where each vertex is a clause and each edge is a variable spanning two clauses
-int solve_monotonic_2sat_2vars(vector<vector<int> > &constraints, list<int> &changed_sockets) {
+int solve_monotonic_2sat_2vars(vector<vector<int> > &constraints, vector<bool> &preferred_sockets, list<int> &changed_sockets) {
 
 	debug_phi_nodes(cout << "solve_monotonic_2sat_2vars()" << endl;)
 
@@ -2349,10 +2386,20 @@ int solve_monotonic_2sat_2vars(vector<vector<int> > &constraints, list<int> &cha
 		}
 		else if (!handled_constraints[*vi]) {
 			// vertex is not matched, pick an arbitrary socket
-			int chosen_socket = constraints[*vi][0];
+			// avoid sockets that are not adjacent to dead components
+			int c = 0;
+			for(c = 0; c < constraints[*vi].size(); c++) {
+				if (!preferred_sockets[constraints[*vi][c]]) {
+					break;
+				}
+			}
+			if (c == constraints[*vi].size()) {
+				c = 0;
+			}
+			int chosen_socket = constraints[*vi][c];
 			debug_phi_nodes(
-				cout << "{" << *vi << "}" << endl;
-				cout << "contains " << chosen_socket << endl;
+				cout << "constraint {" << *vi + 1 << "}" << endl;
+				cout << "chose socket " << chosen_socket+1 << endl;
 			)
 			changed_sockets.push_back(chosen_socket);
 		}
@@ -2378,9 +2425,9 @@ int solve_monotonic_2sat_2vars(vector<vector<int> > &constraints, list<int> &cha
 
 }
 
-int solve_monotonic_2sat_2vars(vector<vector<int> > &constraints) {
+int solve_monotonic_2sat_2vars(vector<vector<int> > &constraints, vector<bool> &preferred_sockets) {
 	list<int> changed_sockets = list<int>();
-	return solve_monotonic_2sat_2vars(constraints, changed_sockets);
+	return solve_monotonic_2sat_2vars(constraints, preferred_sockets, changed_sockets);
 }
 
 bool get_constraint(list<int> &dead_component, socketcontainer &T_sockets, map<socket *, int> &socket_pointer_map, vector<int> &constraint) {

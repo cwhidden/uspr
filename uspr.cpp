@@ -59,7 +59,6 @@ int main(int argc, char *argv[]) {
 		}
 		else if (strcmp(arg, "--no-opt") == 0) {
 			DEFAULT_OPTIMIZATIONS = false;
-			cout << "NO OPTIMIZATIONS" << endl;
 		}
 		else if (strcmp(arg, "--no-protect-b") == 0) {
 			OPTIMIZE_PROTECT_B = false;
