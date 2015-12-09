@@ -1,8 +1,33 @@
-// TODO: basic data structures
-// TODO: mAF iteration
-// TODO: mEAF iteration
-// TODO: USPR distance
+/*******************************************************************************
+uspr.cpp
 
+Usage: uspr [OPTIONS]
+Calculate approximate and exact Subtree Prune and Regraft (rSPR)
+distances and the associated maximum agreement forests (MAFs) between pairs
+of unrooted binary trees from STDIN in newick format.
+Supports arbitrary leaf labels. See the README for more information.
+
+Copyright 2015 Chris Whidden
+cwhidden@fredhutch.org
+https://github.com/cwhidden/uspr
+December 12, 2015
+Version 1.0.0
+
+This file is part of uspr.
+
+uspr is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+uspr is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with uspr.  If not, see <http://www.gnu.org/licenses/>.
+*******************************************************************************/
 
 // includes
 #include <iostream>

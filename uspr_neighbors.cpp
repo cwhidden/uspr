@@ -1,8 +1,32 @@
-// TODO: basic data structures
-// TODO: mAF iteration
-// TODO: mEAF iteration
-// TODO: USPR distance
+/*******************************************************************************
+uspr_neighbors.cpp
 
+Usage: uspr_neighbors [OPTIONS]
+Calculate the set of trees that can be obtained from a given unrooted binary tree by a sin
+The tree is read from standard input and must be in newick format.
+Supports arbitrary leaf labels. See the README for more information.
+
+Copyright 2015 Chris Whidden
+cwhidden@fredhutch.org
+https://github.com/cwhidden/uspr
+December 12, 2015
+Version 1.0.0
+
+This file is part of uspr.
+
+uspr is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+uspr is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with uspr.  If not, see <http://www.gnu.org/licenses/>.
+*******************************************************************************/
 
 // includes
 #include <iostream>
