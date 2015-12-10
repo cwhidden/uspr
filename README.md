@@ -50,21 +50,7 @@ By default, uspr will compute 4 distance metrics:
 Example Output
 ====
 ```
-uspr < test_trees/replug_example_4.tre
-T1: (a1,a2,(a3,(a4,(b1,(b2,(b3,b4))))));
-T2: (a1,(a2,(a3,a4)),(((b1,b2),b3),b4));
-a_TBR: 1 <= d_TBR <= 3
-{1}
-d_TBR = 1
-F1: ((a1,a2),a3,a4); (b1,b2,(b3,b4));
-F2: ((a1,a2),a3,a4); ((b4,b3),b1,b2);
-{1} {2}
-d_R = 2
-F1: ((a1,a2),a3,a4); (b1,b2,(b3,b4));
-F2: ((a1,a2),a3,a4); ((b4,b3),b1,b2);
-examined 170 trees
-d_USPR = 2
-[cwhidden@stoat uspr (master *=)]$ uspr < test_trees/replug_example_3.tre
+./uspr < test_trees/replug_example_3.tre
 T1: (a1,a2,(a3,(a4,(b1,(b2,(b3,(b4,(c1,(c2,(c3,c4))))))))));
 T2: (a1,(a2,(a3,a4)),(((b1,b2),(b3,(c1,(c2,(c3,c4))))),b4));
 a_TBR: 2 <= d_TBR <= 6
@@ -78,6 +64,21 @@ F1: ((a1,a2),a3,a4); (b1,b2,(b3,b4)); ((*,c1),(c3,c4),c2);
 F2: ((a1,a2),a3,a4); ((b3,b4),b1,b2); ((*,c1),(c3,c4),c2);
 examined 347 trees
 d_USPR = 3
+
+./uspr < test_trees/replug_example_4.tre
+T1: (a1,a2,(a3,(a4,(b1,(b2,(b3,b4))))));
+T2: (a1,(a2,(a3,a4)),(((b1,b2),b3),b4));
+a_TBR: 1 <= d_TBR <= 3
+{1}
+d_TBR = 1
+F1: ((a1,a2),a3,a4); (b1,b2,(b3,b4));
+F2: ((a1,a2),a3,a4); ((b4,b3),b1,b2);
+{1} {2}
+d_R = 2
+F1: ((a1,a2),a3,a4); (b1,b2,(b3,b4));
+F2: ((a1,a2),a3,a4); ((b4,b3),b1,b2);
+examined 170 trees
+d_USPR = 2
 ```
 
 Options
