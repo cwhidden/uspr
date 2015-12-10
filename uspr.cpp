@@ -10,7 +10,7 @@ Supports arbitrary leaf labels. See the README for more information.
 Copyright 2015 Chris Whidden
 cwhidden@fredhutch.org
 https://github.com/cwhidden/uspr
-December 12, 2015
+December 10, 2015
 Version 1.0.0
 
 This file is part of uspr.
@@ -50,8 +50,6 @@ using namespace std;
 
 // constants
 //
-string USAGE =
-"uspr, version 0.0.1\n";
 
 bool DEFAULT_OPTIMIZATIONS = true;
 bool PRINT_mAFS = false;
@@ -62,7 +60,55 @@ bool COMPUTE_TBR_APPROX = false;
 bool COMPUTE_TBR = false;
 bool COMPUTE_REPLUG = false;
 bool COMPUTE_USPR = false;
-
+string USAGE =
+"uspr, version 1.0.0\n"
+"\n"
+"usage: uspr [OPTIONS]\n"
+"Calculate the subtree prune and regraft (uSPR) distance and related distances\n"
+"between pairs of unrooted binary tres from STDIN. Input one tree in newick\n"
+"format per line. Supports arbitrary labels. See the README for more\n"
+"information.\n"
+"\n"
+"Copyright 2015 Chris Whidden\n"
+"cwhidden@fredhutch.org\n"
+"https://github.com/cwhidden/uspr\n"
+"December 10, 2015\n"
+"Version 1.0.0\n"
+"\n"
+"This program comes with ABSOLUTELY NO WARRANTY.\n"
+"This is free software, and you are welcome to redistribute it\n"
+"under certain conditions; See the README for details.\n"
+"\n"
+"Basic options\n"
+"\n"
+"-h --help              Print program information and exit.\n"
+"\n"
+"--tbr-approx\n"
+"--tbr\n"
+"--replug\n"
+"--uspr                 By default, uspr will compute all 4 distances. If any of these\n"
+"                       options are specified then uspr will compute only the specified\n"
+"                       distances.\n"
+"                       \n"
+"--print-mAFs           Print all maximal agreement forests found during execution of\n"
+"                       the program.\n"
+"--count-mAFs           Count all maximal agreement forests found during execution of\n"
+"                       the program.\n"
+"\n"
+"Algorithm Options\n"
+"\n"
+"--no-approx-estimate\n"
+"--no-tbr-estimate\n"
+"--no-replug-estimate   Disable the TBR approximation, TBR distance, or replug distance\n"
+"                       heuristics when computing the SPR distance. In most cases these\n"
+"                       options will greatly increase the time required by uspr.\n"
+"                       \n"
+"--no-opt\n"
+"--no-protect-b         Disable all MAF optimizations or just the edge protection\n"
+"                       optimization for enumerating agreement forests. In most\n"
+"                       cases these options will greatly increase the time required\n"
+"                       by uspr.\n"
+"\n";
 
 
 // function prototypes

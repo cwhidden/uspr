@@ -114,7 +114,18 @@ Algorithm Options
                        by uspr.
 ```
 
+uspr_neighbors
+====
+`uspr_neighbors` is a utility program that calculates all trees that can be obtained from an unrooted binary tree using a single subtree prune and regraft operation. This is called the SPR neighborhood of a tree. Input one tree in newick format on STDIN. Note that this program will output or count the input tree unless the `--ignore_original` option is specified.
+```
+Options
 
+-h --help              Print program information and exit.
+
+--ignore_original      Do not output or count the input tree.
+
+--size_only            Count the number of SPR neighbors instead of printing them.
+```
 
 Files
 ====

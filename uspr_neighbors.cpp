@@ -9,7 +9,7 @@ Supports arbitrary leaf labels. See the README for more information.
 Copyright 2015 Chris Whidden
 cwhidden@fredhutch.org
 https://github.com/cwhidden/uspr
-December 12, 2015
+December 10, 2015
 Version 1.0.0
 
 This file is part of uspr.
@@ -53,8 +53,30 @@ bool IGNORE_ORIGINAL = false;
 bool SIZE_ONLY = false;
 
 string USAGE =
-"uspr_neighbors, version 0.0.1\n";
-
+"uspr_neighbors, version 1.0.0\n"
+"\n"
+"usage: uspr_neighbors [OPTIONS]\n"
+"Calculate all trees that can be obtained from an unrooted binary tree using a\n"
+"single subtree prune and regraft operation.  Input one tree in newick format on\n"
+"STDIN\n"
+"\n"
+"Copyright 2015 Chris Whidden\n"
+"cwhidden@fredhutch.org\n"
+"https://github.com/cwhidden/uspr\n"
+"December 10, 2015\n"
+"Version 1.0.0\n"
+"\n"
+"This program comes with ABSOLUTELY NO WARRANTY.\n"
+"This is free software, and you are welcome to redistribute it\n"
+"under certain conditions; See the README for details.\n"
+"\n"
+"Basic options\n"
+"\n"
+"-h --help              Print program information and exit.\n"
+"\n"
+"--ignore_original      Do not output or count the input tree.\n"
+"\n"
+"--size_only            Count the number of SPR neighbors instead of printing them.\n";
 
 // function prototypes
 

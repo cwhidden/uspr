@@ -6,7 +6,7 @@ TBR distance computation functions and data structures
 Copyright 2015 Chris Whidden
 cwhidden@fredhutch.org
 https://github.com/cwhidden/uspr
-December 12, 2015
+December 10, 2015
 Version 1.0.0
 
 This file is part of uspr.
