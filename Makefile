@@ -1,11 +1,10 @@
 CC=g++
 CC64=CC
-CFLAGS=-O2 -march=native -std=c++0x
+CFLAGS=-O2 -march=native -std=c++0x -D_hypot=hypot
 OMPFLAGS=-fopenmp
 C64FLAGS=$(CFLAGS)
 BOOST_GRAPH=-Ilibs/boost/graph/include
 BOOST_ANY=-L/lib/libboost*
-LFLAGS=$(BOOST_GRAPH)
 DEBUGFLAGS=-g -O0 -std=c++0x
 PROFILEFLAGS=-pg
 OBJS=uspr uspr_neighbors
@@ -21,6 +20,10 @@ OBJS=uspr uspr_neighbors
 all: $(OBJS)
 
 all-tests := $(addsuffix .test_out, $(basename $(wildcard test_trees/*.test)))
+
+boost-any := $(addprefix -I, $(basename $(wildcard boost/libs/*/include/)))
+
+LFLAGS=$(boost-any)
 
 uspr: uspr.cpp *.h
 	$(CC) $(LFLAGS) $(CFLAGS) -o uspr uspr.cpp
