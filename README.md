@@ -150,7 +150,7 @@ Files
 
 Dependencies
 ====
-uspr requires the Boost Graph Library. The Boost Graph library is available from https://github.com/boostorg/graph . The library is included as a submodule of uspr on github. If you obtained uspr directly from the github repository, then the command `git submodule init` followed by `git submodule update` can be used to download the library.
+uspr requires the Boost Graph Library, part of the Boost C++ Libraries. The Boost Graph library is available from https://github.com/boostorg/graph and is also available in the package manager of most Linux distributions. The library is included as a submodule of uspr on github. If you obtained uspr directly from the github repository and do not have the Boost Libraries installed on your system, then the command `git submodule update --init --recursive` can be used to download the libraries.
 
 
 Installation
