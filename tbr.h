@@ -414,7 +414,7 @@ int replug_distance(uforest &T1, uforest &T2, bool quiet /* = true */, uforest *
 }
 
 template <typename T>
-int tbr_distance_hlpr(uforest &T1, uforest &T2, int k, T t, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s), uforest **MAF1 = NULL, uforest **MAF2 = NULL) {
+int tbr_distance_hlpr(uforest &T1, uforest &T2, int k, T t, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s), uforest **MAF1 /* = NULL */, uforest **MAF2 /* = NULL */) {
 	uforest F1 = uforest(T1);
 	uforest F2 = uforest(T2);
 
@@ -464,7 +464,7 @@ int tbr_distance_hlpr(uforest &T1, uforest &T2, int k, T t, int (*func_pointer)(
 }
 
 template <typename T>
-int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons, T t, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s), uforest **MAF1 = NULL, uforest **MAF2 = NULL) {
+int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons, T t, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s), uforest **MAF1 /* = NULL*/, uforest **MAF2 /* = NULL*/) {
 
 	if (k < 0) {
 		return -1;
