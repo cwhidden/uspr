@@ -98,6 +98,10 @@ class unode {
 		b_protected = n.b_protected;
 		phi = n.phi;
 	}
+	~unode() {
+		neighbors.clear();
+		contracted_neighbors.clear();
+	}
 
 	void add_neighbor(unode *n) {
 		if (num_neighbors > 0 && neighbors.front()->get_distance() > n->get_distance()) {

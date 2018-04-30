@@ -2876,6 +2876,14 @@ void leaf_reduction_hlpr(utree &T1, utree &T2, nodemapping &twins, map<int, int>
 		done = true;
 		map<int, int>::iterator spi;
 		for (spi = sibling_pairs.begin(); spi != sibling_pairs.end(); spi++) {
+		debug(
+			cout << T1.str() << endl;
+			cout << T2.str() << endl;
+			cout << "sibling pairs: " << sibling_pairs.size() << endl;
+			for (pair<int, int> p: sibling_pairs) {
+				cout << p.first << ", " << p.second << endl;
+			}
+		)
 			// get sibling pair (a,c) in T1
 			unode *T1_a = T1.get_node(spi->first);
 			unode *T1_c = T1.get_node(spi->second);
@@ -2883,6 +2891,15 @@ void leaf_reduction_hlpr(utree &T1, utree &T2, nodemapping &twins, map<int, int>
 			// find a and c in T2
 			unode *T2_a = T2.get_node(twins.get_forward(T1_a->get_label()));
 			unode *T2_c = T2.get_node(twins.get_forward(T1_c->get_label()));
+
+			debug(
+					cout << spi->first << endl;
+					cout << spi->second << endl;
+					cout << "T1_a: " << T1_a->str() << endl;
+					cout << "T1_c: " << T1_c->str() << endl;
+					cout << "T2_a: " << T1_a->str() << endl;
+					cout << "T2_c: " << T1_c->str() << endl;
+			)
 
 			// found a match
 			if (T2_a->get_parent() == T2_c->get_parent() //||
@@ -2943,6 +2960,7 @@ void leaf_reduction_hlpr(utree &T1, utree &T2, nodemapping &twins, map<int, int>
 				spi--;
 				sibling_pairs.erase(T1_a->get_label());
 				sibling_pairs.erase(T1_c->get_label());
+				break;
 			}
 		}
 	}
