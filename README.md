@@ -1,4 +1,4 @@
-uspr version 1.0.0
+uspr version 1.0.1
 ====
 
 Software for computing the unrooted subtree Prune-and-Regraft (uSPR) distance between unrooted binary topologies in Newick format. Can also compute the Tree Bisection-and-Reconnection (TBR) distance and an intermediate distance called the replug distance. The uSPR distance is a natural distance metric with respect to phylogenetic tree search, as common tree search and sampling software mainly use SPR operations (or NNI operations, a subset of SPR operations). The uSPR distance is also a lower bound on the number of lateral gene transfer events required to explain the difference between a reference/species tree and a gene tree.
@@ -12,11 +12,11 @@ This is the code for the preprint "Calculating the Unrooted Subtree-Prune-and-Re
 Copying
 ====
 ```
-Copyright 2015 Chris Whidden
+Copyright 2018 Chris Whidden
 cwhidden@fredhutch.org
 https://github.com/cwhidden/uspr
-December 10, 2015
-Version 1.0.0
+May 1, 2018
+Version 1.0.1
 ```
 
 This file is part of uspr.

@@ -7,11 +7,11 @@ distances and the associated maximum agreement forests (MAFs) between pairs
 of unrooted binary trees from STDIN in newick format.
 Supports arbitrary leaf labels. See the README for more information.
 
-Copyright 2015 Chris Whidden
+Copyright 2018 Chris Whidden
 cwhidden@fredhutch.org
 https://github.com/cwhidden/uspr
-December 10, 2015
-Version 1.0.0
+May 1, 2018
+Version 1.0.1
 
 This file is part of uspr.
 
@@ -61,7 +61,7 @@ bool COMPUTE_TBR = false;
 bool COMPUTE_REPLUG = false;
 bool COMPUTE_USPR = false;
 string USAGE =
-"uspr, version 1.0.0\n"
+"uspr, version 1.0.1\n"
 "\n"
 "usage: uspr [OPTIONS]\n"
 "Calculate the subtree prune and regraft (uSPR) distance and related distances\n"
@@ -69,11 +69,11 @@ string USAGE =
 "format per line. Supports arbitrary labels. See the README for more\n"
 "information.\n"
 "\n"
-"Copyright 2015 Chris Whidden\n"
+"Copyright 2018 Chris Whidden\n"
 "cwhidden@fredhutch.org\n"
 "https://github.com/cwhidden/uspr\n"
-"December 10, 2015\n"
-"Version 1.0.0\n"
+"May 1, 2018\n"
+"Version 1.0.1\n"
 "\n"
 "This program comes with ABSOLUTELY NO WARRANTY.\n"
 "This is free software, and you are welcome to redistribute it\n"

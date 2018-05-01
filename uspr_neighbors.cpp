@@ -6,11 +6,11 @@ Calculate the set of trees that can be obtained from a given unrooted binary tre
 The tree is read from standard input and must be in newick format.
 Supports arbitrary leaf labels. See the README for more information.
 
-Copyright 2015 Chris Whidden
+Copyright 2018 Chris Whidden
 cwhidden@fredhutch.org
 https://github.com/cwhidden/uspr
-December 10, 2015
-Version 1.0.0
+May 1, 2018
+Version 1.0.1
 
 This file is part of uspr.
 
@@ -53,18 +53,18 @@ bool IGNORE_ORIGINAL = false;
 bool SIZE_ONLY = false;
 
 string USAGE =
-"uspr_neighbors, version 1.0.0\n"
+"uspr_neighbors, version 1.0.1\n"
 "\n"
 "usage: uspr_neighbors [OPTIONS]\n"
 "Calculate all trees that can be obtained from an unrooted binary tree using a\n"
 "single subtree prune and regraft operation.  Input one tree in newick format on\n"
 "STDIN\n"
 "\n"
-"Copyright 2015 Chris Whidden\n"
+"Copyright 2018 Chris Whidden\n"
 "cwhidden@fredhutch.org\n"
 "https://github.com/cwhidden/uspr\n"
-"December 10, 2015\n"
-"Version 1.0.0\n"
+"May 1, 2018\n"
+"Version 1.0.1\n"
 "\n"
 "This program comes with ABSOLUTELY NO WARRANTY.\n"
 "This is free software, and you are welcome to redistribute it\n"

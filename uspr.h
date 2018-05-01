@@ -3,11 +3,11 @@ uspr.h
 
 Unrooted SPR distance computation and data structures
 
-Copyright 2015 Chris Whidden
+Copyright 2018 Chris Whidden
 cwhidden@fredhutch.org
 https://github.com/cwhidden/uspr
-December 10, 2015
-Version 1.0.0
+May 1, 2018
+Version 1.0.1
 
 This file is part of uspr.
 
