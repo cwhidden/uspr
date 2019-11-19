@@ -414,7 +414,10 @@ int replug_distance(uforest &T1, uforest &T2, bool quiet /* = true */, uforest *
 }
 
 template <typename T>
-int tbr_distance_hlpr(uforest &T1, uforest &T2, int k, T t, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s), uforest **MAF1 /* = NULL */, uforest **MAF2 /* = NULL */) {
+int tbr_distance_hlpr(uforest &T1, uforest &T2, int k, T t,
+                      int (*func_pointer)(uforest &F1, uforest &F2,
+                           nodemapping &twins, int k, T s),
+                           uforest **MAF1 /* = NULL */, uforest **MAF2 /* = NULL */) {
 	uforest F1 = uforest(T1);
 	uforest F2 = uforest(T2);
 
@@ -459,18 +462,23 @@ int tbr_distance_hlpr(uforest &T1, uforest &T2, int k, T t, int (*func_pointer)(
 		}
 	)
 
-
-	return tbr_distance_hlpr(F1, F2, k, twins, sibling_pairs, singletons, t, func_pointer, MAF1, MAF2);
+	return tbr_distance_hlpr(F1, F2, k, twins, sibling_pairs, singletons, t,
+                          func_pointer, MAF1, MAF2);
 }
 
 template <typename T>
-int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons, T t, int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins, int k, T s), uforest **MAF1 /* = NULL*/, uforest **MAF2 /* = NULL*/) {
+int tbr_distance_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins,
+                      map<int, int> &sibling_pairs, list<int> &singletons, T t,
+                      int (*func_pointer)(uforest &F1, uforest &F2, nodemapping &twins,
+                           int k, T s), uforest **MAF1 /* = NULL*/,
+                           uforest **MAF2 /* = NULL*/) {
 
 	if (k < 0) {
 		return -1;
 	}
 
 	debug(cout << "tbr_distance_hlpr(" << k << ")" << endl);
+	Rcpp::checkUserInterrupt();
 
 	// if (sib pair list is not empty, k>=0) {
 	while (!sibling_pairs.empty() || !singletons.empty()) {
@@ -1234,6 +1242,7 @@ int tbr_approx(uforest &T1, uforest &T2, bool low) {
 int tbr_approx_hlpr(uforest &F1, uforest &F2, int k, nodemapping &twins, map<int, int> &sibling_pairs, list<int> &singletons) {
 
 	debug_approx(cout << "tbr_approx_hlpr(" << k << ")" << endl);
+  Rcpp::checkUserInterrupt();
 
 	while (!sibling_pairs.empty() || !singletons.empty()) {
 
@@ -1674,9 +1683,9 @@ list<pair<int,int> > find_pendants(unode *a, unode *c) {
 }
 
 int print_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, int dummy) {
-	cout << "ANSWER FOUND" << endl;
-	cout << "\t" << F1.str() << endl;
-	cout << "\t" << F2.str() << endl;
+	Rcout << "ANSWER FOUND" << endl;
+	Rcout << "\t" << F1.str() << endl;
+	Rcout << "\t" << F2.str() << endl;
 	return k;
 }
 
@@ -1686,9 +1695,9 @@ int count_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, int *count) 
 }
 
 int print_and_count_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, int *count) {
-	cout << "ANSWER FOUND" << endl;
-	cout << "\t" << F1.str() << endl;
-	cout << "\t" << F2.str() << endl;
+	Rcout << "ANSWER FOUND" << endl;
+	Rcout << "\t" << F1.str() << endl;
+	Rcout << "\t" << F2.str() << endl;
 	(*count)++;
 	return k;
 }
@@ -2372,7 +2381,9 @@ int solve_monotonic_2sat_2vars(vector<vector<int> > &constraints,
 	// matching data structure
 	vector<boost::graph_traits<undirected_graph>::vertex_descriptor> mate(constraints.size());
 	bool success = boost::checked_edmonds_maximum_cardinality_matching(G, &mate[0]);
-	assert(success);
+	if (!success) {
+	  throw(runtime_error("Maximum cardinality matching failed"));
+	}
 
 	int matching_size = boost::matching_size(G, &mate[0]);
 	debug_phi_nodes(cout << "found a matching of size " << matching_size << endl;)
