@@ -73,7 +73,7 @@ class uforest: public utree {
 		string str(bool print_internal = false, map<int, string> *reverse_label_map = NULL) const {
 
 			stringstream ss;
-			for(int i = 0; i < components.size(); i++) {
+			for(int i = 0; i < (int) components.size(); i++) {
 				if (i > 0) {
 					ss << " ";
 				}
@@ -96,7 +96,7 @@ class uforest: public utree {
 		}
 		string str_with_depths(bool print_internal = false) const {
 			stringstream ss;
-			for(int i = 0; i < components.size(); i++) {
+			for(unsigned int i = 0; i < components.size(); i++) {
 				if (i > 0) {
 					ss << " ";
 				}
@@ -195,7 +195,7 @@ class uforest: public utree {
 			}
 		}
 		void contract_degree_two() {
-			for(int i = 0; i < components.size(); i++) {
+			for(unsigned int i = 0; i < components.size(); i++) {
 				unode *c = components[i];
 				unode *result = c->contract_degree_two_subtree();
 				if (result != c) {
