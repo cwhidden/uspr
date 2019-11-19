@@ -50,7 +50,7 @@ along with uspr.  If not, see <http://www.gnu.org/licenses/>.
 #ifdef DEBUG_USPR
 	#define debug_uspr(x) x
 #else
-	#define debug_uspr(x) 
+	#define debug_uspr(x)
 #endif
 
 // options
@@ -100,7 +100,7 @@ bool operator < (tree_distance a, tree_distance b) {
 			return a.estimate < b.estimate;
 		}
 	}
-	return a.distance < b.distance; } 
+	return a.distance < b.distance; }
 bool operator <= (tree_distance a, tree_distance b) {
 	if (a.distance == b.distance) {
 		if (a.estimate == b.estimate) {
@@ -237,7 +237,9 @@ int uspr_distance(uforest &T1_original, uforest &T2_original) {
 //			cout << "target: " << target << endl;
 				if (tree_string == target) {
 //					cout << "returning " << cost+1 << endl;
-					cout << "examined " << visited_trees.size() << " trees" << endl;
+					debug_uspr(
+					  cout << "examined " << visited_trees.size() << " trees" << endl;
+					)
 					return cost+1;
 				}
 //				else {
