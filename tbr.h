@@ -1683,9 +1683,9 @@ list<pair<int,int> > find_pendants(unode *a, unode *c) {
 }
 
 int print_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, int dummy) {
-	Rcout << "ANSWER FOUND" << endl;
-	Rcout << "\t" << F1.str() << endl;
-	Rcout << "\t" << F2.str() << endl;
+	/*Rcout << "ANSWER FOUND" << endl;*/
+	Rcout << F1.str() << endl;
+	Rcout << F2.str() << endl;
 	return k;
 }
 
@@ -1695,9 +1695,9 @@ int count_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, int *count) 
 }
 
 int print_and_count_mAFs(uforest &F1, uforest &F2, nodemapping &twins, int k, int *count) {
-	Rcout << "ANSWER FOUND" << endl;
-	Rcout << "\t" << F1.str() << endl;
-	Rcout << "\t" << F2.str() << endl;
+	/*Rcout << "ANSWER FOUND" << endl;*/
+	Rcout << F1.str() << endl;
+	Rcout << F2.str() << endl;
 	(*count)++;
 	return k;
 }
