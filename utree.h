@@ -41,7 +41,7 @@ bool KEEP_LABELS = false;
 
 // prototypes
 bool build_utree(utree &t, string &s, map<string, int> *label_map = NULL, map<int, string> *reverse_label_map = NULL);
-int build_utree_helper(utree &t, string &s, int start, unode *parent, bool &valid, map<string, int> *label_map = NULL, map<int, string> *reverse_label_map = NULL);
+unsigned int build_utree_helper(utree &t, string &s, int start, unode *parent, bool &valid, map<string, int> *label_map = NULL, map<int, string> *reverse_label_map = NULL);
 void find_sibling_pairs_hlpr(utree &t, map<int, int> &sibling_pairs);
 map<int, int> distances_from_leaf(utree &T1, int leaf);
 void distances_from_leaf_hlpr(utree &T1, map<int, int> &distances, unode *prev, unode *current, int distance);
@@ -135,12 +135,12 @@ class utree {
 		return label;
 	}
 
-	int add_leaf(int label) {
-		int start = leaves.size();
+	 unsigned int add_leaf(unsigned int label) {
+	  unsigned int start = leaves.size();
 		if (leaves.size() <= label) {
-			leaves.resize(label+1);
+			leaves.resize(label + 1);
 		}
-		for(int i = start; i < label; i++) {
+		for(unsigned int i = start; i < label; i++) {
 			leaves[i] = NULL;
 		}
 		leaves[label] = new unode(label);
@@ -283,7 +283,6 @@ class utree {
 			s << n->str(reverse_label_map);
 		}
 		list<unode *>::const_iterator i;
-		const list<unode *> &cn = n->const_neighbors();
 		int count = 0;
 		bool has_contracted = false;
 		for(unode *i : n->const_neighbors()) {
@@ -325,7 +324,7 @@ class utree {
 			s << n->str(reverse_label_map);
 		}
 		list<unode *>::const_iterator i;
-		const list<unode *> &cn = n->const_neighbors();
+
 		int count = 0;
 		bool has_contracted = false;
 		for(unode *i : n->const_neighbors()) {
@@ -367,7 +366,7 @@ class utree {
 			s << n->str();
 		}
 		list<unode *>::const_iterator i;
-		const list<unode *> &cn = n->const_neighbors();
+
 		int count = 0;
 		bool has_contracted = false;
 		for(unode *i : n->const_neighbors()) {
@@ -463,7 +462,7 @@ class utree {
 
 		return true;
 	}
-	
+
 };
 
 ostream& operator<<(ostream &os, const utree& t) {
@@ -491,9 +490,9 @@ bool build_utree(utree &t, string &s, map<string, int> *label_map, map<int, stri
 	return valid;
 }
 
-int build_utree_helper(utree &t, string &s, int start, unode *parent, bool &valid, map<string, int> *label_map, map<int, string> *reverse_label_map) {
+unsigned int build_utree_helper(utree &t, string &s, int start, unode *parent, bool &valid, map<string, int> *label_map, map<int, string> *reverse_label_map) {
 	// next special char
-	int loc = s.find_first_of("(,)", start);
+	unsigned int loc = s.find_first_of("(,)", start);
 	if (loc == string::npos) {
 		return loc;
 	}
@@ -551,7 +550,6 @@ int build_utree_helper(utree &t, string &s, int start, unode *parent, bool &vali
 
 
 void find_sibling_pairs_hlpr(utree &t, map<int, int> &sibling_pairs) {
-	int i = 3;
 	for(int l : t.find_leaves()) {
 		unode *n = t.get_leaf(l);
 		unode *p = n->get_neighbors().front();
