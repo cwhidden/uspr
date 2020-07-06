@@ -2957,7 +2957,7 @@ void leaf_reduction_hlpr(utree &T1, utree &T2, nodemapping &twins, map<int, int>
 				// add to nodemapping
 				twins.add(T1_new_terminal->get_label(), T2_new_terminal->get_label());
 
-				spi--;
+				if (spi != sibling_pairs.begin()) spi--;
 				sibling_pairs.erase(T1_a->get_label());
 				sibling_pairs.erase(T1_c->get_label());
 				break;
